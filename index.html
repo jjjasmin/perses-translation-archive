@@ -389,7 +389,7 @@
       transform: translateX(-50%);
       width: 80%;
       z-index: 99;
-      pointer-events: auto;
+      pointer-events: none; /* 👈 追加: 背景部分のクリック判定を消してシークバー操作を通す */
       cursor: pointer;
       user-select: none;
     }
@@ -410,6 +410,7 @@
       line-height: 1.4;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       transition: all 0.2s;
+      pointer-events: auto; /* 👈 追加: 字幕ボックス自体はクリックで中央/左寄せ切替可能にする */
     }
 
     .overlay-subtitle-box.align-left {
