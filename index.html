@@ -868,7 +868,58 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', init);
+document.addEventListener('keydown', (e) => {
+  const key = e.key;
+  const code = e.keyCode || e.which;
+
+  // 矢印キーやスペースキーでの画面スクロールを防止
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(key) || [37, 38, 39, 40, 32].includes(code)) {
+    e.preventDefault();
+  }
+
+  // 👈 左ボタン (10秒戻し): ArrowLeft または keyCode 37
+  if (key === 'ArrowLeft' || code === 37) {
+    if (player && typeof player.getCurrentTime === 'function') {
+      const cur = player.getCurrentTime();
+      player.seekTo(Math.max(0, cur - 10), true);
+    }
+  }
+
+  // 👉 右ボタン (10秒進む): ArrowRight または keyCode 39
+  if (key === 'ArrowRight' || code === 39) {
+    if (player && typeof player.getCurrentTime === 'function') {
+      const cur = player.getCurrentTime();
+      player.seekTo(cur + 10, true);
+    }
+  }
+
+  // ⏯ 再生 / 一時停止: MediaPlayPause, Space, Enter, または keyCode 179 / 32 / 13
+  if (key === 'MediaPlayPause' || key === ' ' || key === 'Enter' || code === 179 || code === 32 || code === 13) {
+    if (player && typeof player.getPlayerState === 'function') {
+      const state = player.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+    }
+  }
+});
+
+// 画面をクリックしたらフォーカスを親に戻す
+document.addEventListener('click', () => {
+  window.focus();
+});
+
+    window.addEventListener('DOMContentLoaded', () => {
+  init();
+
+  // 🔥 Silkブラウザ対策: ページ全体に強制的フォーカスを当てる
+  window.focus();
+  document.body.focus();
+});
+
+
   </script>
 </body>
 </html>
