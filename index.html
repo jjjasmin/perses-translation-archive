@@ -17,6 +17,14 @@
       color: #333;
       padding: 16px;
       font-size: 90%;
+      transition: background-color 0.3s;
+    }
+
+    /* ★ 動画最大化（シアターモード）のスタイル */
+    body.mode-fullscreen {
+      background-color: #000000 !important;
+      padding: 0 !important;
+      overflow: hidden;
     }
 
     .container {
@@ -26,30 +34,170 @@
       padding: 18px;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s;
+    }
+
+    body.mode-fullscreen .container {
+      max-width: 100% !important;
+      width: 100vw;
+      height: 100vh;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      background: #000000 !important;
+      box-shadow: none !important;
+    }
+
+    /* ヘッダー＆レイアウト切替ボタン */
+    .header-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    body.mode-fullscreen .header-area {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 100;
+      margin-bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 6px 12px;
+      border-radius: 6px;
+      opacity: 0.4; /* 全体を40%に透過 */
+      transition: opacity 0.2s ease;
+    }
+
+    body.mode-fullscreen .header-area:hover {
+      opacity: 1.0; /* ホバー時は不透明に戻す */
     }
 
     h1 {
       font-size: 1.3rem;
-      margin-bottom: 16px;
       color: #1a1a1a;
     }
 
-    /* メインレイアウト（PC表示は左右2カラム） */
+    body.mode-fullscreen h1 {
+      color: #ffffff;
+      font-size: 1.0rem;
+    }
+
+    .layout-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .layout-btn {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .layout-btn:hover {
+      background: #cbd5e1;
+    }
+
+    .layout-btn.active {
+      background: #007bff;
+      color: #ffffff;
+      border-color: #0056b3;
+    }
+
+    /* ==========================================
+       レイアウト切り替えパターン定義
+       ========================================== */
     .content-layout {
       display: flex;
       gap: 24px;
       align-items: flex-start;
+      width: 100%;
     }
 
-    /* 左カラム：動画 ＋ 直下の字幕 */
-    .main-content {
+    /* --- 【2カラムA】デフォルト（左:動画+字幕, 右:関連動画） --- */
+    .mode-2col-a .content-layout {
+      flex-direction: row;
+    }
+    .mode-2col-a .main-content {
       flex: 3.5;
       width: 100%;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+    .mode-2col-a .sidebar-section {
+      flex: 2;
+      width: 100%;
+    }
 
+    /* --- 【1カラム】（縦一列：動画 -> 字幕 -> 関連動画） --- */
+    .mode-1col .content-layout {
+      flex-direction: column;
+    }
+    .mode-1col .main-content,
+    .mode-1col .sidebar-section {
+      flex: none;
+      width: 100%;
+    }
+
+    /* --- 【2カラムB】（左上:動画, 右:字幕 / 左下:関連動画） --- */
+    .mode-2col-b .content-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "video transcript"
+        "sidebar transcript";
+      gap: 16px;
+      align-items: start;
+    }
+
+    .mode-2col-b .main-content {
+      display: contents; /* グリッド配置を直下要素に透過させる */
+    }
+
+    .mode-2col-b .video-section {
+      grid-area: video;
+    }
+
+    .mode-2col-b .transcript-section {
+      grid-area: transcript;
+      height: calc(100vh - 80px);
+      min-height: 0;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+
+    .mode-2col-b .sidebar-section {
+      grid-area: sidebar;
+      width: 100%;
+      margin-top: 0;
+    }
+
+    /* --- 【動画最大化】（シアターモード） --- */
+    body.mode-fullscreen .content-layout {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+    }
+    body.mode-fullscreen .main-content {
+      flex: 1;
+      height: 100%;
+      gap: 0;
+      display: block;
+    }
+    body.mode-fullscreen .sidebar-section,
+    body.mode-fullscreen .transcript-section {
+      display: none !important;
+    }
+
+    /* 共通パーツ */
     .iframe-wrapper {
       position: relative;
       width: 100%;
@@ -57,6 +205,17 @@
       background-color: #000;
       border-radius: 8px;
       overflow: hidden;
+    }
+
+    body.mode-fullscreen .video-section {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    body.mode-fullscreen .iframe-wrapper {
+      padding-top: 0;
+      height: 100vh;
+      border-radius: 0;
     }
 
     #youtube-player {
@@ -68,7 +227,7 @@
       border: none;
     }
 
-    /* 字幕スクロールエリア（動画の直下） */
+    /* 字幕エリア (通常時) */
     .transcript-section {
       width: 100%;
       max-height: 350px;
@@ -96,7 +255,6 @@
       gap: 10px;
     }
 
-    /* 字幕カード */
     .transcript-card {
       background: #ffffff;
       border-left: 4px solid #ccc;
@@ -129,10 +287,8 @@
       color: #e67e22;
     }
 
-    /* 右カラム：関連動画（PC表示） */
+    /* 関連動画リスト */
     .sidebar-section {
-      flex: 2;
-      width: 100%;
       display: flex;
       flex-direction: column;
     }
@@ -173,7 +329,6 @@
       padding: 8px;
       cursor: pointer;
       transition: background-color 0.2s;
-      position: relative;
     }
 
     .video-item:hover {
@@ -185,10 +340,9 @@
       background-color: #e8f0fe;
     }
 
-    /* 💡 サムネイルサイズを1.5倍に拡大 (104px ➔ 156px) */
     .video-thumbnail {
       width: 156px;
-      height: 87.75px; /* 16:9 の比率を維持 */
+      height: 87.75px;
       object-fit: cover;
       border-radius: 4px;
       background-color: #000;
@@ -224,41 +378,119 @@
       display: inline-block;
     }
 
-    /* スマホ表示（850px以下：1カラムで縦並び） */
+    /* ==========================================
+       🔥 動画最大化（シアターモード）用オーバーレイ字幕
+       ========================================== */
+    .overlay-subtitle-container {
+      display: none;
+      position: absolute;
+      bottom: 10px; /* シークバーより下 */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      z-index: 99;
+      pointer-events: auto;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    body.mode-fullscreen .overlay-subtitle-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .overlay-subtitle-box {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 16px;
+      color: #ffffff;
+      font-size: 1.15rem;
+      line-height: 1.4;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s;
+    }
+
+    .overlay-subtitle-box.align-left {
+      text-align: left;
+    }
+
+    .overlay-subtitle-box.align-center {
+      text-align: center;
+    }
+
+    .overlay-speaker {
+      color: #60a5fa;
+      font-weight: bold;
+      margin-right: 8px;
+      display: inline;
+    }
+
+    .overlay-text {
+      color: #ffffff;
+      font-weight: 500;
+      display: inline;
+    }
+
+    /* レスポンシブ (850px以下) */
     @media (max-width: 850px) {
       .content-layout {
-        flex-direction: column;
+        display: flex !important;
+        flex-direction: column !important;
       }
-
       .main-content, .sidebar-section {
-        flex: none;
-        width: 100%;
+        flex: none !important;
+        width: 100% !important;
       }
-
       .video-list-section {
         max-height: none;
         overflow-y: visible;
         margin-top: 10px;
       }
+      .overlay-subtitle-container {
+        width: 92%;
+        bottom: 10px;
+      }
+      .overlay-subtitle-box {
+        font-size: 0.95rem;
+        padding: 8px 12px;
+      }
     }
   </style>
 </head>
-<body>
+<body class="mode-2col-a">
 
-  <div class="container">
-    <h1>PERSES 日本語翻訳アーカイブ</h1>
+  <div class="container" id="app-container">
+    <!-- ヘッダー ＆ レイアウト切替ボタン -->
+    <div class="header-area">
+      <h1>PERSES 日本語翻訳アーカイブ</h1>
+      <div class="layout-buttons">
+        <button class="layout-btn" data-mode="1col">1カラム</button>
+        <button class="layout-btn active" data-mode="2col-a">2カラムA</button>
+        <button class="layout-btn" data-mode="2col-b">2カラムB</button>
+        <button class="layout-btn" data-mode="fullscreen">動画最大化</button>
+      </div>
+    </div>
 
     <div class="content-layout">
-      <!-- 左エリア：動画 ＋ 直下の字幕 -->
+      <!-- メインエリア（動画 ＋ 字幕） -->
       <div class="main-content">
-        <!-- 1. 動画プレーヤー -->
         <div class="video-section">
           <div class="iframe-wrapper">
             <div id="youtube-player"></div>
+
+            <!-- 🔥 動画最大化時のオーバーレイ字幕 -->
+            <div id="overlay-subtitle-container" class="overlay-subtitle-container">
+              <div id="overlay-subtitle-box" class="overlay-subtitle-box align-center">
+                <span id="overlay-speaker" class="overlay-speaker"></span>
+                <span id="overlay-text" class="overlay-text">字幕を選択するとここに表示されます。</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 2. 動画直下の字幕エリア -->
+        <!-- 動画直下の字幕エリア -->
         <div id="transcript-section" class="transcript-section">
           <div id="transcript-container" class="transcript-list">
             <p style="text-align: center; color: #888;">動画を選択すると字幕が表示されます。</p>
@@ -266,7 +498,7 @@
         </div>
       </div>
 
-      <!-- 右エリア：関連動画リスト（PCは右側、スマホは画面下部へ） -->
+      <!-- 右エリア：関連動画リスト -->
       <div class="sidebar-section">
         <div id="video-list-section" class="video-list-section">
           <div class="video-list-title">
@@ -285,6 +517,12 @@
     const transcriptContainer = document.getElementById('transcript-container');
     const videoListSection = document.getElementById('video-list-section');
     const videoListContainer = document.getElementById('video-list-container');
+    
+    // オーバーレイ字幕用エレメント
+    const overlaySubtitleContainer = document.getElementById('overlay-subtitle-container');
+    const overlaySubtitleBox = document.getElementById('overlay-subtitle-box');
+    const overlaySpeaker = document.getElementById('overlay-speaker');
+    const overlayText = document.getElementById('overlay-text');
 
     let player = null;
     let transcriptData = [];
@@ -299,6 +537,69 @@
     let isLoadingMore = false;
     let currentVideoIndex = 0;
 
+    // レイアウト状態保持用変数
+    let previousLayoutMode = '2col-a';
+    let currentLayoutMode = '2col-a';
+
+    // ==========================================
+    // レイアウト切り替え制御
+    // ==========================================
+    const layoutBtns = document.querySelectorAll('.layout-btn');
+    
+    layoutBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetMode = btn.dataset.mode;
+        setLayoutMode(targetMode);
+      });
+    });
+
+    function setLayoutMode(mode) {
+      if (mode === currentLayoutMode) return;
+
+      if (currentLayoutMode !== 'fullscreen') {
+        previousLayoutMode = currentLayoutMode;
+      }
+
+      document.body.classList.remove('mode-1col', 'mode-2col-a', 'mode-2col-b', 'mode-fullscreen');
+      
+      if (mode === 'fullscreen') {
+        document.body.classList.add('mode-fullscreen');
+      } else {
+        document.body.classList.add(`mode-${mode}`);
+      }
+
+      currentLayoutMode = mode;
+
+      layoutBtns.forEach(btn => {
+        if (btn.dataset.mode === mode) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // ESCキー押下で動画最大化を解除
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentLayoutMode === 'fullscreen') {
+        setLayoutMode(previousLayoutMode);
+      }
+    });
+
+    // 🔥 最大画面字幕の「中央寄せ ⇄ 左寄せ」トグル（デフォルト中央寄せ）
+    overlaySubtitleContainer.addEventListener('click', () => {
+      if (overlaySubtitleBox.classList.contains('align-center')) {
+        overlaySubtitleBox.classList.remove('align-center');
+        overlaySubtitleBox.classList.add('align-left');
+      } else {
+        overlaySubtitleBox.classList.remove('align-left');
+        overlaySubtitleBox.classList.add('align-center');
+      }
+    });
+
+    // ==========================================
+    // YouTube API & プレイヤー同期
+    // ==========================================
     function onYouTubeIframeAPIReady() {
       isApiReady = true;
       if (pendingVideoId) {
@@ -321,7 +622,8 @@
           playerVars: {
             'autoplay': 1,
             'mute': 1,
-            'playsinline': 1
+            'playsinline': 1,
+            'cc_load_policy': 0 /* YouTube標準CCを無効化 */
           },
           events: {
             'onStateChange': onPlayerStateChange
@@ -397,6 +699,18 @@
             card.classList.remove('active');
           }
         });
+
+        const currentData = transcriptData[activeIndex];
+        if (currentData) {
+          if (currentData.speaker) {
+            overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
+            overlaySpeaker.style.display = 'inline';
+          } else {
+            overlaySpeaker.textContent = '';
+            overlaySpeaker.style.display = 'none';
+          }
+          overlayText.textContent = currentData.translation || '';
+        }
       }
     }
 
