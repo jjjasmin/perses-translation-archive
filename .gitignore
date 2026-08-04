@@ -1,0 +1,10 @@
+# GitHubにアップロードしないファイルを指定
+generate_json.py
+
+# 音声・動画の一時ファイルや環境変数ファイルも除外
+*.mp3
+*.wav
+*.mp4
+*.env
+__pycache__/
+.DS_Store
