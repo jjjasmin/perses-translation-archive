@@ -27,6 +27,86 @@
       overflow: hidden;
     }
 
+    /* ==========================================
+   ダークモード時のスタイル設定
+   ========================================== */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.dark-mode .container {
+  background: #1e1e1e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode h1 {
+  color: #ffffff;
+}
+
+body.dark-mode .layout-btn {
+  background: #333333;
+  border-color: #444444;
+  color: #cccccc;
+}
+
+body.dark-mode .layout-btn:hover {
+  background: #444444;
+}
+
+body.dark-mode .layout-btn.active {
+  background: #007bff;
+  color: #ffffff;
+  border-color: #0056b3;
+}
+
+body.dark-mode .transcript-section,
+body.dark-mode .video-list-section {
+  background-color: #252525;
+  border-color: #333333;
+}
+
+body.dark-mode .transcript-card {
+  background: #2d2d2d;
+  border-left-color: #555555;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .transcript-card.active {
+  background-color: #1a365d;
+  border-left-color: #3182ce;
+}
+
+body.dark-mode .text-translation {
+  color: #e2e8f0;
+}
+
+body.dark-mode .text-thai {
+  color: #cbd5e1;
+}
+
+body.dark-mode .video-list-title {
+  color: #cccccc;
+}
+
+body.dark-mode .video-item {
+  background: #2d2d2d;
+  border-color: #333333;
+}
+
+body.dark-mode .video-item:hover {
+  background-color: #383838;
+}
+
+body.dark-mode .video-item.active {
+  background-color: #1a365d;
+  border-color: #3182ce;
+}
+
+body.dark-mode .video-title {
+  color: #e2e8f0;
+}
+
     .container {
       max-width: 1440px;
       margin: 0 auto;
@@ -471,6 +551,8 @@
         <button class="layout-btn active" data-mode="2col-a">2カラムA</button>
         <button class="layout-btn" data-mode="2col-b">2カラムB</button>
         <button class="layout-btn" data-mode="fullscreen">動画最大化</button>
+        <!-- ★ 追加: ダークモード切替ボタン -->
+        <button class="layout-btn" id="theme-toggle-btn">🌙</button>
       </div>
     </div>
 
@@ -868,58 +950,82 @@
       });
     }
 
-document.addEventListener('keydown', (e) => {
-  const key = e.key;
-  const code = e.keyCode || e.which;
+    document.addEventListener('keydown', (e) => {
+      const key = e.key;
+      const code = e.keyCode || e.which;
 
-  // 矢印キーやスペースキーでの画面スクロールを防止
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(key) || [37, 38, 39, 40, 32].includes(code)) {
-    e.preventDefault();
-  }
-
-  // 👈 左ボタン (10秒戻し): ArrowLeft または keyCode 37
-  if (key === 'ArrowLeft' || code === 37) {
-    if (player && typeof player.getCurrentTime === 'function') {
-      const cur = player.getCurrentTime();
-      player.seekTo(Math.max(0, cur - 10), true);
-    }
-  }
-
-  // 👉 右ボタン (10秒進む): ArrowRight または keyCode 39
-  if (key === 'ArrowRight' || code === 39) {
-    if (player && typeof player.getCurrentTime === 'function') {
-      const cur = player.getCurrentTime();
-      player.seekTo(cur + 10, true);
-    }
-  }
-
-  // ⏯ 再生 / 一時停止: MediaPlayPause, Space, Enter, または keyCode 179 / 32 / 13
-  if (key === 'MediaPlayPause' || key === ' ' || key === 'Enter' || code === 179 || code === 32 || code === 13) {
-    if (player && typeof player.getPlayerState === 'function') {
-      const state = player.getPlayerState();
-      if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-      } else {
-        player.playVideo();
+      // 矢印キーやスペースキーでの画面スクロールを防止
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(key) || [37, 38, 39, 40, 32].includes(code)) {
+        e.preventDefault();
       }
-    }
-  }
-});
 
-// 画面をクリックしたらフォーカスを親に戻す
-document.addEventListener('click', () => {
-  window.focus();
-});
+      // 👈 左ボタン (10秒戻し): ArrowLeft または keyCode 37
+      if (key === 'ArrowLeft' || code === 37) {
+        if (player && typeof player.getCurrentTime === 'function') {
+          const cur = player.getCurrentTime();
+          player.seekTo(Math.max(0, cur - 10), true);
+        }
+      }
+
+      // 👉 右ボタン (10秒進む): ArrowRight または keyCode 39
+      if (key === 'ArrowRight' || code === 39) {
+        if (player && typeof player.getCurrentTime === 'function') {
+          const cur = player.getCurrentTime();
+          player.seekTo(cur + 10, true);
+        }
+      }
+
+      // ⏯ 再生 / 一時停止: MediaPlayPause, Space, Enter, または keyCode 179 / 32 / 13
+      if (key === 'MediaPlayPause' || key === ' ' || key === 'Enter' || code === 179 || code === 32 || code === 13) {
+        if (player && typeof player.getPlayerState === 'function') {
+          const state = player.getPlayerState();
+          if (state === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+          } else {
+            player.playVideo();
+          }
+        }
+      }
+    });
+
+    // ==========================================
+    // ダークモード切替処理
+    // ==========================================
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
+    // 保存されているテーマまたはOSの設定を確認して初期化
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.body.classList.add('dark-mode');
+      if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+    }
+
+    // ボタン切り替えイベント
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    }
+
+
+    // 画面をクリックしたらフォーカスを親に戻す
+    document.addEventListener('click', () => {
+      window.focus();
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
-  init();
+      init();
 
-  // 🔥 Silkブラウザ対策: ページ全体に強制的フォーカスを当てる
-  window.focus();
-  document.body.focus();
-});
-
-
+      // 🔥 Silkブラウザ対策: ページ全体に強制的フォーカスを当てる
+      window.focus();
+      document.body.focus();
+    });
   </script>
 </body>
 </html>

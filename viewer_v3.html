@@ -1,0 +1,675 @@
+<!-- リサイザーあり。バグっぽい挙動するので却下。 -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSES 日本語翻訳アーカイブ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      padding: 16px;
+      font-size: 90%;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      color: #1a1a1a;
+    }
+
+    /* メインレイアウト（flex-wrapを許可して下への回り込みに対応） */
+    .content-layout {
+      display: flex;
+      flex-wrap: wrap; /* 🔥 下への折り返しを許可 */
+      align-items: stretch;
+      width: 100%;
+    }
+
+    /* 左カラム：動画 ＋ 直下の字幕 */
+    .main-content {
+      width: 63%; /* 初期幅 */
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 🔥 カラム幅調整用のリサイザー（仕切りバー） */
+    .resizer {
+      width: 12px;
+      cursor: col-resize;
+      background-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      user-select: none;
+      touch-action: none;
+      margin: 0 6px;
+    }
+
+    .resizer::after {
+      content: "";
+      width: 4px;
+      height: 40px;
+      background-color: #d1d5db;
+      border-radius: 2px;
+      transition: background-color 0.2s, height 0.2s;
+    }
+
+    .resizer:hover::after,
+    .resizer.dragging::after {
+      background-color: #007bff;
+      height: 100%;
+    }
+
+    /* 右カラム：関連動画 */
+    .sidebar-section {
+      flex: 1;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 🔥 下に回り込んだ時（1カラム時）のスタイル調整 */
+    .content-layout.wrapped .sidebar-section {
+      width: 100%;
+      flex: none;
+      margin-top: 16px;
+    }
+
+    .content-layout.wrapped .video-list-section {
+      max-height: none; /* 下に回った時は縦に伸ばす */
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #youtube-player {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ドラッグ中に iframe にイベントが吸われるのを防ぐ */
+    .disable-pointer {
+      pointer-events: none !important;
+    }
+
+    /* 字幕スクロールエリア（動画の直下） */
+    .transcript-section {
+      width: 100%;
+      max-height: 350px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #fafafa;
+      position: relative;
+    }
+
+    .transcript-section::-webkit-scrollbar,
+    .video-list-section::-webkit-scrollbar {
+      width: 5px;
+    }
+    .transcript-section::-webkit-scrollbar-thumb,
+    .video-list-section::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 3px;
+    }
+
+    .transcript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 字幕カード */
+    .transcript-card {
+      background: #ffffff;
+      border-left: 4px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+
+    .transcript-card.active {
+      border-left: 4px solid #007bff;
+      background-color: #e8f0fe;
+    }
+
+    .text-translation {
+      font-size: 0.88rem;
+      line-height: 1.4;
+      color: #1a1a1a;
+    }
+
+    .text-thai {
+      font-size: 1.0rem;
+      font-weight: 500;
+      color: #2c3e50;
+      margin-bottom: 2px;
+    }
+
+    .text-kana {
+      font-size: 0.78rem;
+      color: #e67e22;
+    }
+
+    .video-list-section {
+      width: 100%;
+      max-height: 700px;
+      overflow-y: auto;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      padding: 12px;
+      background-color: #ffffff;
+    }
+
+    .video-list-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #444;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .video-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .video-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      position: relative;
+    }
+
+    .video-item:hover {
+      background-color: #f8fafc;
+    }
+
+    .video-item.active {
+      border-color: #007bff;
+      background-color: #e8f0fe;
+    }
+
+    /* サムネイルサイズ (156px) */
+    .video-thumbnail {
+      width: 156px;
+      height: 87.75px;
+      object-fit: cover;
+      border-radius: 4px;
+      background-color: #000;
+      flex-shrink: 0;
+    }
+
+    .video-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .video-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #222;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .playing-badge {
+      display: none;
+      font-size: 0.7rem;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .video-item.active .playing-badge {
+      display: inline-block;
+    }
+
+    /* スマホ表示（850px以下：自動で縦並び） */
+    @media (max-width: 850px) {
+      .content-layout {
+        flex-direction: column;
+      }
+
+      .main-content, .sidebar-section {
+        flex: none;
+        width: 100% !important;
+      }
+
+      .resizer {
+        display: none;
+      }
+
+      .video-list-section {
+        max-height: none;
+        overflow-y: visible;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>PERSES 日本語翻訳アーカイブ</h1>
+
+    <div class="content-layout" id="content-layout">
+      <!-- 左エリア：動画 ＋ 直下の字幕 -->
+      <div class="main-content" id="left-column">
+        <!-- 1. 動画プレーヤー -->
+        <div class="video-section">
+          <div class="iframe-wrapper">
+            <div id="youtube-player"></div>
+          </div>
+        </div>
+
+        <!-- 2. 動画直下の字幕エリア -->
+        <div id="transcript-section" class="transcript-section">
+          <div id="transcript-container" class="transcript-list">
+            <p style="text-align: center; color: #888;">動画を選択すると字幕が表示されます。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中央のリサイザー -->
+      <div class="resizer" id="resizer"></div>
+
+      <!-- 右エリア：関連動画リスト -->
+      <div class="sidebar-section" id="right-column">
+        <div id="video-list-section" class="video-list-section">
+          <div class="video-list-title">
+            <span>関連動画</span>
+          </div>
+          <div id="video-list-container" class="video-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    const transcriptSection = document.getElementById('transcript-section');
+    const transcriptContainer = document.getElementById('transcript-container');
+    const videoListSection = document.getElementById('video-list-section');
+    const videoListContainer = document.getElementById('video-list-container');
+
+    let player = null;
+    let transcriptData = [];
+    let syncInterval = null;
+    let activeIndex = -1;
+    let isApiReady = false;
+    let pendingVideoId = null;
+
+    let allVideos = [];
+    let loadedCount = 0;
+    const PAGE_SIZE = 10;
+    let isLoadingMore = false;
+    let currentVideoIndex = 0;
+
+    function onYouTubeIframeAPIReady() {
+      isApiReady = true;
+      if (pendingVideoId) {
+        initPlayer(pendingVideoId);
+      }
+    }
+
+    function initPlayer(videoId) {
+      if (!isApiReady) {
+        pendingVideoId = videoId;
+        return;
+      }
+
+      if (player) {
+        player.loadVideoById({ videoId: videoId });
+        player.mute();
+      } else {
+        player = new YT.Player('youtube-player', {
+          videoId: videoId,
+          playerVars: {
+            'autoplay': 1,
+            'mute': 1,
+            'playsinline': 1
+          },
+          events: {
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        startSync();
+      } else {
+        stopSync();
+      }
+
+      if (event.data === YT.PlayerState.ENDED) {
+        playNextVideo();
+      }
+    }
+
+    function playNextVideo() {
+      if (currentVideoIndex + 1 < allVideos.length) {
+        const nextIndex = currentVideoIndex + 1;
+        if (nextIndex >= loadedCount) {
+          loadMoreVideos();
+        }
+        const nextVideo = allVideos[nextIndex];
+        selectVideoByIndex(nextIndex, nextVideo.file, nextVideo.id);
+      }
+    }
+
+    function startSync() {
+      stopSync();
+      syncInterval = setInterval(updateActiveTranscript, 250);
+    }
+
+    function stopSync() {
+      if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+      }
+    }
+
+    function updateActiveTranscript() {
+      if (!player || typeof player.getCurrentTime !== 'function' || transcriptData.length === 0) return;
+
+      const currentTime = player.getCurrentTime();
+
+      let currentIndex = -1;
+      for (let i = 0; i < transcriptData.length; i++) {
+        const itemStart = parseFloat(transcriptData[i].start || 0);
+        const nextStart = (i < transcriptData.length - 1) ? parseFloat(transcriptData[i + 1].start) : Infinity;
+
+        if (currentTime >= itemStart && currentTime < nextStart) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      if (currentIndex !== -1 && currentIndex !== activeIndex) {
+        activeIndex = currentIndex;
+
+        const cards = transcriptContainer.querySelectorAll('.transcript-card');
+        cards.forEach((card, index) => {
+          if (index === activeIndex) {
+            card.classList.add('active');
+
+            transcriptSection.scrollTo({
+              top: card.offsetTop - transcriptContainer.offsetTop,
+              behavior: 'instant'
+            });
+          } else {
+            card.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    function init() {
+      setupResizer();
+
+      fetch('videos.json')
+        .then(response => {
+          if (!response.ok) throw new Error('videos.json が見つかりません');
+          return response.json();
+        })
+        .then(videoList => {
+          if (!videoList || videoList.length === 0) return;
+
+          allVideos = videoList;
+          loadMoreVideos();
+          selectVideoByIndex(0, allVideos[0].file, allVideos[0].id);
+          setupScrollListener();
+        })
+        .catch(error => {
+          console.error('初期化エラー:', error);
+        });
+    }
+
+    /* 🔥 左右カラムのリサイズ & 自動回り込み処理 */
+    function setupResizer() {
+      const resizer = document.getElementById('resizer');
+      const leftCol = document.getElementById('left-column');
+      const layout = document.getElementById('content-layout');
+      const ytPlayer = document.getElementById('youtube-player');
+
+      let startX = 0;
+      let startLeftWidth = 0;
+
+      const onMouseDown = (e) => {
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startLeftWidth = leftCol.getBoundingClientRect().width;
+
+        resizer.classList.add('dragging');
+        if (ytPlayer) ytPlayer.classList.add('disable-pointer');
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onMouseMove);
+        document.addEventListener('touchend', onMouseUp);
+      };
+
+      const onMouseMove = (e) => {
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const dx = currentX - startX;
+        const layoutWidth = layout.getBoundingClientRect().width - resizer.offsetWidth;
+        
+        let newLeftWidthPx = startLeftWidth + dx;
+        let newLeftPercent = (newLeftWidthPx / layoutWidth) * 100;
+
+        // 最小幅の制限 (30%未満にはならない)
+        if (newLeftPercent < 30) {
+          newLeftPercent = 30;
+        }
+
+        // 🔥 画面右端（85%以上）までドラッグしたら右カラムを下に落とす
+        if (newLeftPercent >= 85) {
+          leftCol.style.width = '100%';
+          layout.classList.add('wrapped');
+        } else {
+          leftCol.style.width = `${newLeftPercent}%`;
+          layout.classList.remove('wrapped');
+        }
+      };
+
+      const onMouseUp = () => {
+        resizer.classList.remove('dragging');
+        if (ytPlayer) ytPlayer.classList.remove('disable-pointer');
+
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onMouseMove);
+        document.removeEventListener('touchend', onMouseUp);
+      };
+
+      resizer.addEventListener('mousedown', onMouseDown);
+      resizer.addEventListener('touchstart', onMouseDown);
+    }
+
+    function loadMoreVideos() {
+      if (loadedCount >= allVideos.length || isLoadingMore) return;
+      isLoadingMore = true;
+
+      const nextBatch = allVideos.slice(loadedCount, loadedCount + PAGE_SIZE);
+
+      const html = nextBatch.map((video, index) => {
+        const globalIndex = loadedCount + index;
+        const thumbnailUrl = `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`;
+        const isActive = globalIndex === currentVideoIndex ? 'active' : '';
+
+        return `
+          <div class="video-item ${isActive}" data-index="${globalIndex}" data-file="${video.file}" data-id="${video.id}">
+            <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail" />
+            <div class="video-info">
+              <span class="playing-badge">▶ 再生中</span>
+              <div class="video-title">${video.title}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      videoListContainer.insertAdjacentHTML('beforeend', html);
+      loadedCount += nextBatch.length;
+      isLoadingMore = false;
+
+      bindVideoItemEvents();
+    }
+
+    function bindVideoItemEvents() {
+      const items = videoListContainer.querySelectorAll('.video-item');
+      items.forEach(item => {
+        if (!item.dataset.bound) {
+          item.dataset.bound = "true";
+          item.addEventListener('click', () => {
+            const index = parseInt(item.dataset.index, 10);
+            const fileName = item.dataset.file;
+            const videoId = item.dataset.id;
+            
+            selectVideoByIndex(index, fileName, videoId);
+          });
+        }
+      });
+    }
+
+    function selectVideoByIndex(index, fileName, videoId) {
+      currentVideoIndex = index;
+
+      const items = videoListContainer.querySelectorAll('.video-item');
+      items.forEach(item => {
+        if (parseInt(item.dataset.index, 10) === index) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      loadVideo(fileName, videoId);
+    }
+
+    function setupScrollListener() {
+      videoListSection.addEventListener('scroll', () => {
+        if (videoListSection.scrollTop + videoListSection.clientHeight >= videoListSection.scrollHeight - 20) {
+          loadMoreVideos();
+        }
+      });
+
+      window.addEventListener('scroll', () => {
+        if (window.innerWidth <= 850) {
+          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 150) {
+            loadMoreVideos();
+          }
+        }
+      });
+    }
+
+    function loadVideo(fileName, videoId) {
+      if (!fileName || !videoId) return;
+
+      activeIndex = -1;
+      initPlayer(videoId);
+
+      fetch(fileName)
+        .then(response => {
+          if (!response.ok) throw new Error(`${fileName} の取得に失敗しました`);
+          return response.json();
+        })
+        .then(data => {
+          transcriptData = data.transcript || [];
+          renderTranscript(transcriptData);
+        })
+        .catch(error => {
+          console.error('字幕取得エラー:', error);
+          transcriptData = [];
+          transcriptContainer.innerHTML = `<p style="color: red; text-align: center;">字幕データの読み込みに失敗しました。(${fileName})</p>`;
+        });
+    }
+
+    function renderTranscript(transcriptList) {
+      if (!transcriptList || transcriptList.length === 0) {
+        transcriptContainer.innerHTML = '<p style="text-align: center;">字幕データがありません。</p>';
+        return;
+      }
+
+      const html = transcriptList.map((item, index) => {
+        const startTime = parseFloat(item.start || 0);
+        
+        const speakerText = item.speaker ? `<span style="color: #007bff; font-weight: bold; margin-right: 6px;">${item.speaker}:</span>` : '';
+
+        return `
+          <div class="transcript-card" data-index="${index}" data-start="${startTime}">
+            <div class="text-translation" style="border-top: none; padding-top: 0; font-weight: bold; margin-bottom: 3px;">
+              ${speakerText}${item.translation || ''}
+            </div>
+            <div class="text-thai">${item.text || ''}</div>
+            <div class="text-kana" style="margin-top: 2px;">${item.pronunciation_kana || ''}</div>
+          </div>
+        `;
+      }).join('');
+
+      transcriptContainer.innerHTML = html;
+
+      const cards = transcriptContainer.querySelectorAll('.transcript-card');
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          const startTime = parseFloat(card.dataset.start);
+          if (player && typeof player.seekTo === 'function') {
+            player.seekTo(startTime, true);
+            player.playVideo();
+          }
+        });
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
