@@ -28,84 +28,113 @@
     }
 
     /* ==========================================
-   ダークモード時のスタイル設定
-   ========================================== */
-body.dark-mode {
-  background-color: #121212;
-  color: #e0e0e0;
-}
+       ダークモード時のスタイル設定
+       ========================================== */
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
 
-body.dark-mode .container {
-  background: #1e1e1e;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
+    body.dark-mode .container {
+      background: #1e1e1e;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
 
-body.dark-mode h1 {
-  color: #ffffff;
-}
+    body.dark-mode h1 {
+      color: #ffffff;
+    }
 
-body.dark-mode .layout-btn {
-  background: #333333;
-  border-color: #444444;
-  color: #cccccc;
-}
+    body.dark-mode .layout-btn {
+      background: #333333;
+      border-color: #444444;
+      color: #cccccc;
+    }
 
-body.dark-mode .layout-btn:hover {
-  background: #444444;
-}
+    body.dark-mode .layout-btn:hover {
+      background: #444444;
+    }
 
-body.dark-mode .layout-btn.active {
-  background: #007bff;
-  color: #ffffff;
-  border-color: #0056b3;
-}
+    body.dark-mode .layout-btn.active {
+      background: #007bff;
+      color: #ffffff;
+      border-color: #0056b3;
+    }
 
-body.dark-mode .transcript-section,
-body.dark-mode .video-list-section {
-  background-color: #252525;
-  border-color: #333333;
-}
+    body.dark-mode .transcript-section,
+    body.dark-mode .video-list-section {
+      background-color: #252525;
+      border-color: #333333;
+    }
 
-body.dark-mode .transcript-card {
-  background: #2d2d2d;
-  border-left-color: #555555;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
+    body.dark-mode .transcript-card {
+      background: #2d2d2d;
+      border-left-color: #555555;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
 
-body.dark-mode .transcript-card.active {
-  background-color: #1a365d;
-  border-left-color: #3182ce;
-}
+    body.dark-mode .transcript-card.active {
+      background-color: #1a365d;
+      border-left-color: #3182ce;
+    }
 
-body.dark-mode .text-translation {
-  color: #e2e8f0;
-}
+    body.dark-mode .text-translation {
+      color: #e2e8f0;
+    }
 
-body.dark-mode .text-thai {
-  color: #cbd5e1;
-}
+    body.dark-mode .text-thai {
+      color: #cbd5e1;
+    }
 
-body.dark-mode .video-list-title {
-  color: #cccccc;
-}
+    body.dark-mode .video-list-title {
+      color: #cccccc;
+    }
 
-body.dark-mode .video-item {
-  background: #2d2d2d;
-  border-color: #333333;
-}
+    body.dark-mode .video-item {
+      background: #2d2d2d;
+      border-color: #333333;
+    }
 
-body.dark-mode .video-item:hover {
-  background-color: #383838;
-}
+    body.dark-mode .video-item:hover {
+      background-color: #383838;
+    }
 
-body.dark-mode .video-item.active {
-  background-color: #1a365d;
-  border-color: #3182ce;
-}
+    body.dark-mode .video-item.active {
+      background-color: #1a365d;
+      border-color: #3182ce;
+    }
 
-body.dark-mode .video-title {
-  color: #e2e8f0;
-}
+    body.dark-mode .video-title {
+      color: #e2e8f0;
+    }
+
+    /* 検索ボックス・フローティングリストのダークモード対応 */
+    body.dark-mode .search-input {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    body.dark-mode .search-btn {
+      background-color: #0056b3;
+      color: #fff;
+    }
+
+    body.dark-mode .keyword-floating-box {
+      background-color: #2a2a2a;
+      border-color: #444;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    body.dark-mode .keyword-chip {
+      background-color: #3a3a3a;
+      color: #90caf9;
+      border-color: #555;
+    }
+
+    body.dark-mode .keyword-chip:hover {
+      background-color: #007bff;
+      color: #ffffff;
+    }
 
     .container {
       max-width: 1440px;
@@ -146,12 +175,12 @@ body.dark-mode .video-title {
       background: rgba(0, 0, 0, 0.6);
       padding: 6px 12px;
       border-radius: 6px;
-      opacity: 0.4; /* 全体を40%に透過 */
+      opacity: 0.4;
       transition: opacity 0.2s ease;
     }
 
     body.mode-fullscreen .header-area:hover {
-      opacity: 1.0; /* ホバー時は不透明に戻す */
+      opacity: 1.0;
     }
 
     h1 {
@@ -239,7 +268,7 @@ body.dark-mode .video-title {
     }
 
     .mode-2col-b .main-content {
-      display: contents; /* グリッド配置を直下要素に透過させる */
+      display: contents;
     }
 
     .mode-2col-b .video-section {
@@ -281,7 +310,7 @@ body.dark-mode .video-title {
     .iframe-wrapper {
       position: relative;
       width: 100%;
-      padding-top: 56.25%; /* 16:9 */
+      padding-top: 56.25%;
       background-color: #000;
       border-radius: 8px;
       overflow: hidden;
@@ -391,6 +420,85 @@ body.dark-mode .video-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      position: relative;
+    }
+
+    /* ★ 検索フォーム & フローティングエリアのスタイル */
+    .search-wrapper {
+      display: flex;
+      gap: 4px;
+      position: relative;
+      flex: 1;
+      max-width: 240px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .search-btn {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .search-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .keyword-floating-box {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 200;
+      max-height: 160px;
+      overflow-y: auto;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .keyword-floating-box.show {
+      display: flex;
+    }
+
+    .keyword-chip {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      background: #eef2f5;
+      color: #007bff;
+      border: 1px solid #d0e1f9;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .keyword-chip:hover {
+      background: #007bff;
+      color: #ffffff;
+      border-color: #007bff;
     }
 
     .video-grid {
@@ -434,6 +542,7 @@ body.dark-mode .video-title {
       flex-direction: column;
       gap: 4px;
       flex: 1;
+      min-width: 0; /* 省略処理のための折り返し制御 */
     }
 
     .video-title {
@@ -447,6 +556,25 @@ body.dark-mode .video-title {
       overflow: hidden;
     }
 
+    /* ★ 動画カード内のキーワード表示（1行で溢れたら...） */
+    .video-keywords {
+      font-size: 0.72rem;
+      color: #007bff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .video-keyword-item {
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .video-keyword-item:hover {
+      text-decoration: underline;
+    }
+
     .playing-badge {
       display: none;
       font-size: 0.7rem;
@@ -458,18 +586,16 @@ body.dark-mode .video-title {
       display: inline-block;
     }
 
-    /* ==========================================
-       🔥 動画最大化（シアターモード）用オーバーレイ字幕
-       ========================================== */
+    /* 🔥 動画最大化（シアターモード）用オーバーレイ字幕 */
     .overlay-subtitle-container {
       display: none;
       position: absolute;
-      bottom: 10px; /* シークバーより下 */
+      bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
       width: 80%;
       z-index: 99;
-      pointer-events: none; /* 👈 追加: 背景部分のクリック判定を消してシークバー操作を通す */
+      pointer-events: none;
       cursor: pointer;
       user-select: none;
     }
@@ -490,7 +616,7 @@ body.dark-mode .video-title {
       line-height: 1.4;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       transition: all 0.2s;
-      pointer-events: auto; /* 👈 追加: 字幕ボックス自体はクリックで中央/左寄せ切替可能にする */
+      pointer-events: auto;
     }
 
     .overlay-subtitle-box.align-left {
@@ -537,6 +663,10 @@ body.dark-mode .video-title {
         font-size: 0.95rem;
         padding: 8px 12px;
       }
+      .search-wrapper {
+        max-width: 100%;
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -545,13 +675,17 @@ body.dark-mode .video-title {
   <div class="container" id="app-container">
     <!-- ヘッダー ＆ レイアウト切替ボタン -->
     <div class="header-area">
-      <h1>PERSES 日本語翻訳アーカイブ</h1>
+      <div style="display: flex; align-items: center; gap: 10px; position: relative;">
+        <!-- ★ 追加：ハンバーガーボタン ＆ リンク集ドロワー -->
+          <a href="admin.html">🛠️ 発言者エディター</a>
+        <h1>PERSES 日本語翻訳アーカイブ</h1>
+      </div>
+
       <div class="layout-buttons">
         <button class="layout-btn" data-mode="1col">1カラム</button>
         <button class="layout-btn active" data-mode="2col-a">2カラムA</button>
         <button class="layout-btn" data-mode="2col-b">2カラムB</button>
         <button class="layout-btn" data-mode="fullscreen">動画最大化</button>
-        <!-- ★ 追加: ダークモード切替ボタン -->
         <button class="layout-btn" id="theme-toggle-btn">🌙</button>
       </div>
     </div>
@@ -586,7 +720,15 @@ body.dark-mode .video-title {
         <div id="video-list-section" class="video-list-section">
           <div class="video-list-title">
             <span>関連動画</span>
+
+            <!-- ★ 追加：検索フォーム ＆ フローティングキーワードリスト -->
+            <div class="search-wrapper" id="search-wrapper">
+              <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
+              <button type="button" id="search-btn" class="search-btn">検索</button>
+              <div id="keyword-floating-box" class="keyword-floating-box"></div>
+            </div>
           </div>
+
           <div id="video-list-container" class="video-grid"></div>
         </div>
       </div>
@@ -607,6 +749,12 @@ body.dark-mode .video-title {
     const overlaySpeaker = document.getElementById('overlay-speaker');
     const overlayText = document.getElementById('overlay-text');
 
+    // 検索・キーワード用エレメント
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const searchWrapper = document.getElementById('search-wrapper');
+    const keywordFloatingBox = document.getElementById('keyword-floating-box');
+
     let player = null;
     let transcriptData = [];
     let syncInterval = null;
@@ -615,10 +763,11 @@ body.dark-mode .video-title {
     let pendingVideoId = null;
 
     let allVideos = [];
+    let filteredVideos = []; // ★ 検索フィルタ結果用配列
     let loadedCount = 0;
     const PAGE_SIZE = 10;
     let isLoadingMore = false;
-    let currentVideoIndex = 0;
+    let currentVideoIndex = 0; // allVideos内でのインデックス
 
     // レイアウト状態保持用変数
     let previousLayoutMode = '2col-a';
@@ -669,7 +818,7 @@ body.dark-mode .video-title {
       }
     });
 
-    // 🔥 最大画面字幕の「中央寄せ ⇄ 左寄せ」トグル（デフォルト中央寄せ）
+    // 🔥 最大画面字幕の「中央寄せ ⇄ 左寄せ」トグル
     overlaySubtitleContainer.addEventListener('click', () => {
       if (overlaySubtitleBox.classList.contains('align-center')) {
         overlaySubtitleBox.classList.remove('align-center');
@@ -706,7 +855,7 @@ body.dark-mode .video-title {
             'autoplay': 1,
             'mute': 1,
             'playsinline': 1,
-            'cc_load_policy': 0 /* YouTube標準CCを無効化 */
+            'cc_load_policy': 0
           },
           events: {
             'onStateChange': onPlayerStateChange
@@ -728,12 +877,12 @@ body.dark-mode .video-title {
     }
 
     function playNextVideo() {
-      if (currentVideoIndex + 1 < allVideos.length) {
+      if (currentVideoIndex + 1 < filteredVideos.length) {
         const nextIndex = currentVideoIndex + 1;
         if (nextIndex >= loadedCount) {
           loadMoreVideos();
         }
-        const nextVideo = allVideos[nextIndex];
+        const nextVideo = filteredVideos[nextIndex];
         selectVideoByIndex(nextIndex, nextVideo.file, nextVideo.id);
       }
     }
@@ -807,8 +956,13 @@ body.dark-mode .video-title {
           if (!videoList || videoList.length === 0) return;
 
           allVideos = videoList;
-          loadMoreVideos();
-          selectVideoByIndex(0, allVideos[0].file, allVideos[0].id);
+          filteredVideos = [...allVideos];
+
+          setupKeywordsFloatingBox();
+          setupSearchEvents();
+
+          resetVideoListDisplay();
+          selectVideoByIndex(0, filteredVideos[0].file, filteredVideos[0].id);
           setupScrollListener();
         })
         .catch(error => {
@@ -816,16 +970,106 @@ body.dark-mode .video-title {
         });
     }
 
+    // ★ 重複排除キーワード一覧の作成とフローティング表示設定
+    function setupKeywordsFloatingBox() {
+      const keywordSet = new Set();
+      allVideos.forEach(v => {
+        if (Array.isArray(v.keywords)) {
+          v.keywords.forEach(k => keywordSet.add(k));
+        }
+      });
+
+      const uniqueKeywords = Array.from(keywordSet);
+      if (uniqueKeywords.length === 0) return;
+
+      const html = uniqueKeywords.map(kw => `
+        <span class="keyword-chip" data-keyword="${kw}">${kw}</span>
+      `).join('');
+
+      keywordFloatingBox.innerHTML = html;
+
+      // チップ押下イベント：単一選択（置き換え）＆自動検索
+      keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetKw = chip.dataset.keyword;
+          searchInput.value = targetKw;
+          keywordFloatingBox.classList.remove('show');
+          executeSearch();
+        });
+      });
+    }
+
+    // ★ 検索機能とイベント設定
+    function setupSearchEvents() {
+      searchInput.addEventListener('focus', () => {
+        keywordFloatingBox.classList.add('show');
+      });
+
+      // 外側クリックでフローティングを閉じる
+      document.addEventListener('click', (e) => {
+        if (!searchWrapper.contains(e.target)) {
+          keywordFloatingBox.classList.remove('show');
+        }
+      });
+
+      searchBtn.addEventListener('click', executeSearch);
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          executeSearch();
+        }
+      });
+    }
+
+    // ★ 検索処理（全フィールド対象）
+    function executeSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      keywordFloatingBox.classList.remove('show');
+
+      if (!query) {
+        filteredVideos = [...allVideos];
+      } else {
+        filteredVideos = allVideos.filter(video => {
+          // videos.json の全プロパティ値を文字列化して検索対象にする
+          const jsonString = JSON.stringify(video).toLowerCase();
+          return jsonString.includes(query);
+        });
+      }
+
+      resetVideoListDisplay();
+    }
+
+    function resetVideoListDisplay() {
+      videoListContainer.innerHTML = '';
+      loadedCount = 0;
+      currentVideoIndex = -1;
+
+      if (filteredVideos.length === 0) {
+        videoListContainer.innerHTML = '<p style="text-align: center; color: #888; font-size: 0.8rem; padding: 10px;">該当する動画がありません。</p>';
+        return;
+      }
+
+      loadMoreVideos();
+    }
+
     function loadMoreVideos() {
-      if (loadedCount >= allVideos.length || isLoadingMore) return;
+      if (loadedCount >= filteredVideos.length || isLoadingMore) return;
       isLoadingMore = true;
 
-      const nextBatch = allVideos.slice(loadedCount, loadedCount + PAGE_SIZE);
+      const nextBatch = filteredVideos.slice(loadedCount, loadedCount + PAGE_SIZE);
 
       const html = nextBatch.map((video, index) => {
         const globalIndex = loadedCount + index;
         const thumbnailUrl = `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`;
         const isActive = globalIndex === currentVideoIndex ? 'active' : '';
+
+        // ★ 動画情報内にキーワードタグを1行・省略ありで構築
+        let keywordsHtml = '';
+        if (Array.isArray(video.keywords) && video.keywords.length > 0) {
+          const kwItems = video.keywords.map(kw => `<span class="video-keyword-item" data-keyword="${kw}">${kw}</span>`).join(' ');
+          keywordsHtml = `<div class="video-keywords">${kwItems}</div>`;
+        }
 
         return `
           <div class="video-item ${isActive}" data-index="${globalIndex}" data-file="${video.file}" data-id="${video.id}">
@@ -833,6 +1077,7 @@ body.dark-mode .video-title {
             <div class="video-info">
               <span class="playing-badge">▶ 再生中</span>
               <div class="video-title">${video.title}</div>
+              ${keywordsHtml}
             </div>
           </div>
         `;
@@ -850,7 +1095,16 @@ body.dark-mode .video-title {
       items.forEach(item => {
         if (!item.dataset.bound) {
           item.dataset.bound = "true";
-          item.addEventListener('click', () => {
+          item.addEventListener('click', (e) => {
+            // キーワードタグクリック時は単一キーワードでの検索を起動
+            if (e.target.classList.contains('video-keyword-item')) {
+              e.stopPropagation();
+              const kw = e.target.dataset.keyword;
+              searchInput.value = kw;
+              executeSearch();
+              return;
+            }
+
             const index = parseInt(item.dataset.index, 10);
             const fileName = item.dataset.file;
             const videoId = item.dataset.id;
@@ -922,7 +1176,6 @@ body.dark-mode .video-title {
 
       const html = transcriptList.map((item, index) => {
         const startTime = parseFloat(item.start || 0);
-        
         const speakerText = item.speaker ? `<span style="color: #007bff; font-weight: bold; margin-right: 6px;">${item.speaker}:</span>` : '';
 
         return `
@@ -950,16 +1203,20 @@ body.dark-mode .video-title {
       });
     }
 
+    // ★ キー操作ショートカット処理（検索フォームにフォーカス中なら無効化）
     document.addEventListener('keydown', (e) => {
+      if (document.activeElement === searchInput) {
+        return; // 検索入力中はプレイヤー制御キーをスキップ
+      }
+
       const key = e.key;
       const code = e.keyCode || e.which;
 
-      // 矢印キーやスペースキーでの画面スクロールを防止
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(key) || [37, 38, 39, 40, 32].includes(code)) {
         e.preventDefault();
       }
 
-      // 👈 左ボタン (10秒戻し): ArrowLeft または keyCode 37
+      // 👈 左ボタン (10秒戻し)
       if (key === 'ArrowLeft' || code === 37) {
         if (player && typeof player.getCurrentTime === 'function') {
           const cur = player.getCurrentTime();
@@ -967,7 +1224,7 @@ body.dark-mode .video-title {
         }
       }
 
-      // 👉 右ボタン (10秒進む): ArrowRight または keyCode 39
+      // 👉 右ボタン (10秒進む)
       if (key === 'ArrowRight' || code === 39) {
         if (player && typeof player.getCurrentTime === 'function') {
           const cur = player.getCurrentTime();
@@ -975,7 +1232,7 @@ body.dark-mode .video-title {
         }
       }
 
-      // ⏯ 再生 / 一時停止: MediaPlayPause, Space, Enter, または keyCode 179 / 32 / 13
+      // ⏯ 再生 / 一時停止
       if (key === 'MediaPlayPause' || key === ' ' || key === 'Enter' || code === 179 || code === 32 || code === 13) {
         if (player && typeof player.getPlayerState === 'function') {
           const state = player.getPlayerState();
@@ -993,7 +1250,6 @@ body.dark-mode .video-title {
     // ==========================================
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
-    // 保存されているテーマまたはOSの設定を確認して初期化
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -1002,7 +1258,6 @@ body.dark-mode .video-title {
       if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
     }
 
-    // ボタン切り替えイベント
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
@@ -1013,16 +1268,12 @@ body.dark-mode .video-title {
       });
     }
 
-
-    // 画面をクリックしたらフォーカスを親に戻す
     document.addEventListener('click', () => {
       window.focus();
     });
 
     window.addEventListener('DOMContentLoaded', () => {
       init();
-
-      // 🔥 Silkブラウザ対策: ページ全体に強制的フォーカスを当てる
       window.focus();
       document.body.focus();
     });

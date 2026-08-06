@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSES 発言者修正エディター（管理者）</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      padding: 16px;
+      font-size: 90%;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+
+    /* ヘッダー */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hamburger-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .hamburger-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* リンク集ドロワー */
+    .nav-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      width: 200px;
+      padding: 8px 0;
+      z-index: 1000;
+      margin-top: 6px;
+    }
+
+    .nav-menu.show { display: block; }
+
+    .nav-menu a {
+      display: block;
+      padding: 8px 16px;
+      color: #334155;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .nav-menu a:hover {
+      background: #f1f5f9;
+      color: #007bff;
+    }
+
+    .nav-menu .menu-title {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      padding: 4px 16px;
+      font-weight: bold;
+    }
+
+    body.dark-mode .nav-menu {
+      background: #252525;
+      border-color: #444444;
+    }
+
+    body.dark-mode .nav-menu a {
+      color: #e2e8f0;
+    }
+
+    body.dark-mode .nav-menu a:hover {
+      background: #333333;
+      color: #60a5fa;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .download-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #059669;
+    }
+
+    .download-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* ファイル・動画選択コントロールパネル */
+    .control-panel {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    body.dark-mode .control-panel {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .select-label {
+      font-weight: bold;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .file-select {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    body.dark-mode .file-select {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .file-input-direct {
+      font-size: 0.8rem;
+    }
+
+    /* 編集エリアレイアウト（YouTubeプレイヤー ＋ リスト） */
+    .editor-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .player-sidebar {
+      flex: 1.2;
+      position: sticky;
+      top: 16px;
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    #youtube-player {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    .video-meta-info {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    body.dark-mode .video-meta-info {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .meta-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .transcript-list-area {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 字幕カード */
+    .transcript-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .transcript-card {
+      background: #252525;
+      border-color: #333333;
+      border-left-color: #555555;
+    }
+
+    .transcript-card.active {
+      border-left-color: #007bff;
+      background-color: #f0f7ff;
+    }
+
+    body.dark-mode .transcript-card.active {
+      border-left-color: #3182ce;
+      background-color: #1a2a3a;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .time-badge {
+      font-size: 0.75rem;
+      background: #e2e8f0;
+      color: #475569;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .time-badge:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    body.dark-mode .time-badge {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    /* 発言者編集コントロール */
+    .speaker-editor {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    body.dark-mode .speaker-editor {
+      background: #1a1a1a;
+      border-color: #333;
+    }
+
+    .speaker-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+
+    .speaker-btn {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .speaker-btn:hover {
+      background: #007bff;
+      color: white;
+      border-color: #0056b3;
+    }
+
+    body.dark-mode .speaker-btn {
+      background: #333;
+      border-color: #444;
+      color: #eee;
+    }
+
+    body.dark-mode .speaker-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .add-btn {
+      background: #fef08a;
+      border-color: #eab308;
+      color: #854d0e;
+    }
+
+    .add-btn:hover {
+      background: #fde047;
+      color: #854d0e;
+    }
+
+    body.dark-mode .add-btn {
+      background: #854d0e;
+      border-color: #ca8a04;
+      color: #fef08a;
+    }
+
+    .speaker-input-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .speaker-input {
+      padding: 4px 8px;
+      font-size: 0.82rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 180px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    body.dark-mode .speaker-input {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    /* テキスト表示部 */
+    .text-translation {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 2px;
+    }
+
+    body.dark-mode .text-translation { color: #f1f5f9; }
+
+    .text-thai {
+      font-size: 0.95rem;
+      color: #2c3e50;
+      margin-bottom: 2px;
+    }
+
+    body.dark-mode .text-thai { color: #cbd5e1; }
+
+    .text-kana {
+      font-size: 0.78rem;
+      color: #e67e22;
+    }
+
+    @media (max-width: 850px) {
+      .editor-layout {
+        flex-direction: column;
+      }
+      .player-sidebar {
+        width: 100%;
+        position: relative;
+        top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <div class="header-left">
+      <button class="hamburger-btn" id="menu-toggle" type="button">≡</button>
+      <h2>発言者修正エディター（管理者）</h2>
+
+      <!-- 🍔 リンク集ドロワー -->
+      <nav class="nav-menu" id="nav-menu">
+        <div class="menu-title">ページ移動</div>
+        <a href="index.html">🏠 メイン閲覧画面</a>
+        <a href="admin.html">🛠️ 発言者エディター</a>
+        <div class="menu-title" style="margin-top: 8px;">外部リンク</div>
+        <a href="https://tpop.fandom.com/wiki/PERSES" target="_blank">📖 PERSES Wiki</a>
+      </nav>
+    </div>
+
+    <div class="header-actions">
+      <button class="theme-btn" id="theme-toggle-btn">🌙</button>
+      <button class="download-btn" id="download-json-btn" disabled>💾 修正済みJSONを出力</button>
+    </div>
+  </div>
+
+  <!-- コントロールパネル：修正対象JSONの選択 -->
+  <div class="control-panel">
+    <div class="select-group">
+      <span class="select-label">動画リストから選択:</span>
+      <select id="video-select" class="file-select">
+        <option value="">videos.json を読み込み中...</option>
+      </select>
+    </div>
+
+    <div class="select-group" style="flex: 0 0 auto;">
+      <span class="select-label">またはローカルファイルを開く:</span>
+      <input type="file" id="direct-file-input" accept=".json" class="file-input-direct">
+    </div>
+  </div>
+
+  <!-- メイン編集エリア -->
+  <div class="editor-layout">
+    <!-- 左側: プレイヤープレビュー -->
+    <div class="player-sidebar">
+      <div class="iframe-wrapper">
+        <div id="youtube-player"></div>
+      </div>
+      <div class="video-meta-info" id="video-meta-info">
+        <div class="meta-title" id="meta-title">動画を選択してください</div>
+        <div id="meta-details" style="color: #666;">-</div>
+      </div>
+    </div>
+
+    <!-- 右側: 発言者編集付き字幕カードリスト -->
+    <div class="transcript-list-area" id="transcript-editor-container">
+      <p style="text-align: center; color: #888; padding: 20px;">動画を選択すると字幕データが展開されます。</p>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // デフォルトのクイック選択用メンバーリスト
+    let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY'];
+
+    // 現在編集中のJSONデータ全体
+    let currentData = null;
+    let player = null;
+    let isApiReady = false;
+    let syncInterval = null;
+    let activeIndex = -1;
+    let currentLoadedFileName = "updated_transcript.json";
+
+    // --- 1. ハンバーガーメニュー ＆ テーマ切り替え ---
+    const menuToggle = document.getElementById('menu-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => navMenu.classList.remove('show'));
+
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // --- 2. YouTube API の読み込み・同期 ---
+    function onYouTubeIframeAPIReady() {
+      isApiReady = true;
+    }
+
+    function initPlayer(videoId) {
+      if (!videoId) return;
+      if (!isApiReady) {
+        setTimeout(() => initPlayer(videoId), 500);
+        return;
+      }
+
+      if (player) {
+        player.loadVideoById({ videoId: videoId });
+      } else {
+        player = new YT.Player('youtube-player', {
+          videoId: videoId,
+          playerVars: { 'autoplay': 0, 'playsinline': 1 },
+          events: {
+            'onStateChange': (e) => {
+              if (e.data === YT.PlayerState.PLAYING) startSync();
+              else stopSync();
+            }
+          }
+        });
+      }
+    }
+
+    function startSync() {
+      stopSync();
+      syncInterval = setInterval(updateActiveCard, 250);
+    }
+
+    function stopSync() {
+      if (syncInterval) clearInterval(syncInterval);
+    }
+
+    function updateActiveCard() {
+      if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
+      const currentTime = player.getCurrentTime();
+      let currentIndex = -1;
+
+      for (let i = 0; i < currentData.transcript.length; i++) {
+        const start = parseFloat(currentData.transcript[i].start || 0);
+        const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
+        if (currentTime >= start && currentTime < nextStart) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      if (currentIndex !== -1 && currentIndex !== activeIndex) {
+        activeIndex = currentIndex;
+        const cards = document.querySelectorAll('.transcript-card');
+        cards.forEach((card, idx) => {
+          if (idx === activeIndex) {
+            card.classList.add('active');
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            card.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    // --- 3. videos.json から選択肢を生成 ＆ ファイル読み込み ---
+    function init() {
+      fetch('videos.json')
+        .then(res => res.json())
+        .then(videos => {
+          const select = document.getElementById('video-select');
+          select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
+
+          videos.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.file;
+            opt.textContent = `${v.title} (${v.id})`;
+            select.appendChild(opt);
+          });
+
+          select.addEventListener('change', (e) => {
+            if (e.target.value) {
+              currentLoadedFileName = e.target.value;
+              loadJsonFile(e.target.value);
+            }
+          });
+        })
+        .catch(err => {
+          console.error("videos.json の読み込み失敗:", err);
+          document.getElementById('video-select').innerHTML = '<option value="">videos.json の読込失敗</option>';
+        });
+    }
+
+    // 直接ファイル選択（ファイルダイアログ）
+    document.getElementById('direct-file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      currentLoadedFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target.result);
+          loadJsonData(json);
+        } catch (err) {
+          alert("JSONファイルの解析に失敗しました。フォーマットをご確認ください。");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function loadJsonFile(fileName) {
+      fetch(fileName)
+        .then(res => res.json())
+        .then(data => loadJsonData(data))
+        .catch(err => {
+          alert(`ファイルの読み込みに失敗しました: ${fileName}`);
+        });
+    }
+
+    function loadJsonData(data) {
+      currentData = data;
+      document.getElementById('download-json-btn').disabled = false;
+
+      // メタデータ表示更新
+      document.getElementById('meta-title').textContent = data.title || "（タイトル未設定）";
+      document.getElementById('meta-details').innerHTML = `
+        <strong>Video ID:</strong> ${data.video_id || '-'}<br>
+        <strong>公開日:</strong> ${data.published_at || '-'}<br>
+        <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
+      `;
+
+      if (data.video_id) {
+        initPlayer(data.video_id);
+      }
+
+      renderEditor();
+    }
+
+    // --- 4. 発言者編集用UIの描画 ---
+    function renderEditor() {
+      const container = document.getElementById('transcript-editor-container');
+      if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
+        return;
+      }
+
+      const html = currentData.transcript.map((item, index) => {
+        const startSec = parseFloat(item.start || 0).toFixed(1);
+        const endSec = parseFloat(item.end || 0).toFixed(1);
+
+        // クイック選択ボタン列の生成
+        const buttonsHtml = speakerOptions.map(spk => 
+          `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
+        ).join('');
+
+        return `
+          <div class="transcript-card" id="card-${index}">
+            <div class="card-header-row">
+              <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ ${startSec}s - ${endSec}s</span>
+              <span style="font-size: 0.75rem; color: #888;">#${item.id || (index + 1)}</span>
+            </div>
+
+            <div class="speaker-editor">
+              <div class="speaker-buttons">
+                <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
+                ${buttonsHtml}
+                <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
+              </div>
+              <div class="speaker-input-group">
+                <input type="text" class="speaker-input" id="speaker-input-${index}" 
+                       value="${item.speaker || ''}" 
+                       placeholder="発言者（自由入力可）"
+                       oninput="updateSpeakerText(${index}, this.value)">
+                <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
+              </div>
+            </div>
+
+            <div class="text-translation">${item.translation || ''}</div>
+            <div class="text-thai">${item.text || ''}</div>
+            <div class="text-kana">${item.pronunciation_kana || ''}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // --- 5. 発言者データの変更アクション ---
+    function setSpeaker(index, name) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].speaker = name;
+      document.getElementById(`speaker-input-${index}`).value = name;
+    }
+
+    function updateSpeakerText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].speaker = value.trim();
+    }
+
+    function promptAddSpeaker() {
+      const newName = prompt("追加したい発言者名を入力してください（例: MC, Staff）:");
+      if (newName && !speakerOptions.includes(newName.trim())) {
+        speakerOptions.push(newName.trim());
+        renderEditor(); // 新ボタンが増えた状態でカード再生成
+      }
+    }
+
+    function seekToTime(seconds) {
+      if (player && typeof player.seekTo === 'function') {
+        player.seekTo(seconds, true);
+        player.playVideo();
+      }
+    }
+
+    // --- 6. 修正済みJSONファイルの出力・ダウンロード ---
+    document.getElementById('download-json-btn').addEventListener('click', () => {
+      if (!currentData) return;
+
+      // フォーマットを綺麗にインデント（2文字スペース）して整形
+      const jsonString = JSON.stringify(currentData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      // 元のファイル名（またはvideo_id）で出力
+      a.download = currentLoadedFileName || `${currentData.video_id || 'updated_transcript'}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      init();
+    });
+  </script>
+</body>
+</html>
