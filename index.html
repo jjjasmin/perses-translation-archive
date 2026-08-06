@@ -15,7 +15,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: #f4f6f8;
       color: #333;
-      padding: 16px;
+      padding: 12px;
       font-size: 90%;
       transition: background-color 0.3s;
     }
@@ -156,6 +156,10 @@
       box-shadow: none !important;
     }
 
+    body.mode-fullscreen .site-footer {
+      display: none !important;
+    }
+
     /* ヘッダー＆レイアウト切替ボタン */
     .header-area {
       display: flex;
@@ -175,7 +179,7 @@
       background: rgba(0, 0, 0, 0.6);
       padding: 6px 12px;
       border-radius: 6px;
-      opacity: 0.4;
+      opacity: 0.2;
       transition: opacity 0.2s ease;
     }
 
@@ -235,15 +239,16 @@
       flex-direction: row;
     }
     .mode-2col-a .main-content {
-      flex: 3.5;
+      flex: 1; /* ★ 動画側がフレキシブルに伸び縮みする */
+      min-width: 0; /* フレックス要素のはみ出し防止 */
       width: 100%;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
     .mode-2col-a .sidebar-section {
-      flex: 2;
-      width: 100%;
+      width: 380px; /* ★ 右側は380pxでしっかり固定（広がらない） */
+      flex-shrink: 0; /* ウィンドウが縮んでも右側を無理に潰さない */
     }
 
     /* --- 【1カラム】（縦一列：動画 -> 字幕 -> 関連動画） --- */
@@ -362,6 +367,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      padding-bottom: 600px;
     }
 
     .transcript-card {
@@ -410,6 +416,7 @@
       border-radius: 8px;
       padding: 12px;
       background-color: #ffffff;
+      box-sizing: border-box; /* ★ 幅計算のズレを防止 */
     }
 
     .video-list-title {
@@ -517,6 +524,8 @@
       padding: 8px;
       cursor: pointer;
       transition: background-color 0.2s;
+      width: 100%; /* ★ 常時親幅いっぱいに固定 */
+      box-sizing: border-box;
     }
 
     .video-item:hover {
@@ -529,12 +538,12 @@
     }
 
     .video-thumbnail {
-      width: 156px;
-      height: 87.75px;
+      width: 130px; /* ★ サムネイル幅を少しコンパクトにして安定化 */
+      height: 73px;
       object-fit: cover;
       border-radius: 4px;
       background-color: #000;
-      flex-shrink: 0;
+      flex-shrink: 0; /* ★ 絶対に縮ませない */
     }
 
     .video-info {
@@ -640,8 +649,25 @@
       display: inline;
     }
 
-    /* レスポンシブ (850px以下) */
-    @media (max-width: 850px) {
+    /* 中小画面〜タブレット（960px〜1100px）での微調整 */
+    @media (max-width: 1100px) and (min-width: 961px) {
+      .mode-2col-a .sidebar-section {
+        width: 320px; /* 画面が少し狭くなったら右側を320pxに絞って動画エリアを保護 */
+      }
+      .video-thumbnail {
+        width: 110px;
+        height: 62px;
+      }
+    }
+
+    /* レスポンシブブレークポイント（960px以下で1カラム化） */
+    @media (max-width: 960px) {
+      /* 2カラムA・2カラムBのボタンを非表示にする */
+      .layout-btn[data-mode="2col-a"],
+      .layout-btn[data-mode="2col-b"] {
+        display: none !important;
+      }
+
       .content-layout {
         display: flex !important;
         flex-direction: column !important;
@@ -676,9 +702,31 @@
     <!-- ヘッダー ＆ レイアウト切替ボタン -->
     <div class="header-area">
       <div style="display: flex; align-items: center; gap: 10px; position: relative;">
-        <!-- ★ 追加：ハンバーガーボタン ＆ リンク集ドロワー -->
-          <a href="admin.html">🛠️ 発言者エディター</a>
+        <a href="admin.html">🛠️</a>
         <h1>PERSES 日本語翻訳アーカイブ</h1>
+        
+
+<div class="site-info" style="
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 3px; 
+  font-size: 0.6rem; 
+  color: #8a7a80; 
+  margin-top: 8px;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+">
+  <span>PERSES 日本語翻訳ファンサイト（非公式）</span>
+  <span>Managed by 
+    <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer" style="
+      color: #ff7597; 
+      text-decoration: none; 
+      font-weight: 500;
+    ">ming@2chicken4you</a>
+  </span>
+</div>
+
+
       </div>
 
       <div class="layout-buttons">
@@ -733,7 +781,34 @@
         </div>
       </div>
     </div>
+
+<!-- フッターエリア（スタイル直書き） -->
+<footer class="site-footer" style="
+  margin-top: 40px; 
+  padding: 20px 16px; 
+  text-align: center; 
+  font-size: 0.6rem; 
+  color: #8a7a80; 
+  line-height: 1.6;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+">
+  <p style="margin: 0 0 6px 0;">当サイトは個人が運営するファンによる非公式の翻訳アーカイブです。公式および関係企業様とは一切関係ありません。</p>
+  <p style="margin: 0; font-size: 0.7rem;">
+    問い合わせ・誤訳のご指摘等: 
+    <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer" class="footer-link" style="
+      color: #ff7597; 
+      text-decoration: none; 
+      font-weight: 600;
+      transition: opacity 0.2s;
+    ">みん@2chicken4you</a>
+  </p>
+</footer>
+
+
   </div>
+
+
+
 
   <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -772,6 +847,7 @@
     // レイアウト状態保持用変数
     let previousLayoutMode = '2col-a';
     let currentLayoutMode = '2col-a';
+    let userSelectedMode = '2col-a'; // ★ ユーザーがデスクトップ時に選んでいたモードを記憶
 
     // ==========================================
     // レイアウト切り替え制御
@@ -781,6 +857,9 @@
     layoutBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetMode = btn.dataset.mode;
+        if (targetMode && targetMode !== 'fullscreen') {
+          userSelectedMode = targetMode; // 1col, 2col-a, 2col-b を記録
+        }
         setLayoutMode(targetMode);
       });
     });
@@ -801,7 +880,11 @@
       }
 
       currentLayoutMode = mode;
+      updateActiveButton(mode);
+    }
 
+    // ボタンのactive表示状態を更新する共通関数
+    function updateActiveButton(mode) {
       layoutBtns.forEach(btn => {
         if (btn.dataset.mode === mode) {
           btn.classList.add('active');
@@ -810,6 +893,35 @@
         }
       });
     }
+
+    // ★ 画面幅の監視（960px以下で1カラムボタンを自動選択）
+    const mediaQuery960 = window.matchMedia('(max-width: 960px)');
+
+    function handleResponsiveLayout(e) {
+      // 動画最大化（fullscreen）のときは画面リサイズでモードを強制変更しない
+      if (currentLayoutMode === 'fullscreen') return;
+
+      if (e.matches) {
+        // 960px以下になった場合：ボタンの選択状態（色替え）を「1カラム」にする
+        updateActiveButton('1col');
+      } else {
+        // 961px以上に戻った場合：記憶していたモードに復帰（setLayoutMode内でボタンの色替えも一括実行されます）
+        const restoreMode = userSelectedMode || '2col-a';
+        
+        if (currentLayoutMode === restoreMode) {
+          // すでにモードが一致している場合でも、ボタンのactiveクラス（色）を確実に更新
+          updateActiveButton(restoreMode);
+        } else {
+          // モードを切り替えてボタンの色も更新
+          setLayoutMode(restoreMode);
+        }
+      }
+    }
+
+    // 初期化時と画面リサイズ時に判定を実行
+    mediaQuery960.addEventListener('change', handleResponsiveLayout);
+    // 初期表示時にも判定
+    handleResponsiveLayout(mediaQuery960);
 
     // ESCキー押下で動画最大化を解除
     window.addEventListener('keydown', (e) => {
@@ -1116,6 +1228,8 @@
     }
 
     function selectVideoByIndex(index, fileName, videoId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
       currentVideoIndex = index;
 
       const items = videoListContainer.querySelectorAll('.video-item');
