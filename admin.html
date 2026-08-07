@@ -494,37 +494,59 @@
       color: #fff;
     }
 
-    /* テキスト表示部・編集部 */
-    .translation-input {
+    /* テキスト入力・自動伸縮 textarea */
+    .field-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-input {
       width: 100%;
       padding: 6px 8px;
-      font-size: 0.88rem;
-      font-weight: bold;
+      font-size: 0.85rem;
       border: 1px solid #cbd5e1;
       border-radius: 4px;
-      margin-bottom: 4px;
       background: #fff;
-      color: #1a1a1a;
+      color: #333;
+      outline: none;
+      font-family: inherit;
+      resize: vertical;
+      line-height: 1.4;
+      min-height: 36px;
+      overflow-y: hidden; /* スクロールバーを非表示にして高さに任せる */
     }
 
-    body.dark-mode .translation-input {
+    body.dark-mode .card-input {
       background: #1a1a1a;
       border-color: #444;
-      color: #f1f5f9;
+      color: #eee;
     }
 
-    .text-thai {
-      font-size: 0.95rem;
-      color: #2c3e50;
-      margin-bottom: 2px;
+    .input-translation {
+      font-weight: bold;
+      font-size: 0.88rem;
+      color: #1a1a1a;
     }
+    body.dark-mode .input-translation { color: #f1f5f9; }
 
-    body.dark-mode .text-thai { color: #cbd5e1; }
+    .input-thai {
+      font-size: 0.92rem;
+      color: #1e3a8a;
+    }
+    body.dark-mode .input-thai { color: #93c5fd; }
 
-    .text-kana {
+    .input-kana {
+      font-size: 0.8rem;
+      color: #d97706;
+    }
+    body.dark-mode .input-kana { color: #fcd34d; }
+
+    .input-roman {
       font-size: 0.78rem;
-      color: #e67e22;
+      color: #4b5563;
     }
+    body.dark-mode .input-roman { color: #9ca3af; }
 
     @media (max-width: 850px) {
       .editor-layout {
@@ -729,7 +751,6 @@
           select.addEventListener('change', (e) => {
             if (e.target.value) {
               currentLoadedFileName = e.target.value;
-              // 対応する videos.json の要素を取得
               currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
               loadJsonFile(e.target.value);
             }
@@ -772,7 +793,7 @@
 
     function loadJsonData(data) {
       currentData = data;
-      reindexTranscript(); // idの補正
+      reindexTranscript();
 
       document.getElementById('download-json-btn').disabled = false;
       document.getElementById('editor-toolbar').style.display = 'flex';
@@ -802,13 +823,19 @@
       renderEditor();
     }
 
-    // IDを 1 から順に振り直す補助関数
     function reindexTranscript() {
       if (currentData && currentData.transcript) {
         currentData.transcript.forEach((item, idx) => {
           item.id = idx + 1;
         });
       }
+    }
+
+    // --- テキストエリア高さ自動調整ヘルパー ---
+    function autoResizeTextarea(textarea) {
+      if (!textarea) return;
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
     }
 
     // --- 4. 発言者編集用UIの描画 ---
@@ -826,7 +853,6 @@
         const startSec = parseFloat(item.start || 0).toFixed(1);
         const endSec = item.end ? parseFloat(item.end).toFixed(1) : '-';
 
-        // クイック選択ボタン列の生成
         const buttonsHtml = speakerOptions.map(spk => 
           `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
         ).join('');
@@ -857,22 +883,40 @@
               </div>
             </div>
 
-            <!-- 翻訳テキスト編集用インプット -->
-            <input type="text" class="translation-input" 
-                   value="${escapeHtml(item.translation || '')}" 
-                   placeholder="日本語訳（編集可）"
-                   oninput="updateTranslationText(${index}, this.value)">
+            <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
+            <div class="field-input-group">
+              <textarea class="card-input input-translation" 
+                        rows="1"
+                        placeholder="日本語訳 (translation)"
+                        oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.translation || '')}</textarea>
 
-            <div class="text-thai">${escapeHtml(item.text || '')}</div>
-            <div class="text-kana">${escapeHtml(item.pronunciation_kana || '')}</div>
+              <textarea class="card-input input-thai" 
+                        rows="1"
+                        placeholder="タイ語原文 (text)"
+                        oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
+
+              <textarea class="card-input input-kana" 
+                        rows="1"
+                        placeholder="発音カナ (pronunciation_kana)"
+                        oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
+
+              <textarea class="card-input input-roman" 
+                        rows="1"
+                        placeholder="発音ローマ字 (pronunciation_roman)"
+                        oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
+            </div>
           </div>
         `;
       }).join('');
 
       container.innerHTML = html;
+
+      // 描画完了後、既存テキストの量に合わせて高さを一括フィッティング
+      setTimeout(() => {
+        container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
+      }, 0);
     }
 
-    // HTMLエスケープ処理関数
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -880,7 +924,6 @@
 
     // --- 5. アクション関数群 ---
 
-    // 発言者割り当て
     function setSpeaker(index, name) {
       if (!currentData || !currentData.transcript[index]) return;
       currentData.transcript[index].speaker = name;
@@ -892,13 +935,26 @@
       currentData.transcript[index].speaker = value.trim();
     }
 
-    // 翻訳文更新
     function updateTranslationText(index, value) {
       if (!currentData || !currentData.transcript[index]) return;
       currentData.transcript[index].translation = value;
     }
 
-    // 発言者一括クリア
+    function updateThaiText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].text = value;
+    }
+
+    function updateKanaText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].pronunciation_kana = value;
+    }
+
+    function updateRomanText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].pronunciation_roman = value;
+    }
+
     function clearAllSpeakers() {
       if (!currentData || !currentData.transcript) return;
       if (confirm("すべての発言者データをクリアしてもよろしいですか？")) {
@@ -909,7 +965,6 @@
       }
     }
 
-    // 行削除機能
     function deleteCard(index) {
       if (!currentData || !currentData.transcript) return;
       if (confirm(`字幕 #${currentData.transcript[index].id} を削除しますか？`)) {
@@ -919,7 +974,6 @@
       }
     }
 
-    // テキスト分割機能（動画の現在再生位置で分割）
     function splitCard(index) {
       if (!currentData || !currentData.transcript[index]) return;
       if (!player || typeof player.getCurrentTime !== 'function') {
@@ -938,10 +992,8 @@
       const splitTime = parseFloat(currentTime.toFixed(3));
       const oldEnd = currentItem.end;
 
-      // 前半カードの終了時間を現在の再生位置に変更
       currentItem.end = splitTime;
 
-      // 後半カードを作成
       const newCard = {
         id: currentItem.id + 1,
         start: splitTime,
@@ -953,7 +1005,6 @@
         translation: currentItem.translation || ""
       };
 
-      // 配列の該当位置の直後に挿入
       currentData.transcript.splice(index + 1, 0, newCard);
 
       reindexTranscript();
@@ -975,7 +1026,6 @@
       }
     }
 
-    // keywords の変更反映
     function updateKeywords(value) {
       if (!currentVideoMeta) return;
       const arr = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
@@ -984,7 +1034,6 @@
 
     // --- 6. JSONファイルの出力・ダウンロード ---
 
-    // 字幕データ JSON ダウンロード
     document.getElementById('download-json-btn').addEventListener('click', () => {
       if (!currentData) return;
 
@@ -1000,7 +1049,6 @@
       URL.revokeObjectURL(url);
     });
 
-    // videos.json ダウンロード
     document.getElementById('download-videos-btn').addEventListener('click', () => {
       if (!videosData || videosData.length === 0) return;
 
