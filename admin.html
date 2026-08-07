@@ -148,6 +148,13 @@
       cursor: not-allowed;
     }
 
+    .download-btn.videos-btn {
+      background: #6366f1;
+    }
+    .download-btn.videos-btn:hover {
+      background: #4f46e5;
+    }
+
     /* ファイル・動画選択コントロールパネル */
     .control-panel {
       background: #ffffff;
@@ -252,11 +259,61 @@
       margin-bottom: 6px;
     }
 
+    .keywords-editor-box {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .keywords-input {
+      width: 100%;
+      padding: 6px;
+      font-size: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 4px;
+      background: #fff;
+      color: #333;
+    }
+    body.dark-mode .keywords-input {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
     .transcript-list-area {
       flex: 2;
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    body.dark-mode .editor-toolbar {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .clear-all-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .clear-all-btn:hover {
+      background: #dc2626;
     }
 
     /* 字幕カード */
@@ -292,6 +349,12 @@
       margin-bottom: 6px;
     }
 
+    .card-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .time-badge {
       font-size: 0.75rem;
       background: #e2e8f0;
@@ -310,6 +373,36 @@
     body.dark-mode .time-badge {
       background: #334155;
       color: #cbd5e1;
+    }
+
+    .action-mini-btn {
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #fff;
+      font-weight: bold;
+    }
+
+    .split-btn {
+      color: #0284c7;
+      border-color: #38bdf8;
+    }
+    .split-btn:hover {
+      background: #e0f2fe;
+    }
+
+    .delete-btn {
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .delete-btn:hover {
+      background: #fef2f2;
+    }
+
+    body.dark-mode .action-mini-btn {
+      background: #2d2d2d;
     }
 
     /* 発言者編集コントロール */
@@ -401,15 +494,24 @@
       color: #fff;
     }
 
-    /* テキスト表示部 */
-    .text-translation {
-      font-size: 0.9rem;
+    /* テキスト表示部・編集部 */
+    .translation-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 0.88rem;
       font-weight: bold;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      background: #fff;
       color: #1a1a1a;
-      margin-bottom: 2px;
     }
 
-    body.dark-mode .text-translation { color: #f1f5f9; }
+    body.dark-mode .translation-input {
+      background: #1a1a1a;
+      border-color: #444;
+      color: #f1f5f9;
+    }
 
     .text-thai {
       font-size: 0.95rem;
@@ -456,6 +558,7 @@
 
     <div class="header-actions">
       <button class="theme-btn" id="theme-toggle-btn">🌙</button>
+      <button class="download-btn videos-btn" id="download-videos-btn" disabled>📋 videos.json 出力</button>
       <button class="download-btn" id="download-json-btn" disabled>💾 修正済みJSONを出力</button>
     </div>
   </div>
@@ -477,7 +580,7 @@
 
   <!-- メイン編集エリア -->
   <div class="editor-layout">
-    <!-- 左側: プレイヤープレビュー -->
+    <!-- 左側: プレイヤープレビュー ＆ メタデータ編集 -->
     <div class="player-sidebar">
       <div class="iframe-wrapper">
         <div id="youtube-player"></div>
@@ -485,12 +588,26 @@
       <div class="video-meta-info" id="video-meta-info">
         <div class="meta-title" id="meta-title">動画を選択してください</div>
         <div id="meta-details" style="color: #666;">-</div>
+
+        <!-- videos.json のキーワード(keywords)編集エリア -->
+        <div class="keywords-editor-box" id="keywords-editor-box" style="display: none;">
+          <label style="font-weight: bold; font-size: 0.8rem;">keywords 編集（カンマ区切り）:</label>
+          <input type="text" id="keywords-input" class="keywords-input" placeholder="#JUNG, #NAY, #KRITTIN..." oninput="updateKeywords(this.value)">
+        </div>
       </div>
     </div>
 
     <!-- 右側: 発言者編集付き字幕カードリスト -->
-    <div class="transcript-list-area" id="transcript-editor-container">
-      <p style="text-align: center; color: #888; padding: 20px;">動画を選択すると字幕データが展開されます。</p>
+    <div class="transcript-list-area">
+      <!-- ツールバー（一括クリアなど） -->
+      <div class="editor-toolbar" id="editor-toolbar" style="display: none;">
+        <span style="font-size: 0.82rem; font-weight: bold; color: #666;" id="card-count-label">字幕数: 0</span>
+        <button class="clear-all-btn" type="button" onclick="clearAllSpeakers()">⚠️ 発言者を全クリア</button>
+      </div>
+
+      <div id="transcript-editor-container">
+        <p style="text-align: center; color: #888; padding: 20px;">動画を選択すると字幕データが展開されます。</p>
+      </div>
     </div>
   </div>
 
@@ -499,8 +616,11 @@
     // デフォルトのクイック選択用メンバーリスト
     let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY'];
 
-    // 現在編集中のJSONデータ全体
+    // 現在編集中のJSONデータおよびvideos.jsonの参照
     let currentData = null;
+    let videosData = []; // videos.json の全データ
+    let currentVideoMeta = null; // 現在選択中の動画の videos.json エントリ
+
     let player = null;
     let isApiReady = false;
     let syncInterval = null;
@@ -588,11 +708,14 @@
       }
     }
 
-    // --- 3. videos.json から選択肢を生成 ＆ ファイル読み込み ---
+    // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
     function init() {
       fetch('videos.json')
         .then(res => res.json())
         .then(videos => {
+          videosData = videos;
+          document.getElementById('download-videos-btn').disabled = false;
+
           const select = document.getElementById('video-select');
           select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
 
@@ -606,6 +729,8 @@
           select.addEventListener('change', (e) => {
             if (e.target.value) {
               currentLoadedFileName = e.target.value;
+              // 対応する videos.json の要素を取得
+              currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
               loadJsonFile(e.target.value);
             }
           });
@@ -616,12 +741,14 @@
         });
     }
 
-    // 直接ファイル選択（ファイルダイアログ）
+    // 直接ファイル選択
     document.getElementById('direct-file-input').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       currentLoadedFileName = file.name;
+      currentVideoMeta = videosData.find(v => v.file === file.name) || null;
+
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
@@ -645,7 +772,10 @@
 
     function loadJsonData(data) {
       currentData = data;
+      reindexTranscript(); // idの補正
+
       document.getElementById('download-json-btn').disabled = false;
+      document.getElementById('editor-toolbar').style.display = 'flex';
 
       // メタデータ表示更新
       document.getElementById('meta-title').textContent = data.title || "（タイトル未設定）";
@@ -655,6 +785,16 @@
         <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
       `;
 
+      // keywords 編集欄の表示と値設定
+      const keywordsBox = document.getElementById('keywords-editor-box');
+      const keywordsInput = document.getElementById('keywords-input');
+      if (currentVideoMeta) {
+        keywordsBox.style.display = 'block';
+        keywordsInput.value = (currentVideoMeta.keywords || []).join(', ');
+      } else {
+        keywordsBox.style.display = 'none';
+      }
+
       if (data.video_id) {
         initPlayer(data.video_id);
       }
@@ -662,17 +802,29 @@
       renderEditor();
     }
 
+    // IDを 1 から順に振り直す補助関数
+    function reindexTranscript() {
+      if (currentData && currentData.transcript) {
+        currentData.transcript.forEach((item, idx) => {
+          item.id = idx + 1;
+        });
+      }
+    }
+
     // --- 4. 発言者編集用UIの描画 ---
     function renderEditor() {
       const container = document.getElementById('transcript-editor-container');
       if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
+        document.getElementById('card-count-label').textContent = '字幕数: 0';
         return;
       }
 
+      document.getElementById('card-count-label').textContent = `字幕数: ${currentData.transcript.length}`;
+
       const html = currentData.transcript.map((item, index) => {
         const startSec = parseFloat(item.start || 0).toFixed(1);
-        const endSec = parseFloat(item.end || 0).toFixed(1);
+        const endSec = item.end ? parseFloat(item.end).toFixed(1) : '-';
 
         // クイック選択ボタン列の生成
         const buttonsHtml = speakerOptions.map(spk => 
@@ -683,7 +835,11 @@
           <div class="transcript-card" id="card-${index}">
             <div class="card-header-row">
               <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ ${startSec}s - ${endSec}s</span>
-              <span style="font-size: 0.75rem; color: #888;">#${item.id || (index + 1)}</span>
+              <div class="card-actions-right">
+                <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
+                <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
+                <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
+              </div>
             </div>
 
             <div class="speaker-editor">
@@ -701,9 +857,14 @@
               </div>
             </div>
 
-            <div class="text-translation">${item.translation || ''}</div>
-            <div class="text-thai">${item.text || ''}</div>
-            <div class="text-kana">${item.pronunciation_kana || ''}</div>
+            <!-- 翻訳テキスト編集用インプット -->
+            <input type="text" class="translation-input" 
+                   value="${escapeHtml(item.translation || '')}" 
+                   placeholder="日本語訳（編集可）"
+                   oninput="updateTranslationText(${index}, this.value)">
+
+            <div class="text-thai">${escapeHtml(item.text || '')}</div>
+            <div class="text-kana">${escapeHtml(item.pronunciation_kana || '')}</div>
           </div>
         `;
       }).join('');
@@ -711,7 +872,15 @@
       container.innerHTML = html;
     }
 
-    // --- 5. 発言者データの変更アクション ---
+    // HTMLエスケープ処理関数
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // --- 5. アクション関数群 ---
+
+    // 発言者割り当て
     function setSpeaker(index, name) {
       if (!currentData || !currentData.transcript[index]) return;
       currentData.transcript[index].speaker = name;
@@ -723,11 +892,79 @@
       currentData.transcript[index].speaker = value.trim();
     }
 
+    // 翻訳文更新
+    function updateTranslationText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].translation = value;
+    }
+
+    // 発言者一括クリア
+    function clearAllSpeakers() {
+      if (!currentData || !currentData.transcript) return;
+      if (confirm("すべての発言者データをクリアしてもよろしいですか？")) {
+        currentData.transcript.forEach(item => {
+          item.speaker = "";
+        });
+        renderEditor();
+      }
+    }
+
+    // 行削除機能
+    function deleteCard(index) {
+      if (!currentData || !currentData.transcript) return;
+      if (confirm(`字幕 #${currentData.transcript[index].id} を削除しますか？`)) {
+        currentData.transcript.splice(index, 1);
+        reindexTranscript();
+        renderEditor();
+      }
+    }
+
+    // テキスト分割機能（動画の現在再生位置で分割）
+    function splitCard(index) {
+      if (!currentData || !currentData.transcript[index]) return;
+      if (!player || typeof player.getCurrentTime !== 'function') {
+        alert("動画プレイヤーが準備できていません。");
+        return;
+      }
+
+      const currentTime = player.getCurrentTime();
+      const currentItem = currentData.transcript[index];
+
+      if (currentTime <= currentItem.start) {
+        alert("再生位置が現在の字幕の開始時間より前です。分割したいポイントまで動画を再生してください。");
+        return;
+      }
+
+      const splitTime = parseFloat(currentTime.toFixed(3));
+      const oldEnd = currentItem.end;
+
+      // 前半カードの終了時間を現在の再生位置に変更
+      currentItem.end = splitTime;
+
+      // 後半カードを作成
+      const newCard = {
+        id: currentItem.id + 1,
+        start: splitTime,
+        end: oldEnd,
+        speaker: currentItem.speaker || "",
+        text: currentItem.text || "",
+        pronunciation_kana: currentItem.pronunciation_kana || "",
+        pronunciation_roman: currentItem.pronunciation_roman || "",
+        translation: currentItem.translation || ""
+      };
+
+      // 配列の該当位置の直後に挿入
+      currentData.transcript.splice(index + 1, 0, newCard);
+
+      reindexTranscript();
+      renderEditor();
+    }
+
     function promptAddSpeaker() {
       const newName = prompt("追加したい発言者名を入力してください（例: MC, Staff）:");
       if (newName && !speakerOptions.includes(newName.trim())) {
         speakerOptions.push(newName.trim());
-        renderEditor(); // 新ボタンが増えた状態でカード再生成
+        renderEditor();
       }
     }
 
@@ -738,19 +975,42 @@
       }
     }
 
-    // --- 6. 修正済みJSONファイルの出力・ダウンロード ---
+    // keywords の変更反映
+    function updateKeywords(value) {
+      if (!currentVideoMeta) return;
+      const arr = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      currentVideoMeta.keywords = arr;
+    }
+
+    // --- 6. JSONファイルの出力・ダウンロード ---
+
+    // 字幕データ JSON ダウンロード
     document.getElementById('download-json-btn').addEventListener('click', () => {
       if (!currentData) return;
 
-      // フォーマットを綺麗にインデント（2文字スペース）して整形
       const jsonString = JSON.stringify(currentData, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement('a');
       a.href = url;
-      // 元のファイル名（またはvideo_id）で出力
       a.download = currentLoadedFileName || `${currentData.video_id || 'updated_transcript'}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+
+    // videos.json ダウンロード
+    document.getElementById('download-videos-btn').addEventListener('click', () => {
+      if (!videosData || videosData.length === 0) return;
+
+      const jsonString = JSON.stringify(videosData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'videos.json';
       a.click();
 
       URL.revokeObjectURL(url);
