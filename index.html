@@ -170,22 +170,85 @@
       gap: 12px;
     }
 
+    /* ★ 変更：動画最大化（fullscreen）時はヘッダーを完全に隠す */
     body.mode-fullscreen .header-area {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 100;
-      margin-bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 6px 12px;
-      border-radius: 6px;
-      opacity: 0.2;
-      transition: opacity 0.2s ease;
+      display: none !important;
     }
 
-    body.mode-fullscreen .header-area:hover {
+
+
+
+    .exit-fullscreen-btn {
+      display: none;
+      position: absolute;
+      bottom: 90px; /* シークバー（約0〜20px付近）を避け、ボタン群の上に配置 */
+      right: 20px;  /* 全画面表示ボタンの左、シアターモード位置をカバー */
+      opacity: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+    
+    .exit-fullscreen-btn:hover {
+      background: rgba(0, 123, 255, 0.9);
+      border-color: #007bff;
+      color: #ffffff;
+      transform: scale(1);
       opacity: 1.0;
     }
+
+    /* 動画最大化モード時のみボタンを表示 */
+    body.mode-fullscreen .exit-fullscreen-btn {
+      display: block;
+    }
+
+
+
+
+    .fullscreen-btn {
+      display: block;
+      position: absolute;
+      bottom: 90px; /* シークバー（約0〜20px付近）を避け、ボタン群の上に配置 */
+      right: 20px;  /* 全画面表示ボタンの左、シアターモード位置をカバー */
+      opacity: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+    
+    .fullscreen-btn:hover {
+      background: rgba(0, 123, 255, 0.9);
+      border-color: #007bff;
+      color: #ffffff;
+      transform: scale(1);
+      opacity: 1.0;
+    }
+
+    /* 動画最大化モード時のみボタンを表示 */
+    body.mode-fullscreen .fullscreen-btn {
+      display: none;
+    }
+
+
+
+
+
 
     h1 {
       font-size: 1.3rem;
@@ -733,7 +796,7 @@
         <button class="layout-btn" data-mode="1col">1カラム</button>
         <button class="layout-btn active" data-mode="2col-a">2カラムA</button>
         <button class="layout-btn" data-mode="2col-b">2カラムB</button>
-        <button class="layout-btn" data-mode="fullscreen">動画最大化</button>
+        <button class="layout-btn" data-mode="fullscreen">シアターモード</button>
         <button class="layout-btn" id="theme-toggle-btn">🌙</button>
       </div>
     </div>
@@ -744,6 +807,10 @@
         <div class="video-section">
           <div class="iframe-wrapper">
             <div id="youtube-player"></div>
+
+            <button class="fullscreen-btn" data-mode="fullscreen">シアターモード</button>
+            <!-- ★ 追加：動画最大化モード用 解除ボタン -->
+            <button id="exit-fullscreen-btn" class="exit-fullscreen-btn">シアターモード終了</button>
 
             <!-- 🔥 動画最大化時のオーバーレイ字幕 -->
             <div id="overlay-subtitle-container" class="overlay-subtitle-container">
@@ -864,6 +931,14 @@
       });
     });
 
+    /* 【修正後】動画プレーヤー上のボタン処理を新規追加 */
+    const fullscreenBtns = document.querySelectorAll('.fullscreen-btn');
+    fullscreenBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setLayoutMode('fullscreen');
+      });
+    });
+
     function setLayoutMode(mode) {
       if (mode === currentLayoutMode) return;
 
@@ -939,6 +1014,17 @@
         overlaySubtitleBox.classList.remove('align-left');
         overlaySubtitleBox.classList.add('align-center');
       }
+    });
+
+    // ★ 追加：解像ボタン要素の取得（<script>冒頭付近）
+    const exitFullscreenBtn = document.getElementById('exit-fullscreen-btn');
+    
+    // ★ 追加：最大化解除ボタンのクリックイベント設定
+    [exitFullscreenBtn].forEach(btn => {
+      btn.addEventListener('click', () => {
+        // 直前に選択していたレイアウトモード（1col / 2col-a / 2col-b）に復帰
+        setLayoutMode(previousLayoutMode);
+      });
     });
 
     // ==========================================
