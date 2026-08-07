@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSES TV Player</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      /* 全体文字サイズ125%拡大 */
+      font-size: 20px;
+    }
+
+    /* --------------------------------------------------
+       フォーカス表示 (Spatial Navigation)
+    -------------------------------------------------- */
+    .focusable {
+      outline: none;
+      transition: outline 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .focusable:focus {
+      outline: 5px solid #00d2ff !important;
+      box-shadow: 0 0 20px rgba(0, 210, 255, 0.9) !important;
+      transform: scale(1.03);
+      z-index: 10;
+    }
+
+    /* --------------------------------------------------
+       メインUI (16:9 大画面 完全固定2カラムレイアウト)
+    -------------------------------------------------- */
+    #app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ■ 左サイドバー（幅440px固定） */
+    .sidebar {
+      width: 440px;
+      min-width: 440px;
+      height: 100vh;
+      background-color: #1a1a1a;
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid #333;
+    }
+
+    /* サイドバー内アイテム：縦1列配置 */
+    .search-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 16px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: 2px solid #444;
+      background-color: #2a2a2a;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .clear-btn {
+      width: 100%;
+      height: 56px;
+      font-size: 1.1rem;
+      background-color: #333;
+      border: 2px solid #555;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 36px;
+    }
+
+    .tag-section-title {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .tag-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100vh - 240px);
+      overflow-y: auto;
+      padding-right: 6px;
+
+      /* スクロールバー非表示 */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .tag-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tag-btn {
+      width: 100%;
+      padding: 14px 18px;
+      background-color: #2a2a2a;
+      border: 2px solid #444;
+      color: #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+    }
+    .tag-btn.active {
+      background-color: #00d2ff;
+      color: #000;
+      font-weight: bold;
+      border-color: #00d2ff;
+    }
+
+    /* ■ 右メインエリア（3列固定） */
+    .main-content {
+      flex: 1;
+      height: 100vh;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      padding-bottom: 60px;
+    }
+
+    .video-card {
+      background-color: #222;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid #333;
+    }
+
+    .thumbnail-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background-color: #000;
+    }
+    .thumbnail-img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .card-info {
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0 0 10px 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 4.2em;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .card-tag {
+      font-size: 0.8rem;
+      color: #aaa;
+      background: #333;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* --------------------------------------------------
+       再生画面 (全画面シアターモード)
+    -------------------------------------------------- */
+    #player-view {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: #000;
+      z-index: 100;
+    }
+    #youtube-player {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* PC・スマホ向け 設定ボタン */
+    .panel-trigger-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 115;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 2px solid #555;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    /* オーバーレイ字幕 (初期状態は非表示) */
+    #subtitle-overlay {
+      position: absolute;
+      bottom: 80px; /* controls表示用に位置調整 */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85%;
+      text-align: center;
+      padding: 20px 30px;
+      border-radius: 16px;
+      transition: all 0.2s ease;
+      z-index: 110;
+      pointer-events: none;
+      display: none;
+    }
+
+    .style-standard {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #ffffff;
+    }
+    .style-high-contrast {
+      background-color: #000000;
+      color: #ffeb3b;
+      font-weight: bold;
+    }
+    .style-text-only {
+      background-color: transparent;
+      color: #ffffff;
+      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 0 3px 0 #000, 3px 0 0 #000, 0 -3px 0 #000, -3px 0 0 #000;
+    }
+
+    .sub-line-ja { font-size: 2.2rem; font-weight: bold; margin-bottom: 6px; }
+    .sub-line-kana { font-size: 1.6rem; color: #64b5f6; margin-bottom: 4px; }
+    .sub-line-text { font-size: 1.3rem; color: #dddddd; }
+
+    /* 字幕カスタムパネル */
+    #custom-panel {
+      display: none;
+      position: fixed;
+      top: 0; right: 0;
+      width: 460px; height: 100vh;
+      background-color: rgba(20, 20, 20, 0.95);
+      border-left: 2px solid #444;
+      padding: 40px 30px;
+      z-index: 120;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+    }
+    .panel-section { margin-bottom: 32px; }
+    .panel-title { font-size: 1.2rem; color: #00d2ff; margin-bottom: 16px; }
+    .panel-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 10px;
+      background: #333;
+      border: 2px solid #555;
+      color: #fff;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .panel-btn.active { border-color: #00d2ff; background: #005b82; }
+  </style>
+</head>
+<body>
+
+  <!-- メイン画面（検索・選択） -->
+  <div id="app-container">
+    <!-- 左サイドバー -->
+    <div id="sidebar" class="sidebar">
+      <input type="text" id="searchInput" class="search-input focusable" placeholder="キーワード検索..." />
+      <button id="clearBtn" class="clear-btn focusable">✕ クリア</button>
+      
+      <div class="tag-section-title">タグ選択</div>
+      <div id="tagContainer" class="tag-container"></div>
+    </div>
+
+    <!-- 右メインエリア (3列固定) -->
+    <div class="main-content">
+      <div id="videoGrid" class="video-grid"></div>
+    </div>
+  </div>
+
+  <!-- 再生画面 (全画面シアター) -->
+  <div id="player-view">
+    <div id="youtube-player"></div>
+    
+    <!-- PC・スマホ操作用 設定ボタン -->
+    <button id="openPanelBtn" class="panel-trigger-btn focusable" onclick="toggleCustomPanel()">⚙ 字幕・表示設定</button>
+
+    <!-- オーバーレイ字幕 -->
+    <div id="subtitle-overlay" class="style-standard">
+      <div id="subJa" class="sub-line-ja"></div>
+      <div id="subKana" class="sub-line-kana"></div>
+      <div id="subText" class="sub-line-text"></div>
+    </div>
+
+    <!-- カスタムパネル -->
+    <div id="custom-panel">
+      <h2>字幕・表示設定</h2>
+      
+      <div class="panel-section">
+        <div class="panel-title">表示プリセット</div>
+        <button class="panel-btn focusable active" onclick="setPreset('ja-kana', this)">日本語 ＋ カタカナ（標準）</button>
+        <button class="panel-btn focusable" onclick="setPreset('all', this)">全表示 (日本語/原文/カナ)</button>
+        <button class="panel-btn focusable" onclick="setPreset('ja-only', this)">日本語のみ</button>
+        <button class="panel-btn focusable" onclick="setPreset('text-kana', this)">原文 ＋ カタカナ</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-title">スタイル・背景</div>
+        <button class="panel-btn focusable active" onclick="setStyle('style-standard', this)">標準 (ダークシネマ)</button>
+        <button class="panel-btn focusable" onclick="setStyle('style-high-contrast', this)">くっきり (高コントラスト黄色)</button>
+        <button class="panel-btn focusable" onclick="setStyle('style-text-only', this)">文字のみ (ネオン縁取り)</button>
+      </div>
+      
+      <p style="font-size: 0.9rem; color: #888; margin-top: 40px;">※「戻る」キーまたは再タップで設定完了</p>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    let videoIndexData = [];
+    let currentVideoDetail = null;
+    let selectedTag = '#ALL';
+    let ytPlayer = null;
+    let subtitleTimer = null;
+    
+    let currentDisplayPreset = 'ja-kana';
+    let currentStyleClass = 'style-standard';
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadVideoIndex();
+      setupEvents();
+      setupSpatialNavigation();
+    });
+
+    async function loadVideoIndex() {
+      try {
+        const res = await fetch('videos.json');
+        videoIndexData = await res.json();
+        renderTags();
+        renderVideos();
+      } catch (err) {
+        console.error('videos.json の読み込みに失敗しました:', err);
+      }
+    }
+
+    function renderTags() {
+      const tagContainer = document.getElementById('tagContainer');
+      const tagsSet = new Set();
+      
+      videoIndexData.forEach(item => {
+        if (item.keywords) {
+          item.keywords.forEach(k => tagsSet.add(k));
+        }
+      });
+
+      const sortedTags = Array.from(tagsSet).sort();
+      const finalTags = ['#ALL', ...sortedTags.filter(t => t !== '#ALL')];
+
+      tagContainer.innerHTML = '';
+      finalTags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = `tag-btn focusable ${tag === selectedTag ? 'active' : ''}`;
+        btn.innerText = tag;
+        btn.onclick = () => filterByTag(tag);
+        tagContainer.appendChild(btn);
+      });
+    }
+
+    function renderVideos() {
+      const grid = document.getElementById('videoGrid');
+      const searchText = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      grid.innerHTML = '';
+
+      const filtered = videoIndexData.filter(item => {
+        const matchTag = (selectedTag === '#ALL') || (item.keywords && item.keywords.includes(selectedTag));
+        const matchText = !searchText || item.title.toLowerCase().includes(searchText) || 
+                          (item.keywords && item.keywords.some(k => k.toLowerCase().includes(searchText)));
+        return matchTag && matchText;
+      });
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'video-card focusable';
+        card.onclick = () => playVideo(item);
+
+        const thumbUrl = `https://img.youtube.com/vi/${item.id}/mqdefault.jpg`;
+        const tagsHtml = (item.keywords || []).map(k => `<span class="card-tag">${k}</span>`).join('');
+
+        card.innerHTML = `
+          <div class="thumbnail-wrapper">
+            <img class="thumbnail-img" src="${thumbUrl}" alt="${item.title}">
+          </div>
+          <div class="card-info">
+            <h3 class="card-title">${item.title}</h3>
+            <div class="card-tags">${tagsHtml}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setupEvents() {
+      const searchInput = document.getElementById('searchInput');
+
+      searchInput.addEventListener('input', () => {
+        renderVideos();
+      });
+
+      document.getElementById('clearBtn').onclick = () => {
+        searchInput.value = '';
+        selectedTag = '#ALL';
+        renderTags();
+        renderVideos();
+        searchInput.focus();
+      };
+    }
+
+    function filterByTag(tag) {
+      selectedTag = tag;
+      document.getElementById('searchInput').value = '';
+      renderTags();
+      renderVideos();
+    }
+
+    /* controls: 1 に変更 */
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('youtube-player', {
+        playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'modestbranding': 1 },
+        events: { 'onStateChange': onPlayerStateChange }
+      });
+    }
+
+    async function playVideo(item) {
+      document.getElementById('app-container').style.display = 'none';
+      document.getElementById('player-view').style.display = 'block';
+
+      try {
+        const res = await fetch(item.file);
+        currentVideoDetail = await res.json();
+      } catch (e) {
+        currentVideoDetail = null;
+      }
+
+      if (ytPlayer && ytPlayer.loadVideoById) {
+        ytPlayer.loadVideoById(item.id);
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        startSubtitleSync();
+      } else {
+        stopSubtitleSync();
+      }
+    }
+
+    function startSubtitleSync() {
+      stopSubtitleSync();
+      subtitleTimer = setInterval(updateSubtitle, 100);
+    }
+
+    function stopSubtitleSync() {
+      if (subtitleTimer) clearInterval(subtitleTimer);
+    }
+
+    /* 字幕非表示制御（背景消去対応） */
+    function updateSubtitle() {
+      const overlay = document.getElementById('subtitle-overlay');
+
+      if (!ytPlayer || !currentVideoDetail || !currentVideoDetail.transcript) {
+        overlay.style.display = 'none';
+        return;
+      }
+      
+      const currentTime = ytPlayer.getCurrentTime();
+      const currentSub = currentVideoDetail.transcript.find(t => currentTime >= t.start && currentTime <= t.end);
+
+      const subJa = document.getElementById('subJa');
+      const subKana = document.getElementById('subKana');
+      const subText = document.getElementById('subText');
+
+      if (currentSub && (currentSub.translation || currentSub.pronunciation_kana || currentSub.text)) {
+        subJa.innerText = currentSub.translation || '';
+        subKana.innerText = currentSub.pronunciation_kana || '';
+        subText.innerText = currentSub.text || '';
+        applyPresetVisibility();
+        overlay.style.display = 'block';
+      } else {
+        subJa.innerText = '';
+        subKana.innerText = '';
+        subText.innerText = '';
+        overlay.style.display = 'none';
+      }
+    }
+
+    /* カスタムパネル開閉切り替え */
+    function toggleCustomPanel() {
+      const panel = document.getElementById('custom-panel');
+      if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+      } else {
+        panel.style.display = 'block';
+        const firstBtn = panel.querySelector('.panel-btn');
+        if (firstBtn) firstBtn.focus();
+      }
+    }
+
+    /* activeクラスの切り替え修正 */
+    function setPreset(preset, btnElement) {
+      currentDisplayPreset = preset;
+      applyPresetVisibility();
+      
+      const section = btnElement.closest('.panel-section');
+      section.querySelectorAll('.panel-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+    }
+
+    function setStyle(styleClass, btnElement) {
+      currentStyleClass = styleClass;
+      document.getElementById('subtitle-overlay').className = styleClass;
+      
+      const section = btnElement.closest('.panel-section');
+      section.querySelectorAll('.panel-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+    }
+
+    function applyPresetVisibility() {
+      const subJa = document.getElementById('subJa');
+      const subKana = document.getElementById('subKana');
+      const subText = document.getElementById('subText');
+
+      subJa.style.display = 'block';
+      subKana.style.display = 'block';
+      subText.style.display = 'block';
+
+      if (currentDisplayPreset === 'ja-kana') {
+        subText.style.display = 'none';
+      } else if (currentDisplayPreset === 'ja-only') {
+        subKana.style.display = 'none';
+        subText.style.display = 'none';
+      } else if (currentDisplayPreset === 'text-kana') {
+        subJa.style.display = 'none';
+      }
+    }
+
+    function exitPlayer() {
+      if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+      stopSubtitleSync();
+      document.getElementById('player-view').style.display = 'none';
+      document.getElementById('custom-panel').style.display = 'none';
+      document.getElementById('app-container').style.display = 'flex';
+      
+      const firstCard = document.querySelector('.video-card');
+      if (firstCard) firstCard.focus();
+    }
+
+    // Spatial Navigation
+    function setupSpatialNavigation() {
+      setTimeout(() => {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.focus();
+      }, 500);
+
+      document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        const playerViewVisible = document.getElementById('player-view').style.display === 'block';
+        const customPanelVisible = document.getElementById('custom-panel').style.display === 'block';
+
+        if (playerViewVisible) {
+          if (key === 'Escape' || key === 'Backspace' || e.keyCode === 10009 || e.keyCode === 461) {
+            e.preventDefault();
+            if (customPanelVisible) {
+              document.getElementById('custom-panel').style.display = 'none';
+            } else {
+              exitPlayer();
+            }
+            return;
+          }
+
+          if (key === 'ArrowUp' && !customPanelVisible) {
+            e.preventDefault();
+            toggleCustomPanel();
+            return;
+          }
+        }
+
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+          if (document.activeElement.id === 'searchInput' && ['ArrowLeft', 'ArrowRight'].includes(key)) {
+            return;
+          }
+          e.preventDefault();
+          moveFocus(key);
+        }
+      });
+    }
+
+    function moveFocus(direction) {
+      const focusables = Array.from(document.querySelectorAll('.focusable:not([style*="display: none"])'));
+      const current = document.activeElement;
+
+      if (!focusables.includes(current)) {
+        if (focusables.length > 0) focusables[0].focus();
+        return;
+      }
+
+      const currentRect = current.getBoundingClientRect();
+      let bestMatch = null;
+      let minDistance = Infinity;
+
+      focusables.forEach(el => {
+        if (el === current) return;
+        const rect = el.getBoundingClientRect();
+
+        let isValidDirection = false;
+        if (direction === 'ArrowUp') isValidDirection = rect.bottom <= currentRect.top + 10;
+        if (direction === 'ArrowDown') isValidDirection = rect.top >= currentRect.bottom - 10;
+        if (direction === 'ArrowLeft') isValidDirection = rect.right <= currentRect.left + 10;
+        if (direction === 'ArrowRight') isValidDirection = rect.left >= currentRect.right - 10;
+
+        if (isValidDirection) {
+          const dist = Math.hypot(
+            (rect.left + rect.width / 2) - (currentRect.left + currentRect.width / 2),
+            (rect.top + rect.height / 2) - (currentRect.top + currentRect.height / 2)
+          );
+          if (dist < minDistance) {
+            minDistance = dist;
+            bestMatch = el;
+          }
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.focus();
+      }
+    }
+  </script>
+</body>
+</html>
