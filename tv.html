@@ -10,7 +10,7 @@
       user-select: none;
     }
     
-    /* Silk等での文字サイズ自動拡大を強制作動停止 */
+    /* TVブラウザの自動テキスト拡大を完全停止 */
     html, body {
       margin: 0;
       padding: 0;
@@ -20,11 +20,16 @@
       overflow: hidden;
       width: 100vw;
       height: 100vh;
-      font-size: 20px;
-      -webkit-text-size-adjust: 100%;
-      -moz-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-      text-size-adjust: 100%;
+      font-size: 20px; /* PC/標準デフォルト */
+      -webkit-text-size-adjust: none !important;
+      -moz-text-size-adjust: none !important;
+      -ms-text-size-adjust: none !important;
+      text-size-adjust: none !important;
+    }
+
+    /* Silkブラウザ検知時に自動付与されるクラス（文字サイズ50%縮小） */
+    body.is-silk {
+      font-size: 10px !important; /* 50%に縮小 */
     }
 
     /* --------------------------------------------------
@@ -35,14 +40,14 @@
       transition: outline 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
     .focusable:focus {
-      outline: 5px solid #00d2ff !important;
-      box-shadow: 0 0 20px rgba(0, 210, 255, 0.9) !important;
-      transform: scale(1.03);
+      outline: 4px solid #00d2ff !important;
+      box-shadow: 0 0 15px rgba(0, 210, 255, 0.9) !important;
+      transform: scale(1.02);
       z-index: 10;
     }
 
     /* --------------------------------------------------
-       メインUI (16:9 大画面 完全固定2カラムレイアウト)
+       メインUI (画面比率可変 2カラムレイアウト)
     -------------------------------------------------- */
     #app-container {
       display: flex;
@@ -50,13 +55,13 @@
       height: 100vh;
     }
 
-    /* ■ 左サイドバー */
+    /* ■ 左サイドバー（画面幅の20%に指定） */
     .sidebar {
-      width: 440px;
-      min-width: 440px;
+      width: 20vw;
+      min-width: 20vw;
       height: 100vh;
       background-color: #1a1a1a;
-      padding: 30px 24px;
+      padding: 1.5rem 1rem;
       display: flex;
       flex-direction: column;
       border-right: 2px solid #333;
@@ -65,20 +70,19 @@
     .tag-section-title {
       font-size: 0.85rem;
       color: #888;
-      margin-bottom: 12px;
+      margin-bottom: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
-    /* タグエリアを可変高に調整 */
     .tag-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 0.6rem;
       flex: 1;
       overflow-y: auto;
-      padding-right: 6px;
-      margin-bottom: 24px;
+      padding-right: 4px;
+      margin-bottom: 1rem;
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
@@ -88,7 +92,7 @@
 
     .tag-btn {
       width: 100%;
-      padding: 14px 18px;
+      padding: 0.8rem 1rem;
       background-color: #2a2a2a;
       border: 2px solid #444;
       color: #ddd;
@@ -104,20 +108,19 @@
       border-color: #00d2ff;
     }
 
-    /* 下部に移動した検索エリア */
     .search-section {
       border-top: 1px solid #333;
-      padding-top: 20px;
+      padding-top: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 0.6rem;
     }
 
     .search-input {
       width: 100%;
-      height: 52px;
-      padding: 0 16px;
-      font-size: 1.1rem;
+      height: 2.6rem;
+      padding: 0 0.8rem;
+      font-size: 1rem;
       border-radius: 8px;
       border: 2px solid #444;
       background-color: #2a2a2a;
@@ -126,8 +129,8 @@
 
     .clear-btn {
       width: 100%;
-      height: 52px;
-      font-size: 1.1rem;
+      height: 2.6rem;
+      font-size: 1rem;
       background-color: #333;
       border: 2px solid #555;
       color: #fff;
@@ -135,19 +138,19 @@
       cursor: pointer;
     }
 
-    /* ■ 右メインエリア */
+    /* ■ 右メインエリア（画面幅の残り80%） */
     .main-content {
-      flex: 1;
+      width: 80vw;
       height: 100vh;
-      padding: 30px;
+      padding: 1.5rem;
       overflow-y: auto;
     }
 
     .video-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      padding-bottom: 60px;
+      gap: 1.2rem;
+      padding-bottom: 3rem;
     }
 
     .video-card {
@@ -172,31 +175,31 @@
     }
 
     .card-info {
-      padding: 16px;
+      padding: 1rem;
     }
 
     .card-title {
       font-size: 1.05rem;
       font-weight: 600;
-      line-height: 1.4;
-      margin: 0 0 10px 0;
+      line-height: 1.35;
+      margin: 0 0 0.6rem 0;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      height: 4.2em;
+      height: 4.05em;
     }
 
     .card-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 0.4rem;
     }
     .card-tag {
       font-size: 0.8rem;
       color: #aaa;
       background: #333;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 4px;
     }
 
@@ -218,13 +221,13 @@
 
     .panel-trigger-btn {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: 1.5rem;
+      right: 1.5rem;
       z-index: 115;
       background: rgba(0, 0, 0, 0.75);
       color: #fff;
       border: 2px solid #666;
-      padding: 12px 20px;
+      padding: 0.6rem 1.2rem;
       border-radius: 10px;
       font-size: 1rem;
       cursor: pointer;
@@ -238,7 +241,7 @@
       transform: translateX(-50%);
       width: 85%;
       text-align: center;
-      padding: 20px 30px;
+      padding: 1rem 1.5rem;
       border-radius: 16px;
       transition: all 0.2s ease;
       z-index: 110;
@@ -261,6 +264,7 @@
       text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 0 3px 0 #000, 3px 0 0 #000, 0 -3px 0 #000, -3px 0 0 #000;
     }
 
+    /* 字幕サイズ (SS / S / M / L) */
     .size-ss .sub-line-ja { font-size: 1.4rem; }
     .size-ss .sub-line-kana { font-size: 1.0rem; }
     .size-ss .sub-line-text { font-size: 0.85rem; }
@@ -277,18 +281,19 @@
     .size-l .sub-line-kana { font-size: 1.9rem; }
     .size-l .sub-line-text { font-size: 1.55rem; }
 
-    .sub-line-ja { font-weight: bold; margin-bottom: 6px; }
-    .sub-line-kana { color: #64b5f6; margin-bottom: 4px; }
+    .sub-line-ja { font-weight: bold; margin-bottom: 0.3rem; }
+    .sub-line-kana { color: #64b5f6; margin-bottom: 0.2rem; }
     .sub-line-text { color: #dddddd; }
 
     #custom-panel {
       display: none;
       position: fixed;
       top: 0; right: 0;
-      width: 480px; height: 100vh;
+      width: 25vw; min-width: 320px;
+      height: 100vh;
       background-color: rgba(20, 20, 20, 0.96);
       border-left: 2px solid #444;
-      padding: 30px;
+      padding: 1.5rem;
       z-index: 120;
       box-shadow: -10px 0 30px rgba(0,0,0,0.8);
       overflow-y: auto;
@@ -298,34 +303,34 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 1.5rem;
       border-bottom: 1px solid #444;
-      padding-bottom: 12px;
+      padding-bottom: 0.8rem;
     }
     .panel-close-btn {
       background: #444;
       color: #fff;
       border: none;
-      padding: 8px 16px;
+      padding: 0.4rem 0.8rem;
       border-radius: 6px;
       font-size: 1rem;
       cursor: pointer;
     }
 
-    .panel-section { margin-bottom: 28px; }
-    .panel-title { font-size: 1.1rem; color: #00d2ff; margin-bottom: 12px; }
+    .panel-section { margin-bottom: 1.5rem; }
+    .panel-title { font-size: 1.1rem; color: #00d2ff; margin-bottom: 0.8rem; }
     
     .size-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 0.4rem;
     }
 
     .panel-btn {
       display: block;
       width: 100%;
-      padding: 14px;
-      margin-bottom: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
       background: #333;
       border: 2px solid #555;
       color: #fff;
@@ -336,7 +341,7 @@
     }
     .size-grid .panel-btn {
       text-align: center;
-      padding: 12px 0;
+      padding: 0.6rem 0;
     }
     .panel-btn.active { border-color: #00d2ff; background: #005b82; font-weight: bold; }
   </style>
@@ -345,19 +350,16 @@
 
   <!-- メイン画面（検索・選択） -->
   <div id="app-container">
-    <!-- 左サイドバー -->
     <div id="sidebar" class="sidebar">
       <div class="tag-section-title">タグ選択</div>
       <div id="tagContainer" class="tag-container"></div>
 
-      <!-- 検索・クリアエリアをサイドバー最下部に移動 -->
       <div class="search-section">
         <input type="text" id="searchInput" class="search-input focusable" placeholder="キーワード検索..." />
         <button id="clearBtn" class="clear-btn focusable">✕ クリア</button>
       </div>
     </div>
 
-    <!-- 右メインエリア (3列固定) -->
     <div class="main-content">
       <div id="videoGrid" class="video-grid"></div>
     </div>
@@ -377,7 +379,7 @@
 
     <div id="custom-panel">
       <div class="panel-header">
-        <h2 style="margin:0; font-size: 1.4rem;">字幕・表示設定</h2>
+        <h2 style="margin:0; font-size: 1.3rem;">字幕・表示設定</h2>
         <button class="panel-close-btn focusable" onclick="toggleCustomPanel()">閉じる ✕</button>
       </div>
       
@@ -421,11 +423,41 @@
     let currentStyleClass = 'style-standard';
     let currentSizeClass = 'size-m';
 
+    // 1. Fire TV Silkブラウザの検知処理
+    function detectSilkBrowser() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes('silk') || ua.includes('aftb') || ua.includes('aftm') || ua.includes('aftt')) {
+        document.body.classList.add('is-silk');
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
+      detectSilkBrowser();
+      setupHistoryState();
       await loadVideoIndex();
       setupEvents();
       setupSpatialNavigation();
     });
+
+    // 2. リモコンの「戻る」ボタンによるブラウザバック防止 ＆ 履歴フック
+    function setupHistoryState() {
+      history.pushState({ page: 'main' }, '', location.href);
+      
+      window.addEventListener('popstate', (e) => {
+        const playerViewVisible = document.getElementById('player-view').style.display === 'block';
+        const customPanelVisible = document.getElementById('custom-panel').style.display === 'block';
+
+        if (customPanelVisible) {
+          history.pushState({ page: 'player' }, '', location.href);
+          document.getElementById('custom-panel').style.display = 'none';
+        } else if (playerViewVisible) {
+          history.pushState({ page: 'main' }, '', location.href);
+          exitPlayer();
+        } else {
+          history.pushState({ page: 'main' }, '', location.href);
+        }
+      });
+    }
 
     async function loadVideoIndex() {
       try {
@@ -507,7 +539,6 @@
         selectedTag = '#ALL';
         renderTags();
         renderVideos();
-        // クリア時もタグ先頭にフォーカスを戻す
         const firstTag = document.querySelector('.tag-btn');
         if (firstTag) firstTag.focus();
       };
@@ -530,6 +561,7 @@
     async function playVideo(item) {
       document.getElementById('app-container').style.display = 'none';
       document.getElementById('player-view').style.display = 'block';
+      history.pushState({ page: 'player' }, '', location.href);
 
       try {
         const res = await fetch(item.file);
@@ -660,9 +692,8 @@
       if (firstCard) firstCard.focus();
     }
 
-    // Spatial Navigation
+    // 3. メディアキー・リモコン操作フック
     function setupSpatialNavigation() {
-      // 初期フォーカスを「タグ一覧の先頭（#ALL）」に設定してキーボード起動を防止
       setTimeout(() => {
         const firstTag = document.querySelector('.tag-btn');
         if (firstTag) firstTag.focus();
@@ -670,11 +701,13 @@
 
       document.addEventListener('keydown', (e) => {
         const key = e.key;
+        const code = e.keyCode || e.which;
         const playerViewVisible = document.getElementById('player-view').style.display === 'block';
         const customPanelVisible = document.getElementById('custom-panel').style.display === 'block';
 
         if (playerViewVisible) {
-          if (key === 'Escape' || key === 'Backspace' || e.keyCode === 10009 || e.keyCode === 461) {
+          // A. 戻るキー (Back / Escape / キーコード判定)
+          if (key === 'Escape' || key === 'Backspace' || code === 10009 || code === 461 || code === 27) {
             e.preventDefault();
             if (customPanelVisible) {
               document.getElementById('custom-panel').style.display = 'none';
@@ -684,6 +717,41 @@
             return;
           }
 
+          // B. メディア再生・一時停止キー (再生・一時停止ボタン)
+          if (key === 'MediaPlayPause' || code === 179 || code === 32 || key === ' ') {
+            e.preventDefault();
+            if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+              const state = ytPlayer.getPlayerState();
+              if (state === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+              } else {
+                ytPlayer.playVideo();
+              }
+            }
+            return;
+          }
+
+          // C. メディア早送り・巻き戻しキー / 左右矢印キー（10秒シーク）
+          if (key === 'MediaFastForward' || code === 228 || (key === 'ArrowRight' && !customPanelVisible)) {
+            if (document.activeElement !== document.getElementById('openPanelBtn')) {
+              e.preventDefault();
+              if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                ytPlayer.seekTo(ytPlayer.getCurrentTime() + 10, true);
+              }
+              return;
+            }
+          }
+          if (key === 'MediaRewind' || code === 227 || (key === 'ArrowLeft' && !customPanelVisible)) {
+            if (document.activeElement !== document.getElementById('openPanelBtn')) {
+              e.preventDefault();
+              if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 10), true);
+              }
+              return;
+            }
+          }
+
+          // D. 上キーで設定パネル呼び出し
           if (key === 'ArrowUp' && !customPanelVisible) {
             e.preventDefault();
             toggleCustomPanel();
@@ -691,6 +759,7 @@
           }
         }
 
+        // 十字キーフォーカスナビゲーション
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
           if (document.activeElement.id === 'searchInput' && ['ArrowLeft', 'ArrowRight'].includes(key)) {
             return;
