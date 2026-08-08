@@ -20,16 +20,16 @@
       overflow: hidden;
       width: 100vw;
       height: 100vh;
-      font-size: 20px; /* PC/標準デフォルト */
+      font-size: 20px; /* 通常時の基準 */
       -webkit-text-size-adjust: none !important;
       -moz-text-size-adjust: none !important;
       -ms-text-size-adjust: none !important;
       text-size-adjust: none !important;
     }
 
-    /* Silkブラウザ検知時に自動付与されるクラス（文字サイズ50%縮小） */
+    /* ■ Silkブラウザ検知時：全体の文字サイズを約10%（2px基準）へ極小化 */
     body.is-silk {
-      font-size: 10px !important; /* 50%に縮小 */
+      font-size: 2px !important;
     }
 
     /* --------------------------------------------------
@@ -47,7 +47,7 @@
     }
 
     /* --------------------------------------------------
-       メインUI (画面比率可変 2カラムレイアウト)
+       メインUI (2カラムレイアウト)
     -------------------------------------------------- */
     #app-container {
       display: flex;
@@ -55,7 +55,7 @@
       height: 100vh;
     }
 
-    /* ■ 左サイドバー（画面幅の20%に指定） */
+    /* ■ 左サイドバー（画面幅の20%） */
     .sidebar {
       width: 20vw;
       min-width: 20vw;
@@ -138,7 +138,7 @@
       cursor: pointer;
     }
 
-    /* ■ 右メインエリア（画面幅の残り80%） */
+    /* ■ 右メインエリア（画面幅の80%） */
     .main-content {
       width: 80vw;
       height: 100vh;
@@ -423,7 +423,7 @@
     let currentStyleClass = 'style-standard';
     let currentSizeClass = 'size-m';
 
-    // 1. Fire TV Silkブラウザの検知処理
+    // Fire TV (Silk) ブラウザ検知＆クラス付与
     function detectSilkBrowser() {
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('silk') || ua.includes('aftb') || ua.includes('aftm') || ua.includes('aftt')) {
@@ -439,7 +439,6 @@
       setupSpatialNavigation();
     });
 
-    // 2. リモコンの「戻る」ボタンによるブラウザバック防止 ＆ 履歴フック
     function setupHistoryState() {
       history.pushState({ page: 'main' }, '', location.href);
       
@@ -692,7 +691,6 @@
       if (firstCard) firstCard.focus();
     }
 
-    // 3. メディアキー・リモコン操作フック
     function setupSpatialNavigation() {
       setTimeout(() => {
         const firstTag = document.querySelector('.tag-btn');
@@ -706,7 +704,6 @@
         const customPanelVisible = document.getElementById('custom-panel').style.display === 'block';
 
         if (playerViewVisible) {
-          // A. 戻るキー (Back / Escape / キーコード判定)
           if (key === 'Escape' || key === 'Backspace' || code === 10009 || code === 461 || code === 27) {
             e.preventDefault();
             if (customPanelVisible) {
@@ -717,7 +714,6 @@
             return;
           }
 
-          // B. メディア再生・一時停止キー (再生・一時停止ボタン)
           if (key === 'MediaPlayPause' || code === 179 || code === 32 || key === ' ') {
             e.preventDefault();
             if (ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
@@ -731,7 +727,6 @@
             return;
           }
 
-          // C. メディア早送り・巻き戻しキー / 左右矢印キー（10秒シーク）
           if (key === 'MediaFastForward' || code === 228 || (key === 'ArrowRight' && !customPanelVisible)) {
             if (document.activeElement !== document.getElementById('openPanelBtn')) {
               e.preventDefault();
@@ -751,7 +746,6 @@
             }
           }
 
-          // D. 上キーで設定パネル呼び出し
           if (key === 'ArrowUp' && !customPanelVisible) {
             e.preventDefault();
             toggleCustomPanel();
@@ -759,7 +753,6 @@
           }
         }
 
-        // 十字キーフォーカスナビゲーション
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
           if (document.activeElement.id === 'searchInput' && ['ArrowLeft', 'ArrowRight'].includes(key)) {
             return;
