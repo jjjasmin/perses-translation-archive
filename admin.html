@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSES 発言者修正エディター（管理者）</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      padding: 16px;
+      font-size: 90%;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+
+    /* ヘッダー */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hamburger-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .hamburger-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* リンク集ドロワー */
+    .nav-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      width: 200px;
+      padding: 8px 0;
+      z-index: 1000;
+      margin-top: 6px;
+    }
+
+    .nav-menu.show { display: block; }
+
+    .nav-menu a {
+      display: block;
+      padding: 8px 16px;
+      color: #334155;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .nav-menu a:hover {
+      background: #f1f5f9;
+      color: #007bff;
+    }
+
+    .nav-menu .menu-title {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      padding: 4px 16px;
+      font-weight: bold;
+    }
+
+    body.dark-mode .nav-menu {
+      background: #252525;
+      border-color: #444444;
+    }
+
+    body.dark-mode .nav-menu a {
+      color: #e2e8f0;
+    }
+
+    body.dark-mode .nav-menu a:hover {
+      background: #333333;
+      color: #60a5fa;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-btn {
+      background: #334155;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .download-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #059669;
+    }
+
+    .download-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .download-btn.videos-btn {
+      background: #6366f1;
+    }
+    .download-btn.videos-btn:hover {
+      background: #4f46e5;
+    }
+
+    /* ファイル・動画選択コントロールパネル */
+    .control-panel {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    body.dark-mode .control-panel {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .select-label {
+      font-weight: bold;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .file-select {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    body.dark-mode .file-select {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .file-input-direct {
+      font-size: 0.8rem;
+    }
+
+    /* 編集エリアレイアウト（YouTubeプレイヤー ＋ リスト） */
+    .editor-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .player-sidebar {
+      flex: 1.2;
+      position: sticky;
+      top: 16px;
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    #youtube-player {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+
+    .video-meta-info {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    body.dark-mode .video-meta-info {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .meta-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .keywords-editor-box {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .keywords-input {
+      width: 100%;
+      padding: 6px;
+      font-size: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 4px;
+      background: #fff;
+      color: #333;
+    }
+    body.dark-mode .keywords-input {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .transcript-list-area {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    body.dark-mode .editor-toolbar {
+      background: #1e1e1e;
+      border-color: #333;
+    }
+
+    .clear-all-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .clear-all-btn:hover {
+      background: #dc2626;
+    }
+
+    /* 字幕カード */
+    .transcript-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .transcript-card {
+      background: #252525;
+      border-color: #333333;
+      border-left-color: #555555;
+    }
+
+    .transcript-card.active {
+      border-left-color: #007bff;
+      background-color: #f0f7ff;
+    }
+
+    body.dark-mode .transcript-card.active {
+      border-left-color: #3182ce;
+      background-color: #1a2a3a;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .card-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .time-badge {
+      font-size: 0.75rem;
+      background: #e2e8f0;
+      color: #475569;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .time-badge:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    body.dark-mode .time-badge {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    .action-mini-btn {
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #fff;
+      font-weight: bold;
+    }
+
+    .merge-btn {
+      color: #d97706;
+      border-color: #fcd34d;
+    }
+    .merge-btn:hover {
+      background: #fef3c7;
+    }
+    .merge-btn:disabled {
+      color: #9ca3af;
+      border-color: #e5e7eb;
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
+
+    .split-btn {
+      color: #0284c7;
+      border-color: #38bdf8;
+    }
+    .split-btn:hover {
+      background: #e0f2fe;
+    }
+
+    .delete-btn {
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .delete-btn:hover {
+      background: #fef2f2;
+    }
+
+    body.dark-mode .action-mini-btn {
+      background: #2d2d2d;
+    }
+    body.dark-mode .merge-btn:disabled {
+      background: #1f2937;
+      color: #4b5563;
+      border-color: #374151;
+    }
+
+    /* 発言者編集コントロール */
+    .speaker-editor {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    body.dark-mode .speaker-editor {
+      background: #1a1a1a;
+      border-color: #333;
+    }
+
+    .speaker-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+
+    .speaker-btn {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .speaker-btn:hover {
+      background: #007bff;
+      color: white;
+      border-color: #0056b3;
+    }
+
+    body.dark-mode .speaker-btn {
+      background: #333;
+      border-color: #444;
+      color: #eee;
+    }
+
+    body.dark-mode .speaker-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .add-btn {
+      background: #fef08a;
+      border-color: #eab308;
+      color: #854d0e;
+    }
+
+    .add-btn:hover {
+      background: #fde047;
+      color: #854d0e;
+    }
+
+    body.dark-mode .add-btn {
+      background: #854d0e;
+      border-color: #ca8a04;
+      color: #fef08a;
+    }
+
+    .speaker-input-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .speaker-input {
+      padding: 4px 8px;
+      font-size: 0.82rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 180px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    body.dark-mode .speaker-input {
+      background: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    /* テキスト入力・自動伸縮 textarea */
+    .field-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      outline: none;
+      font-family: inherit;
+      resize: vertical;
+      line-height: 1.4;
+      min-height: 36px;
+      overflow-y: hidden; /* スクロールバーを非表示にして高さに任せる */
+    }
+
+    body.dark-mode .card-input {
+      background: #1a1a1a;
+      border-color: #444;
+      color: #eee;
+    }
+
+    .input-translation {
+      font-weight: bold;
+      font-size: 0.88rem;
+      color: #1a1a1a;
+    }
+    body.dark-mode .input-translation { color: #f1f5f9; }
+
+    .input-thai {
+      font-size: 0.92rem;
+      color: #1e3a8a;
+    }
+    body.dark-mode .input-thai { color: #93c5fd; }
+
+    .input-kana {
+      font-size: 0.8rem;
+      color: #d97706;
+    }
+    body.dark-mode .input-kana { color: #fcd34d; }
+
+    .input-roman {
+      font-size: 0.78rem;
+      color: #4b5563;
+    }
+    body.dark-mode .input-roman { color: #9ca3af; }
+
+    @media (max-width: 850px) {
+      .editor-layout {
+        flex-direction: column;
+      }
+      .player-sidebar {
+        width: 100%;
+        position: relative;
+        top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <div class="header-left">
+      <button class="hamburger-btn" id="menu-toggle" type="button">≡</button>
+      <h2>発言者修正エディター（管理者）</h2>
+
+      <!-- 🍔 リンク集ドロワー -->
+      <nav class="nav-menu" id="nav-menu">
+        <div class="menu-title">ページ移動</div>
+        <a href="index.html">🏠 メイン閲覧画面</a>
+        <a href="admin.html">🛠️ 発言者エディター</a>
+        <div class="menu-title" style="margin-top: 8px;">外部リンク</div>
+        <a href="https://tpop.fandom.com/wiki/PERSES" target="_blank">📖 PERSES Wiki</a>
+      </nav>
+    </div>
+
+    <div class="header-actions">
+      <button class="theme-btn" id="theme-toggle-btn">🌙</button>
+      <button class="download-btn videos-btn" id="download-videos-btn" disabled>📋 videos.json 出力</button>
+      <button class="download-btn" id="download-json-btn" disabled>💾 修正済みJSONを出力</button>
+    </div>
+  </div>
+
+  <!-- コントロールパネル：修正対象JSONの選択 -->
+  <div class="control-panel">
+    <div class="select-group">
+      <span class="select-label">動画リストから選択:</span>
+      <select id="video-select" class="file-select">
+        <option value="">videos.json を読み込み中...</option>
+      </select>
+    </div>
+
+    <div class="select-group" style="flex: 0 0 auto;">
+      <span class="select-label">またはローカルファイルを開く:</span>
+      <input type="file" id="direct-file-input" accept=".json" class="file-input-direct">
+    </div>
+  </div>
+
+  <!-- メイン編集エリア -->
+  <div class="editor-layout"> 
+    <!-- 左側: プレイヤープレビュー ＆ メタデータ編集 -->
+    <div class="player-sidebar">
+      <div class="iframe-wrapper">
+        <div id="youtube-player"></div>
+      </div>
+      <div class="video-meta-info" id="video-meta-info">
+
+        <textarea class="card-input meta-title-input" 
+          id="meta-title-input" 
+          rows="1" 
+          placeholder="動画タイトル"
+          style="font-weight: bold; font-size: 0.95rem; margin-bottom: 6px; max-height: 5.6em; resize: vertical;"
+          oninput="updateVideoTitle(this.value); autoResizeTextarea(this);"></textarea>
+        <div id="meta-details" style="color: #666;">-</div>
+
+        <!-- keywords 編集エリア -->
+        <div class="keywords-editor-box" id="keywords-editor-box" style="display: none;">
+          <label style="font-weight: bold; font-size: 0.8rem;">keywords 編集（カンマ区切り）:</label>
+          <input type="text" id="keywords-input" class="keywords-input" placeholder="#JUNG, #NAY, #KRITTIN..." oninput="updateKeywords(this.value)">
+
+          <!-- ▼ 追加: 頻出キーワードボタン表示コンテナ -->
+          <div id="common-keywords-container" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+            <!-- JavaScriptでボタンが動的に生成されます -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右側: 発言者編集付き字幕カードリスト -->
+    <div class="transcript-list-area">
+      <!-- ツールバー（一括クリアなど） -->
+      <div class="editor-toolbar" id="editor-toolbar" style="display: none;">
+        <span style="font-size: 0.82rem; font-weight: bold; color: #666;" id="card-count-label">字幕数: 0</span>
+        <button class="clear-all-btn" type="button" onclick="clearAllSpeakers()">⚠️ 発言者を全クリア</button>
+      </div>
+
+      <div id="transcript-editor-container">
+        <p style="text-align: center; color: #888; padding: 20px;">動画を選択すると字幕データが展開されます。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // デフォルトのクイック選択用メンバーリスト
+    let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY'];
+
+    // 現在編集中のJSONデータおよびvideos.jsonの参照
+    let currentData = null;
+    let videosData = []; // videos.json の全データ
+    let currentVideoMeta = null; // 現在選択中の動画の videos.json エントリ
+
+    let player = null;
+    let isApiReady = false;
+    let syncInterval = null;
+    let activeIndex = -1;
+    let currentLoadedFileName = "updated_transcript.json";
+
+    // --- 1. ハンバーガーメニュー ＆ テーマ切り替え ---
+    const menuToggle = document.getElementById('menu-toggle');
+    const navMenu = document.getElementById('nav-menu');
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => navMenu.classList.remove('show'));
+
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // --- 2. YouTube API の読み込み・同期 ---
+    function onYouTubeIframeAPIReady() {
+      isApiReady = true;
+    }
+
+    function initPlayer(videoId) {
+      if (!videoId) return;
+      if (!isApiReady) {
+        setTimeout(() => initPlayer(videoId), 500);
+        return;
+      }
+
+      if (player) {
+        player.loadVideoById({ videoId: videoId });
+      } else {
+        player = new YT.Player('youtube-player', {
+          videoId: videoId,
+          playerVars: { 'autoplay': 0, 'playsinline': 1 },
+          events: {
+            'onStateChange': (e) => {
+              if (e.data === YT.PlayerState.PLAYING) startSync();
+              else stopSync();
+            }
+          }
+        });
+      }
+    }
+
+    function startSync() {
+      stopSync();
+      syncInterval = setInterval(updateActiveCard, 250);
+    }
+
+    function stopSync() {
+      if (syncInterval) clearInterval(syncInterval);
+    }
+
+    function updateActiveCard() {
+      if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
+      const currentTime = player.getCurrentTime();
+      let currentIndex = -1;
+
+      for (let i = 0; i < currentData.transcript.length; i++) {
+        const start = parseFloat(currentData.transcript[i].start || 0);
+        const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
+        if (currentTime >= start && currentTime < nextStart) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      if (currentIndex !== -1 && currentIndex !== activeIndex) {
+        activeIndex = currentIndex;
+        const cards = document.querySelectorAll('.transcript-card');
+        cards.forEach((card, idx) => {
+          if (idx === activeIndex) {
+            card.classList.add('active');
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            card.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
+    function init() {
+      // 変更前: fetch('videos.json')
+      fetch('data/videos.json')
+        .then(res => res.json())
+        .then(videos => {
+          videosData = videos;
+          document.getElementById('download-videos-btn').disabled = false;
+
+          // ▼ 追加: 頻出キーワードの初回生成
+          renderCommonKeywords();
+
+          const select = document.getElementById('video-select');
+          select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
+
+          videos.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.file;
+            opt.textContent = `${v.title} (${v.id})`;
+            select.appendChild(opt);
+          });
+
+          select.addEventListener('change', (e) => {
+            if (e.target.value) {
+              currentLoadedFileName = e.target.value;
+              currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
+              loadJsonFile(e.target.value);
+            }
+          });
+        })
+        .catch(err => {
+          console.error("videos.json の読み込み失敗:", err);
+          document.getElementById('video-select').innerHTML = '<option value="">videos.json の読込失敗</option>';
+        });
+    }
+
+    // 直接ファイル選択
+    document.getElementById('direct-file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      currentLoadedFileName = file.name;
+      currentVideoMeta = videosData.find(v => v.file === file.name) || null;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target.result);
+          loadJsonData(json);
+        } catch (err) {
+          alert("JSONファイルの解析に失敗しました。フォーマットをご確認ください。");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function loadJsonFile(fileName) {
+      const filePath = `data/transcripts/${fileName}`;
+      fetch(filePath)
+        .then(res => res.json())
+        .then(data => loadJsonData(data))
+        .catch(err => {
+          alert(`ファイルの読み込みに失敗しました: ${filePath}`);
+        });
+    }
+
+    function loadJsonData(data) {
+      currentData = data;
+      reindexTranscript();
+
+      document.getElementById('download-json-btn').disabled = false;
+      document.getElementById('editor-toolbar').style.display = 'flex';
+
+      // メタデータ表示更新
+      const titleInput = document.getElementById('meta-title-input');
+      if (titleInput) {
+        titleInput.value = data.title || "";
+        autoResizeTextarea(titleInput);
+      }
+
+      document.getElementById('meta-details').innerHTML = `
+        <strong>Video ID:</strong> ${data.video_id || '-'}<br>
+        <strong>公開日:</strong> ${data.published_at || '-'}<br>
+        <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
+      `;
+
+      // keywords 編集欄の表示と値設定
+      const keywordsBox = document.getElementById('keywords-editor-box');
+      const keywordsInput = document.getElementById('keywords-input');
+      if (currentVideoMeta) {
+        keywordsBox.style.display = 'block';
+        keywordsInput.value = (currentVideoMeta.keywords || []).join(', ');
+        
+        // ▼ 追加: 頻出キーワードボタン群を最新化
+        renderCommonKeywords();
+      } else {
+        keywordsBox.style.display = 'none';
+      }
+
+      if (data.video_id) {
+        initPlayer(data.video_id);
+      }
+
+      renderEditor();
+    }
+
+
+    function reindexTranscript() {
+      if (currentData && currentData.transcript) {
+        currentData.transcript.forEach((item, idx) => {
+          item.id = idx + 1;
+        });
+      }
+    }
+
+    // --- テキストエリア高さ自動調整ヘルパー ---
+    function autoResizeTextarea(textarea) {
+      if (!textarea) return;
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    // --- 4. 発言者編集用UIの描画 ---
+    function renderEditor() {
+      const container = document.getElementById('transcript-editor-container');
+      if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
+        document.getElementById('card-count-label').textContent = '字幕数: 0';
+        return;
+      }
+
+      const totalItems = currentData.transcript.length;
+      document.getElementById('card-count-label').textContent = `字幕数: ${totalItems}`;
+
+      const html = currentData.transcript.map((item, index) => {
+        const startSec = parseFloat(item.start || 0).toFixed(1);
+        const endSec = item.end ? parseFloat(item.end).toFixed(1) : '-';
+
+        const buttonsHtml = speakerOptions.map(spk => 
+          `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
+        ).join('');
+
+        const isLastItem = index === totalItems - 1;
+
+        return `
+          <div class="transcript-card" id="card-${index}">
+            <div class="card-header-row">
+              <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ ${startSec}s - ${endSec}s</span>
+              <div class="card-actions-right">
+                <button class="action-mini-btn merge-btn" type="button" onclick="mergeCardWithNext(${index})" ${isLastItem ? 'disabled' : ''}>👇 下と結合</button>
+                <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
+                <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
+                <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
+              </div>
+            </div>
+
+            <div class="speaker-editor">
+              <div class="speaker-buttons">
+                <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
+                ${buttonsHtml}
+                <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
+              </div>
+              <div class="speaker-input-group">
+                <input type="text" class="speaker-input" id="speaker-input-${index}" 
+                       value="${item.speaker || ''}" 
+                       placeholder="発言者（自由入力可）"
+                       oninput="updateSpeakerText(${index}, this.value)">
+                <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
+              </div>
+            </div>
+
+            <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
+            <div class="field-input-group">
+              <textarea class="card-input input-translation" 
+                        rows="1"
+                        placeholder="日本語訳 (translation)"
+                        oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.translation || '')}</textarea>
+
+              <textarea class="card-input input-thai" 
+                        rows="1"
+                        placeholder="タイ語原文 (text)"
+                        oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
+
+              <textarea class="card-input input-kana" 
+                        rows="1"
+                        placeholder="発音カナ (pronunciation_kana)"
+                        oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
+
+              <textarea class="card-input input-roman" 
+                        rows="1"
+                        placeholder="発音ローマ字 (pronunciation_roman)"
+                        oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+
+      // 描画完了後、既存テキストの量に合わせて高さを一括フィッティング
+      setTimeout(() => {
+        container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
+      }, 0);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // --- 5. アクション関数群 ---
+
+    function setSpeaker(index, name) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].speaker = name;
+      document.getElementById(`speaker-input-${index}`).value = name;
+    }
+
+    function updateSpeakerText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].speaker = value.trim();
+    }
+
+    function updateTranslationText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].translation = value;
+    }
+
+    function updateThaiText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].text = value;
+    }
+
+    function updateKanaText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].pronunciation_kana = value;
+    }
+
+    function updateRomanText(index, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      currentData.transcript[index].pronunciation_roman = value;
+    }
+
+    function clearAllSpeakers() {
+      if (!currentData || !currentData.transcript) return;
+      if (confirm("すべての発言者データをクリアしてもよろしいですか？")) {
+        currentData.transcript.forEach(item => {
+          item.speaker = "";
+        });
+        renderEditor();
+      }
+    }
+
+    function deleteCard(index) {
+      if (!currentData || !currentData.transcript) return;
+      if (confirm(`字幕 #${currentData.transcript[index].id} を削除しますか？`)) {
+        currentData.transcript.splice(index, 1);
+        reindexTranscript();
+        renderEditor();
+      }
+    }
+
+    function mergeCardWithNext(index) {
+      if (!currentData || !currentData.transcript) return;
+      if (index >= currentData.transcript.length - 1) return;
+
+      const top = currentData.transcript[index];
+      const bottom = currentData.transcript[index + 1];
+
+      // カナ結合（中黒・）
+      let kanaCombined = '';
+      if (top.pronunciation_kana && bottom.pronunciation_kana) {
+        kanaCombined = `${top.pronunciation_kana}・${bottom.pronunciation_kana}`;
+      } else {
+        kanaCombined = (top.pronunciation_kana || '') + (bottom.pronunciation_kana || '');
+      }
+
+      // ローマン結合（スペース ）
+      let romanCombined = '';
+      if (top.pronunciation_roman && bottom.pronunciation_roman) {
+        romanCombined = `${top.pronunciation_roman} ${bottom.pronunciation_roman}`;
+      } else {
+        romanCombined = (top.pronunciation_roman || '') + (bottom.pronunciation_roman || '');
+      }
+
+      // words の配列結合（存在しない場合にも配慮）
+      let mergedWords = undefined;
+      if (top.words || bottom.words) {
+        mergedWords = [...(top.words || []), ...(bottom.words || [])];
+      }
+
+      // 統合オブジェクト作成（start, speaker は上、end は下）
+      const mergedItem = {
+        id: top.id,
+        start: top.start,
+        end: bottom.end,
+        speaker: top.speaker || "",
+        text: (top.text || '') + (bottom.text || ''),
+        pronunciation_kana: kanaCombined,
+        pronunciation_roman: romanCombined,
+        translation: (top.translation || '') + (bottom.translation || '')
+      };
+
+      if (mergedWords) {
+        mergedItem.words = mergedWords;
+      }
+
+      // 対象の2つの要素を結合後オブジェクトで置き換え
+      currentData.transcript.splice(index, 2, mergedItem);
+
+      reindexTranscript();
+      renderEditor();
+    }
+
+    function splitCard(index) {
+      if (!currentData || !currentData.transcript[index]) return;
+      if (!player || typeof player.getCurrentTime !== 'function') {
+        alert("動画プレイヤーが準備できていません。");
+        return;
+      }
+
+      const currentTime = player.getCurrentTime();
+      const currentItem = currentData.transcript[index];
+
+      if (currentTime <= currentItem.start) {
+        alert("再生位置が現在の字幕の開始時間より前です。分割したいポイントまで動画を再生してください。");
+        return;
+      }
+
+      const splitTime = parseFloat(currentTime.toFixed(3));
+      const oldEnd = currentItem.end;
+
+      currentItem.end = splitTime;
+
+      const newCard = {
+        id: currentItem.id + 1,
+        start: splitTime,
+        end: oldEnd,
+        speaker: currentItem.speaker || "",
+        text: currentItem.text || "",
+        pronunciation_kana: currentItem.pronunciation_kana || "",
+        pronunciation_roman: currentItem.pronunciation_roman || "",
+        translation: currentItem.translation || ""
+      };
+
+      currentData.transcript.splice(index + 1, 0, newCard);
+
+      reindexTranscript();
+      renderEditor();
+    }
+
+    function promptAddSpeaker() {
+      const newName = prompt("追加したい発言者名を入力してください（例: MC, Staff）:");
+      if (newName && !speakerOptions.includes(newName.trim())) {
+        speakerOptions.push(newName.trim());
+        renderEditor();
+      }
+    }
+
+    function seekToTime(seconds) {
+      if (player && typeof player.seekTo === 'function') {
+        player.seekTo(seconds, true);
+        player.playVideo();
+      }
+    }
+
+    function updateKeywords(value) {
+      if (!currentVideoMeta) return;
+      const arr = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      currentVideoMeta.keywords = arr;
+    }
+
+    // 動画タイトルの変更を currentData (video_XX.json) と currentVideoMeta (videos.json) の両方に反映
+function updateVideoTitle(value) {
+  if (currentData) {
+    currentData.title = value;
+  }
+  if (currentVideoMeta) {
+    currentVideoMeta.title = value;
+  }
+}
+
+// videos.json 全体から頻出キーワードを集計してボタン描画
+function renderCommonKeywords() {
+  const container = document.getElementById('common-keywords-container');
+  if (!container || !videosData || videosData.length === 0) return;
+
+  // 1. 全動画の keywords を集計して出現数をカウント
+  const counts = {};
+  videosData.forEach(v => {
+    if (Array.isArray(v.keywords)) {
+      v.keywords.forEach(kw => {
+        const trimmed = kw.trim();
+        if (trimmed) {
+          counts[trimmed] = (counts[trimmed] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  // 出現頻度の高い順（件数が同じ場合は五十音・アルファベット順）にソート
+  const sortedKeywords = Object.keys(counts).sort((a, b) => {
+    if (counts[b] !== counts[a]) {
+      return counts[b] - counts[a];
+    }
+    return a.localeCompare(b);
+  });
+
+  if (sortedKeywords.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // 上位 15 件を表示（必要に応じて調整可）
+  const topKeywords = sortedKeywords.slice(0, 15);
+
+  let html = `<span style="font-size: 0.72rem; color: #666; font-weight: bold; width: 100%;">頻出キーワード（クリックで追加）:</span>`;
+  html += topKeywords.map(kw => `
+    <button class="speaker-btn" type="button" 
+            style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
+            onclick="addKeywordToInput('${escapeHtml(kw)}')">
+      + ${escapeHtml(kw)}
+    </button>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+// クリックされたキーワードを input に追加
+function addKeywordToInput(keyword) {
+  const input = document.getElementById('keywords-input');
+  if (!input) return;
+
+  let currentArray = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+  // 既に含まれていなければ追加
+  if (!currentArray.includes(keyword)) {
+    currentArray.push(keyword);
+    input.value = currentArray.join(', ');
+    updateKeywords(input.value);
+  }
+}
+
+    // --- 6. JSONファイルの出力・ダウンロード ---
+
+    document.getElementById('download-json-btn').addEventListener('click', () => {
+      if (!currentData) return;
+
+      const jsonString = JSON.stringify(currentData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentLoadedFileName || `${currentData.video_id || 'updated_transcript'}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('download-videos-btn').addEventListener('click', () => {
+      if (!videosData || videosData.length === 0) return;
+
+      const jsonString = JSON.stringify(videosData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'videos.json';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      init();
+    });
+  </script>
+</body>
+</html>

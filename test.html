@@ -1,0 +1,168 @@
+
+
+<!-- レイアウト切替ボタン -->
+<div class="layout-buttons" style="display: flex; gap: 8px; ">
+  
+  <!-- 1カラム -->
+  <button class="layout-btn" data-mode="1col" title="1カラム（全幅動画）">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <rect x="2" y="2" width="12" height="7" rx="1" opacity="0.6"/> <!-- 動画エリア -->
+      <path d="M7 4.5l3 1.5-3 1.5v-3z" /> <!-- 再生マーク -->
+      <rect x="2" y="10" width="12" height="4" rx="1" /> <!-- 字幕/コンテンツ -->
+    </svg>
+  </button>
+
+  <!-- 2カラムA -->
+  <button class="layout-btn active" data-mode="2col-a" title="2カラムA（左：動画/字幕、右：関連動画）">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <!-- 左カラム（広め）：動画（上）と字幕（下） -->
+      <rect x="1" y="2" width="9" height="5" rx="1" opacity="0.6"/> <!-- 動画 -->
+      <path d="M4.5 3.5l3 1.5-3 1.5v-3z" /> <!-- 再生マーク -->
+      <rect x="1" y="8" width="9" height="6" rx="1" /> <!-- 字幕（メモ帳風） -->
+      <line x1="3" y1="10" x2="8" y2="10" stroke="white" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="3" y1="12" x2="6" y2="12" stroke="white" stroke-width="0.8" stroke-linecap="round"/>
+      
+      <!-- 右カラム（狭め）：関連動画（リスト） -->
+      <rect x="11" y="2" width="4" height="2" rx="0.5"/>
+      <rect x="11" y="5" width="4" height="2" rx="0.5"/>
+      <rect x="11" y="8" width="4" height="2" rx="0.5"/>
+      <rect x="11" y="11" width="4" height="2" rx="0.5"/>
+    </svg>
+  </button>
+
+  <!-- 2カラムB -->
+  <button class="layout-btn" data-mode="2col-b" title="2カラムB（左右均等 左：動画/関連動画、右：字幕）">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <!-- 左カラム：動画（上）と関連動画（下） -->
+      <rect x="1" y="2" width="6.5" height="4" rx="1" opacity="0.6"/> <!-- 動画 -->
+      <path x="3" d="M3.5 3.5l2 1-2 1v-2z" /> <!-- 再生マーク（小さめ） -->
+      <rect x="1" y="7" width="6.5" height="2" rx="0.5"/> <!-- リスト -->
+      <rect x="1" y="10" width="6.5" height="2" rx="0.5"/> <!-- リスト -->
+      
+      <!-- 右カラム：字幕（広め） -->
+      <rect x="8.5" y="2" width="6.5" height="12" rx="1" /> <!-- 字幕 -->
+      <line x1="10.5" y1="5" x2="13.5" y2="5" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      <line x1="10.5" y1="8" x2="13.5" y2="8" stroke="white" stroke-width="1" stroke-linecap="round"/>
+      <line x1="10.5" y1="11" x2="12.5" y2="11" stroke="white" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+    <!-- シアターモード -->
+  <button class="layout-btn" data-mode="fullscreen" title="シアターモード（動画最大化）">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-9zM1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
+      <path d="M6.5 5.5l4 2.5-4 2.5v-5z"/>
+    </svg>
+  </button>
+
+  <button class="layout-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.3 7.299 7.3.715 0 1.399-.104 2.046-.298.359-.11.758.01.884.358.127.348.01.737-.282.973A9.227 9.227 0 0 1 8.618 16C3.859 16 0 12.14 0 7.38 0 3.822 2.148.718 5.41.082A.766.766 0 0 1 6 .278z"/>
+      <path d="M10.5 1.5a.5.5 0 0 1 .5.5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 .5-.5z" opacity="0.8"/>
+    </svg>
+  </button>
+
+</div>
+
+<!-- アイコンボタン群 -->
+<div class="layout-buttons" style="display: flex; gap: 6px; align-items: center;">
+
+
+
+  <!-- FIRETV専用ページ -->
+  <a href="firetv.html" class="layout-btn" title="Fire TV 専用ページ">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M2.5 2A1.5 1.5 0 0 0 1 3.5v8A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 13.5 2h-11zM2 3.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-8z"/>
+      <path d="M5 14.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+      <!-- リモコン風電波マーク -->
+      <path d="M6 7.5a2 2 0 0 1 4 0" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </a>
+
+  <!-- ダークモード切替 -->
+
+
+  <!-- 管理者ページ -->
+  <a href="admin.html" class="layout-btn" title="管理者ページ">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 1a2 2 0 0 1 2 2v2h1.5A1.5 1.5 0 0 1 13 6.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5v-7A1.5 1.5 0 0 1 4.5 5H6V3a2 2 0 0 1 2-2zm1 4V3a1 1 0 0 0-2 0v2h2zm-4.5 2a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5h-7z"/>
+      <circle cx="8" cy="9.5" r="1"/>
+    </svg>
+  </a>
+
+</div>
+<div class="layout-buttons" style="display: flex; gap: 6px; align-items: center;">
+  
+  <button class="layout-btn" data-mode="fullscreen" title="シアターモード">🎬</button>
+
+  <!-- FireTVだけ少し横幅を広げて「TV」を入れる -->
+  <a href="firetv.html" class="layout-btn layout-btn-text" title="Fire TV 専用ページ">
+    <span>📺</span><span style="font-size: 0.65rem; margin-left: 2px;">TV</span>
+  </a>
+
+  <button class="layout-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替">🌙</button>
+
+  <a href="admin.html" class="layout-btn" title="管理者ページ">🎀</a>
+
+</div>
+
+
+
+
+
+
+
+<!-- ボタン用CSS（丸みとサイズ感を調整。前回のものと同じです。） -->
+<style>
+  .layout-btn {
+    background-color: #ffffff;
+    color: #8a7a80;
+    border: 1.5px solid #f8c8d8;
+    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(255, 117, 151, 0.08);
+  }
+
+  .layout-btn:hover {
+    background-color: #fff0f5;
+    color: #ff7597;
+    border-color: #ff7597;
+    transform: translateY(-1px);
+  }
+
+  .layout-btn.active {
+    background-color: #ff7597;
+    color: #ffffff;
+    border-color: #ff7597;
+    box-shadow: 0 2px 6px rgba(255, 117, 151, 0.3);
+  }
+  
+  /* SVG内の白い線の色を、ボタンがアクティブになった時だけ白く保持するための設定 */
+  .layout-btn.active svg line {
+    stroke: #ffffff;
+  }
+  .layout-btn:not(.active) svg line {
+    stroke: #f8c8d8; /* 非アクティブ時は枠線と同じ色にする */
+  }
+
+  .theme-btn {
+    font-size: 0.85rem;
+  }
+  a.layout-btn {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+/* 文字が入るボタン用の調整 */
+.layout-btn-text {
+  width: auto !important;
+  padding: 0 8px !important;
+}
+</style>
