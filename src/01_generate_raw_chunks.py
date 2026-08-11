@@ -242,140 +242,148 @@ def fetch_transcript(video_id: str):
 # ==========================================
 # 3. メイン生成ループ
 # ==========================================
-status_data = load_pipeline_status()
-need_fix_videos = []
+def main(urls=None):
+    # urlsが渡されなければ直書きの TARGET_URLS を使用
+    target_list = urls if urls is not None else TARGET_URLS
 
-for url in TARGET_URLS:
-    video_id = extract_video_id(url)
-    if not video_id:
-        continue
-
-    v_status = status_data.get(video_id, {})
-    if v_status.get("generate") == "completed":
-        print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
-        continue
-
-    print(f"\n==========================================")
-    print(f"🎬 処理開始: VIDEO_ID = {video_id}")
-    print(f"==========================================")
-
-    try:
-        original_title, upload_date, raw_tags = get_video_metadata(video_id)
-        fetched = fetch_transcript(video_id)
-
-        transcript_list = []
-        for idx, item in enumerate(fetched, 1):
-            transcript_list.append({
-                "id": idx,
-                "start": round(item["start"], 2),
-                "end": round(item["start"] + item["duration"], 2),
-                "text": re.sub(r'>>\s*', '', item["text"]).strip()
-            })
-    except Exception as e:
-        print(f"❌ 字幕データ取得失敗: {e}")
-        continue
-
-    chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
-    total_chunks = len(chunks)
-    parsed_chunks_data = []
-
-    temp_chunk_file = os.path.join(DATA_DIR, f"temp_raw_chunks_{video_id}.json")
-    start_chunk_idx = v_status.get("last_processed_chunk", 0)
-
-    if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
+    status_data = load_pipeline_status()
+    need_fix_videos = []
+    
+    for url in TARGET_URLS:
+        video_id = extract_video_id(url)
+        if not video_id:
+            continue
+    
+        v_status = status_data.get(video_id, {})
+        if v_status.get("generate") == "completed":
+            print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
+            continue
+    
+        print(f"\n==========================================")
+        print(f"🎬 処理開始: VIDEO_ID = {video_id}")
+        print(f"==========================================")
+    
         try:
-            with open(temp_chunk_file, "r", encoding="utf-8") as f:
-                parsed_chunks_data = json.load(f)
-            print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
-        except Exception:
-            parsed_chunks_data, start_chunk_idx = [], 0
-
-    has_unresolved_chunk = False
-
-    for chunk_idx in range(start_chunk_idx, total_chunks):
-        target_batch = chunks[chunk_idx]
-        start_id, end_id = target_batch[0]["id"], target_batch[-1]["id"]
-        expected_ids = set(item["id"] for item in target_batch)
-
-        minimal_input = [{"id": item["id"], "text": item["text"]} for item in target_batch]
-        context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
-        context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
-
-        output_format = f'{{\n  "title": "{original_title} の日本語訳タイトル",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
-
-        prompt = f"""タイのボーイズグループ「PERSES」の字幕翻訳タスクです。指定フォーマットの完全なJSONのみ出力してください。
-【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}\n【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
-【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
-【出力フォーマット】\n{output_format}"""
-
-        parsed_res = None
-        is_chunk_success = False
-        last_raw_text = ""
-
-        # 再試行パイプライン（最大3回）
-        for attempt in range(1, 4):
-            chunk_info = f"Chunk {chunk_idx + 1}/{total_chunks} (試行 {attempt}/3)"
-            print(f"🔄 処理中: {chunk_info} (ID {start_id}〜{end_id})")
-
+            original_title, upload_date, raw_tags = get_video_metadata(video_id)
+            fetched = fetch_transcript(video_id)
+    
+            transcript_list = []
+            for idx, item in enumerate(fetched, 1):
+                transcript_list.append({
+                    "id": idx,
+                    "start": round(item["start"], 2),
+                    "end": round(item["start"] + item["duration"], 2),
+                    "text": re.sub(r'>>\s*', '', item["text"]).strip()
+                })
+        except Exception as e:
+            print(f"❌ 字幕データ取得失敗: {e}")
+            continue
+    
+        chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
+        total_chunks = len(chunks)
+        parsed_chunks_data = []
+    
+        temp_chunk_file = os.path.join(DATA_DIR, f"temp_raw_chunks_{video_id}.json")
+        start_chunk_idx = v_status.get("last_processed_chunk", 0)
+    
+        if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
             try:
-                raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
-                last_raw_text = raw_text
-            except Exception as e:
-                print(f"  ❌ APIエラー: {e}")
-                continue
-
-            # 一次パース & 検証
-            candidate = parse_chunk_response(raw_text)
-            if validate_chunk_data(candidate, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                print(f"  ✅ 一次パース ＆ 検証成功！")
-                parsed_res, is_chunk_success = candidate, True
-                break
-
-            # 軽量LLMリペア
-            print(f"  ⚠️ パース失敗。軽量LLMでリペア中...")
-            repaired_text = repair_json_with_light_model(raw_text, chunk_info=chunk_info)
-            if repaired_text:
-                candidate_repaired = parse_chunk_response(repaired_text)
-                if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                    print(f"  🎉 リペア ＆ 検証に成功しました！")
-                    parsed_res, is_chunk_success = candidate_repaired, True
+                with open(temp_chunk_file, "r", encoding="utf-8") as f:
+                    parsed_chunks_data = json.load(f)
+                print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
+            except Exception:
+                parsed_chunks_data, start_chunk_idx = [], 0
+    
+        has_unresolved_chunk = False
+    
+        for chunk_idx in range(start_chunk_idx, total_chunks):
+            target_batch = chunks[chunk_idx]
+            start_id, end_id = target_batch[0]["id"], target_batch[-1]["id"]
+            expected_ids = set(item["id"] for item in target_batch)
+    
+            minimal_input = [{"id": item["id"], "text": item["text"]} for item in target_batch]
+            context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
+            context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
+    
+            output_format = f'{{\n  "title": "{original_title} の日本語訳タイトル",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
+    
+            prompt = f"""タイのボーイズグループ「PERSES」の字幕翻訳タスクです。指定フォーマットの完全なJSONのみ出力してください。
+    【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}\n【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
+    【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
+    【出力フォーマット】\n{output_format}"""
+    
+            parsed_res = None
+            is_chunk_success = False
+            last_raw_text = ""
+    
+            # 再試行パイプライン（最大3回）
+            for attempt in range(1, 4):
+                chunk_info = f"Chunk {chunk_idx + 1}/{total_chunks} (試行 {attempt}/3)"
+                print(f"🔄 処理中: {chunk_info} (ID {start_id}〜{end_id})")
+    
+                try:
+                    raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
+                    last_raw_text = raw_text
+                except Exception as e:
+                    print(f"  ❌ APIエラー: {e}")
+                    continue
+    
+                # 一次パース & 検証
+                candidate = parse_chunk_response(raw_text)
+                if validate_chunk_data(candidate, expected_ids, is_first_chunk=(chunk_idx == 0)):
+                    print(f"  ✅ 一次パース ＆ 検証成功！")
+                    parsed_res, is_chunk_success = candidate, True
                     break
-
-            print(f"  ❌ 試行 {attempt} 失敗。メイン翻訳から再生成します...")
-
-        if is_chunk_success and parsed_res is not None:
-            parsed_chunks_data.append(parsed_res)
+    
+                # 軽量LLMリペア
+                print(f"  ⚠️ パース失敗。軽量LLMでリペア中...")
+                repaired_text = repair_json_with_light_model(raw_text, chunk_info=chunk_info)
+                if repaired_text:
+                    candidate_repaired = parse_chunk_response(repaired_text)
+                    if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=(chunk_idx == 0)):
+                        print(f"  🎉 リペア ＆ 検証に成功しました！")
+                        parsed_res, is_chunk_success = candidate_repaired, True
+                        break
+    
+                print(f"  ❌ 試行 {attempt} 失敗。メイン翻訳から再生成します...")
+    
+            if is_chunk_success and parsed_res is not None:
+                parsed_chunks_data.append(parsed_res)
+            else:
+                print(f"❌ チャンク {chunk_idx + 1} は3回試行しても正常化できませんでした。生テキストを保持します。")
+                parsed_chunks_data.append(last_raw_text)
+                has_unresolved_chunk = True
+    
+            with open(temp_chunk_file, "w", encoding="utf-8") as f:
+                json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
+    
+            status_data[video_id] = {
+                "title": original_title,
+                "generate": "in_progress",
+                "last_processed_chunk": chunk_idx + 1,
+                "total_chunks": total_chunks,
+            }
+            save_pipeline_status(status_data)
+            time.sleep(1)
+    
+        # チャンク生成完了後の自動判定
+        if has_unresolved_chunk:
+            print(f"\n⚠️ 動画 [{video_id}] に手修正が必要なチャンクが含まれています。")
+            print(f"👉 修正用ファイル: 『{temp_chunk_file}』")
+            print("💡 手動修正後、`python 02_build_final_json.py` を実行してください。02の自動実行はスキップして次の動画へ進みます。")
+            need_fix_videos.append(video_id)
         else:
-            print(f"❌ チャンク {chunk_idx + 1} は3回試行しても正常化できませんでした。生テキストを保持します。")
-            parsed_chunks_data.append(last_raw_text)
-            has_unresolved_chunk = True
+            print(f"\n🎉 全チャンクが正常に揃いました！ 自動で 02 (データ結合処理) を呼び出します...")
+            build_final_json(video_id, original_title, upload_date, raw_tags, transcript_list)
+    
+    tracker.print_summary()
+    
+    if need_fix_videos:
+        print(f"\n⚠️ 以下の動画は手作業の修正が必要です: {need_fix_videos}")
+        print("手修正後に `python 02_build_final_json.py` を実行してください。")
+    
+    print("\n🎉 全URLの API生成処理が完了しました！")
 
-        with open(temp_chunk_file, "w", encoding="utf-8") as f:
-            json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
-
-        status_data[video_id] = {
-            "title": original_title,
-            "generate": "in_progress",
-            "last_processed_chunk": chunk_idx + 1,
-            "total_chunks": total_chunks,
-        }
-        save_pipeline_status(status_data)
-        time.sleep(1)
-
-    # チャンク生成完了後の自動判定
-    if has_unresolved_chunk:
-        print(f"\n⚠️ 動画 [{video_id}] に手修正が必要なチャンクが含まれています。")
-        print(f"👉 修正用ファイル: 『{temp_chunk_file}』")
-        print("💡 手動修正後、`python 02_build_final_json.py` を実行してください。02の自動実行はスキップして次の動画へ進みます。")
-        need_fix_videos.append(video_id)
-    else:
-        print(f"\n🎉 全チャンクが正常に揃いました！ 自動で 02 (データ結合処理) を呼び出します...")
-        build_final_json(video_id, original_title, upload_date, raw_tags, transcript_list)
-
-tracker.print_summary()
-
-if need_fix_videos:
-    print(f"\n⚠️ 以下の動画は手作業の修正が必要です: {need_fix_videos}")
-    print("手修正後に `python 02_build_final_json.py` を実行してください。")
-
-print("\n🎉 全URLの API生成処理が完了しました！")
+# 01 単体で直接実行された場合のみ呼び出す
+if __name__ == "__main__":
+    main()
