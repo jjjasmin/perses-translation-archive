@@ -1215,7 +1215,7 @@
     }
 
     function init() {
-      fetch('videos.json')
+      fetch('data/videos.json')
         .then(response => {
           if (!response.ok) throw new Error('videos.json が見つかりません');
           return response.json();
