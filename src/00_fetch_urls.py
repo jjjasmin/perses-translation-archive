@@ -1,5 +1,6 @@
 import os
 import sys
+import importlib
 from yt_dlp import YoutubeDL
 
 # 取得したい再生リストやチャンネルのURL
@@ -42,11 +43,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # 01_generate_raw_chunks.py を呼び出し
-    try:
-        import generate_raw_chunks_01 as step01
-    except ImportError:
-        import importlib
-        step01 = importlib.import_module("01_generate_raw_chunks")
+    step01 = importlib.import_module("01_generate_raw_chunks")
 
     print("\n🚀 01_generate_raw_chunks.py を実行します...\n")
     step01.TARGET_URLS = urls

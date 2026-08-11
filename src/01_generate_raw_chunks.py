@@ -10,13 +10,9 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from yt_dlp import YoutubeDL
 
 # 02の結合処理をモジュールとしてインポート
-try:
-    from build_final_json_02 import build_final_json
-except ImportError:
-    # 同一ディレクトリのファイル名が 02_build_final_json.py の場合
-    import importlib
-    build_module = importlib.import_module("02_build_final_json")
-    build_final_json = build_module.build_final_json
+import importlib
+build_module = importlib.import_module("02_build_final_json")
+build_final_json = build_module.build_final_json
 
 
 # ==========================================
