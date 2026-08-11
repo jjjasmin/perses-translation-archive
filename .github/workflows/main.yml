@@ -28,7 +28,7 @@ jobs:
         env:
           GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
         run: |
-          python 00_fetch_urls.py
+          python src/00_fetch_urls.py
 
       - name: 生成されたJSONデータを自動コミット＆プッシュ
         run: |
