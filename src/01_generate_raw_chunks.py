@@ -14,6 +14,14 @@ import importlib
 build_module = importlib.import_module("02_build_final_json")
 build_final_json = build_module.build_final_json
 
+# ルート階層にある .env を明示的に読み込む
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.join(BASE_DIR, "..", ".env")
+load_dotenv(dotenv_path)
+
+# その後で API キーを取得
+raw_keys = os.getenv("GEMINI_API_KEYS", "")
+
 
 # ==========================================
 # 0. トークン管理クラス
@@ -75,7 +83,7 @@ def get_client(key_index: int):
 client = get_client(current_key_index)
 
 TARGET_URLS = [
-    "https://www.youtube.com/watch?v=NvrHLb-4lkk",
+    "https://www.youtube.com/watch?v=iZdVNGHTLmA",
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,7 +91,7 @@ status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 os.makedirs(DATA_DIR, exist_ok=True)
 
-CHUNK_SIZE = 60
+CHUNK_SIZE = 50
 CONTEXT_SIZE = 3
 
 
@@ -147,7 +155,20 @@ def parse_chunk_response(raw_text: str):
         result["items"] = try_decode(result["items"])
     return result
 
+def check_id_completeness(raw_text: str, expected_ids: set) -> bool:
+    # よりシンプル＆確実に「[1,」や「1:」などのIDを抽出する正規表現
+    found_ids = set(map(int, re.findall(r'(?:\[|^\s*|"\s*)(\d{1,4})\s*(?:,||:|\]|\s)', raw_text, re.MULTILINE)))
+    
+    missing = expected_ids - found_ids
+    if missing:
+        # どのIDが検出できなかったかを画面に出力して原因特定
+        print(f"    🔍 [デバッグ] 期待ID: {sorted(list(expected_ids))} | 検出ID: {sorted(list(found_ids))}")
+        print(f"    ❌ [デバッグ] 不足しているID: {sorted(list(missing))}")
+        
+    return expected_ids.issubset(found_ids)
+
 def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -> bool:
+    """JSONの構造とIDの完全性を検証"""
     if not isinstance(data, dict):
         return False
     if is_first_chunk and not data.get("title"):
@@ -161,14 +182,23 @@ def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -
     for row in items:
         if not isinstance(row, list) or len(row) < 3:
             return False
+        
         item_id, kana, trans = row[0], row[1], row[2]
-        if not isinstance(item_id, int) or not str(kana).strip() or not str(trans).strip():
+        
+        # ★ ここを修正！ IDが文字列("1")で返ってきても数値(1)にキャスト（変換）して許容する
+        try:
+            item_id = int(item_id)
+        except (ValueError, TypeError):
             return False
+
+        if not str(kana).strip() or not str(trans).strip():
+            return False
+            
         found_ids.add(item_id)
 
     return expected_ids.issubset(found_ids)
 
-def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: str = "gemini-3.5-flash"):
+def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: str = "gemini-3.5-flash-lite"):
     global current_key_index, client
     max_retries = 5
     base_backoff = 5
@@ -178,7 +208,25 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: st
             response = client.models.generate_content(
                 model=model_name,
                 contents=prompt,
-                config={"response_mime_type": "application/json", "max_output_tokens": 8192},
+                # call_gemini_api_with_retry 内の config を更新
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "title": {"type": "STRING"},
+                            "items": {
+                                "type": "ARRAY",
+                                "items": {
+                                    "type": "ARRAY",
+                                    "items": {"type": "STRING"} # [ID, カタカナ, 日本語]
+                                }
+                            }
+                        },
+                        "required": ["items"]
+                    },
+                    "max_output_tokens": 8192
+                }
             )
             tracker.log(response, prefix=chunk_info)
             return response.text.strip()
@@ -215,29 +263,50 @@ def repair_json_with_light_model(broken_raw_text: str, chunk_info: str = "") -> 
 【対象テキスト】
 {broken_raw_text}"""
     try:
-        return call_gemini_api_with_retry(repair_prompt, chunk_info=f"{chunk_info}-Repair", model_name="gemini-2.5-flash")
+        return call_gemini_api_with_retry(repair_prompt, chunk_info=f"{chunk_info}-Repair", model_name="gemini-3.5-flash-lite")
     except Exception as e:
         print(f"    ⚠️ リペアAPI実行エラー: {e}")
         return ""
 
 def get_video_metadata(video_id: str):
-    url = f"[https://www.youtube.com/watch?v=](https://www.youtube.com/watch?v=){video_id}"
+    url = f"https://www.youtube.com/watch?v={video_id}"
     ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         return info.get("title", ""), info.get("upload_date", ""), info.get("tags", []) or []
 
 def fetch_transcript(video_id: str):
+    # 最新版(v0.6.3+)のインスタンス化呼び出しを試行
     try:
-        api = YouTubeTranscriptApi()
-        transcript_list = api.list_transcripts(video_id)
-        try:
-            return transcript_list.find_manually_created_transcript(["th", "en", "ja"]).fetch()
-        except Exception:
-            return transcript_list.find_generated_transcript(["th"]).fetch()
-    except Exception:
-        return YouTubeTranscriptApi.get_transcript(video_id, languages=["th", "en", "ja"])
+        ytt_api = YouTubeTranscriptApi()
+        if hasattr(ytt_api, "list"):
+            transcript_list = ytt_api.list(video_id)
+        elif hasattr(ytt_api, "list_transcripts"):
+            transcript_list = ytt_api.list_transcripts(video_id)
+        else:
+            # 旧バージョン(クラス直接呼び出し)
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+    except AttributeError:
+        # クラス直接呼び出しのフォールバック
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
 
+    # 1. 手動作成された字幕（タイ語・英語・日本語）を探す
+    try:
+        return transcript_list.find_manually_created_transcript(["th", "en", "ja"]).fetch()
+    except Exception:
+        pass
+
+    # 2. 自動生成された字幕（タイ語・英語・日本語）を探す
+    try:
+        return transcript_list.find_generated_transcript(["th", "en", "ja"]).fetch()
+    except Exception:
+        pass
+
+    # 3. その他利用可能な字幕を取得
+    for t in transcript_list:
+        return t.fetch()
+
+    raise RuntimeError("利用可能な字幕が見つかりませんでした。")
 
 # ==========================================
 # 3. メイン生成ループ
@@ -249,7 +318,7 @@ def main(urls=None):
     status_data = load_pipeline_status()
     need_fix_videos = []
     
-    for url in TARGET_URLS:
+    for url in target_list:
         video_id = extract_video_id(url)
         if not video_id:
             continue
@@ -269,12 +338,36 @@ def main(urls=None):
     
             transcript_list = []
             for idx, item in enumerate(fetched, 1):
+                # 辞書型(dict)かオブジェクト(FetchedTranscriptSnippet)かでアクセスを切り替え
+                if isinstance(item, dict):
+                    start_val = item.get("start", 0.0)
+                    duration_val = item.get("duration", 0.0)
+                    text_val = item.get("text", "")
+                else:
+                    start_val = getattr(item, "start", 0.0)
+                    duration_val = getattr(item, "duration", 0.0)
+                    text_val = getattr(item, "text", "")
+
                 transcript_list.append({
                     "id": idx,
-                    "start": round(item["start"], 2),
-                    "end": round(item["start"] + item["duration"], 2),
-                    "text": re.sub(r'>>\s*', '', item["text"]).strip()
+                    "start": round(start_val, 2),
+                    "end": round(start_val + duration_val, 2),
+                    "text": re.sub(r'>>\s*', '', str(text_val)).strip()
                 })
+
+            # ==========================================
+            # ★【追加】YouTubeから取得した生データを別ファイルとして保存
+            # ==========================================
+            temp_source_file = os.path.join(DATA_DIR, f"temp_source_{video_id}.json")
+            with open(temp_source_file, "w", encoding="utf-8") as f:
+                json.dump({
+                    "video_id": video_id,
+                    "original_title": original_title,
+                    "upload_date": upload_date,
+                    "raw_tags": raw_tags,
+                    "transcript": transcript_list
+                }, f, ensure_ascii=False, indent=2)
+
         except Exception as e:
             print(f"❌ 字幕データ取得失敗: {e}")
             continue
@@ -300,63 +393,149 @@ def main(urls=None):
             target_batch = chunks[chunk_idx]
             start_id, end_id = target_batch[0]["id"], target_batch[-1]["id"]
             expected_ids = set(item["id"] for item in target_batch)
-    
+
             minimal_input = [{"id": item["id"], "text": item["text"]} for item in target_batch]
             context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
             context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
-    
+
             output_format = f'{{\n  "title": "{original_title} の日本語訳タイトル",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
-    
-            prompt = f"""タイのボーイズグループ「PERSES」の字幕翻訳タスクです。指定フォーマットの完全なJSONのみ出力してください。
-    【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}\n【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
-    【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
-    【出力フォーマット】\n{output_format}"""
+
+            prompt = f"""あなたはタイのボーイズグループ「PERSES」のコンテンツを日本語に翻訳・解析する専門家です。
+
+指定されたJSONフォーマットに従って完全なJSONデータのみを出力してください。
+
+【翻訳および発音カタカナ作成ルール】
+・自然で親しみやすい日本語会話体に翻訳してください。
+・感嘆詞や文末のニュアンスに合わせて、ファンが読みやすいカタカナ表記を作成してください。
+・【重要】発音カタカナでは、タイ文字（例: รอบ など）やアルファベットをそのまま出力することを【絶対厳禁】とし、すべての音を必ず日本語のカタカナのみで表記してください。
+・【重要】日本語訳に含まれるダブルクォーテーション（"）は、JSON破綻を防ぐため必ず「」や『』などの鍵かっこに置換してください。
+
+【グループおよび基本情報】
+・グループ名: PERSES（読み方はパーセス） ／ ファンダム名: PIECES（読み方はピーセス）／所属会社: GNEST（読み方はジーネスト）
+■ メンバー識別・呼称:
+1. 🦥 ジャン（JUNG）
+   ・愛称/呼称: ジャン、ピジャン、ウィコーン
+2. 🐒 ネー（NAY）
+   ・愛称/呼称: ネー、ピネー、ナラン、ナランヴィク
+3. 🦈 クリッティン（KRITTIN）
+   ・愛称/呼称: クリッティン、クリット
+4. 🐶 パーム（PALM）
+   ・愛称/呼称: パーム、ノンパーム、トンパーム、ピラウィッチ
+5. 🐱 プラッギー（PLUGGY）
+   ・愛称/呼称: プラッギー、ギー、ノンギー、ギーギー、タラコーン
+
+【メンバーの呼称・愛称の表記ルール】
+・日本語訳内でのメンバー呼称は、定義された呼称リストの表記を厳格に守ってください。
+・「พี่จั๋ง（ピー・ジャン）」は「ピ・ジャン」のように中黒（・）やスペースを入れず、必ず「ピジャン」と表記してください。
+・「บักคี้（バック・キー）」や「น้องกี้（ノン・ギー）」などの呼び方は、中黒を入れず「プラッギー」や「ノンギー」等、指定の表記に統一してください。
+
+【日本語訳のトーン・表現ルール】
+・一人称は全メンバー共通で原則「僕」または「僕たち」に統一してください。ただし、自分の名前を一人称にしている愛嬌表現（例：「ギーはね〜」）は、ニュアンスを殺さずそのまま「〇〇は〜」と訳してください。
+・個別の過度な役割語（キャラクター口調）は適用せず、タイ語原文のニュアンス（敬語・タメ口、感情の高ぶり）に忠実で、自然な日本語会話体に翻訳してください。
+・文末に「クラップ/カー（ครับ/ค่ะ）」がついている発言や丁寧な単語が使われている場合は、日本語でも丁寧語・敬語（〜です/〜ます/〜ですね）を維持してください。
+・日本語訳では、タイ語文字（เอ้ย, เฮ้ย, อุ้ย, อู้ว など）を出力することを【絶対厳禁】とします。
+・リアクションや感嘆詞は【カタカナ音声】に変換してください。
+・笑いの表現は「555」を使用してください。
+・基本はタメ口で話している途中に急に文末詞をつけて「敬語」に戻った場合（照れ、皮肉、改まった雰囲気など）は、その落差（ギャップ）が日本語テロップでも伝わるように表現してください。
+
+【タイ語のカタカナ表記推奨リスト（タイ沼・ファン向け）】
+視聴者がタイカルチャーに親しみがあることを前提に、以下の定番単語・挨拶・リアクションは日本語に直訳（「こんにちは」「かわいい」等）せず、指定のカタカナ表記にカッコ書きでキャラクターに合わせた翻訳文を添えて出力してください。
+発音カタカナを出力する際は、単語や意味の区切り、語尾とのつなぎ目に「・」（中黒）を入れて読みやすく区切ってください。（例: 「サワッディー・クラップ」「ナーラック・ジャン」）
+※文末詞（ナ、ジャン、ルーイ、ア等）が伴う場合は、語尾まであわせてカタカナ化し、ニュアンスをカッコ内に反映してください。
+※「サワッディー」「コップン」などの超定番挨拶は、認知度が高いためカッコ書きの補足は不要です。
+
+■ 挨拶・感謝・返事:
+・สวัสดี（サワッディー / サワディー・クラップ）※英語の「ハロー！」等に訳すのは禁止。補足訳は不要。
+・ขอบคุณ（コップン / コップン・クラップ / コップン・ナ）※感謝表現。補足訳は不要。
+・ใช่（チャイ）※語尾も含めてカタカナ化（例: 「チャイ・ナ（そうだよ〜）」「チャイ・シ！（もちろん！）」）
+・ไม่ใช่（マイチャイ）※語尾も含めてカタカナ化（例: 「マイチャイ・ナ（ちがうよ〜）」「マイチャイ・クラップ（違います）」）
+・ครับ（クラップ）※返事・丁寧な文末表現（例: 「クラップ（はい）」）
+
+■ 呼称・感情・形容詞:
+・พี่（ピー）※敬称（例: ピジャン、ピネー）※補足訳は不要。
+・น้อง（ノン）※敬称（例: ノンパーム、ノンギー）※補足訳は不要。
+・น่ารัก（ナーラック）※語尾も含めてカタカナ化（例: 「ナーラック・ジャン〜（すごくかわいいね）」「ナーラック・ルーイ！（めちゃくちゃかわいい！）」）
+
+【外来語・英語由来の言葉の翻訳ルール】
+・日本語でも同じ感覚・文脈で通じる外来語（例: Amazing → アメイジング、 touch → タッチ）は、テンションに合わせてカタカナ表記で出力してください。
+・日本人に通じない・誤解を与える外来語（例: 英語由来だがタイ語で「おしゃれ・粋」の意味で使われる gay / เก๋ など）はカタカナ化せず、意味の通じる日本語（例: 「おしゃれ〜」など）に翻訳してください。
+
+【タイ語特有の文化・表現に対する「注釈」の挿入】
+・日本人にとって馴染みのない文化、スラング、商品名、人名、タイ語特有の言葉遊び（ダジャレ等）が出た場合は、カッコ等で直後に簡潔な注釈を入れてください。
+  例：「〜なんだよ（※タイの人気SNSで話題のフレーズ）」
+  例：「ソムタム（※パパイヤの辛いサラダ）食べたい！」
+
+---
+
+【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}\n【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
+【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
+【出力フォーマット】\n{output_format}"""
     
             parsed_res = None
             is_chunk_success = False
-            last_raw_text = ""
-    
-            # 再試行パイプライン（最大3回）
-            for attempt in range(1, 4):
-                chunk_info = f"Chunk {chunk_idx + 1}/{total_chunks} (試行 {attempt}/3)"
+            failed_raw_history = []  # メイン翻訳APIの失敗生データ（最大3回分）を蓄積
+
+            # メイン翻訳API（最大3回試行）
+            for main_attempt in range(1, 4):
+                chunk_info = f"Chunk {chunk_idx + 1}/{total_chunks} (メイン試行 {main_attempt}/3)"
                 print(f"🔄 処理中: {chunk_info} (ID {start_id}〜{end_id})")
-    
+
                 try:
                     raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
-                    last_raw_text = raw_text
+                    failed_raw_history.append(f"#NEED_FIX [メイン試行 {main_attempt}]\n" + raw_text)
                 except Exception as e:
                     print(f"  ❌ APIエラー: {e}")
                     continue
-    
-                # 一次パース & 検証
+
                 candidate = parse_chunk_response(raw_text)
+
+                # 1. 完璧に成功した場合
                 if validate_chunk_data(candidate, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                    print(f"  ✅ 一次パース ＆ 検証成功！")
+                    print(f"  ✅ 一次パース ＆ 全ID検証成功！")
                     parsed_res, is_chunk_success = candidate, True
                     break
-    
-                # 軽量LLMリペア
-                print(f"  ⚠️ パース失敗。軽量LLMでリペア中...")
-                repaired_text = repair_json_with_light_model(raw_text, chunk_info=chunk_info)
-                if repaired_text:
-                    candidate_repaired = parse_chunk_response(repaired_text)
-                    if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                        print(f"  🎉 リペア ＆ 検証に成功しました！")
-                        parsed_res, is_chunk_success = candidate_repaired, True
-                        break
-    
-                print(f"  ❌ 試行 {attempt} 失敗。メイン翻訳から再生成します...")
-    
+
+                # 2. IDが不足している（データ欠落）場合 ➔ リペアせず即メイン再走
+                # 修正後：生のレスポンス文字列(raw_text)をそのまま渡す！
+                has_all_ids = check_id_completeness(raw_text, expected_ids)
+                if not has_all_ids:
+                    print(f"  ⚠️ IDの欠落（データ抜け）を検知しました。リペアは行わずメイン翻訳APIを再実行します...")
+                    continue
+
+                # 3. IDは全揃いだがJSONが壊れている場合 ➔ リペアAPI（最大3回試行）
+                print(f"  ⚠️ ID全揃い・JSON構造不全。リペアAPI（最大3回）を実行します...")
+                repair_success = False
+                for repair_attempt in range(1, 4):
+                    r_info = f"{chunk_info}-Repair_{repair_attempt}"
+                    repaired_text = repair_json_with_light_model(raw_text, chunk_info=r_info)
+                    if repaired_text:
+                        candidate_repaired = parse_chunk_response(repaired_text)
+                        if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=(chunk_idx == 0)):
+                            print(f"  🎉 リペア (試行 {repair_attempt}/3) ＆ 検証に成功しました！")
+                            parsed_res, is_chunk_success, repair_success = candidate_repaired, True, True
+                            break
+                    print(f"    ❌ リペア試行 {repair_attempt}/3 失敗")
+
+                if repair_success:
+                    break
+                else:
+                    print(f"  ❌ リペア3回失敗。メイン翻訳APIからやり直します...")
+
+            # 結果の保存判定
             if is_chunk_success and parsed_res is not None:
                 parsed_chunks_data.append(parsed_res)
             else:
-                print(f"❌ チャンク {chunk_idx + 1} は3回試行しても正常化できませんでした。生テキストを保持します。")
-                parsed_chunks_data.append(last_raw_text)
+                print(f"❌ チャンク {chunk_idx + 1} はメイン試行3回・リペア試行を経て正常化できませんでした。#NEED_FIX 生テキスト履歴を保持します。")
+                parsed_chunks_data.append({
+                    "status": "#NEED_FIX",
+                    "chunk": chunk_idx + 1,
+                    "raw_history": failed_raw_history
+                })
                 has_unresolved_chunk = True
-    
+
             with open(temp_chunk_file, "w", encoding="utf-8") as f:
                 json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
-    
+
             status_data[video_id] = {
                 "title": original_title,
                 "generate": "in_progress",
