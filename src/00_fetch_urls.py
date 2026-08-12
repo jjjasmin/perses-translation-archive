@@ -39,17 +39,22 @@ def fetch_all_video_urls(sources):
     return unique_urls
 
 if __name__ == "__main__":
-    urls = fetch_all_video_urls(TARGET_SOURCES)
+    from git_utils import push_to_github, trigger_cloudflare_build_if_needed
 
+    urls = fetch_all_video_urls(TARGET_SOURCES)
     if not urls:
         print("❌ 有効な動画URLが取得できませんでした。")
         sys.exit(0)
 
-    # ★ 最新1件だけに絞り込む（テスト用）
-    urls = urls[:3]
-
-    # 01_generate_raw_chunks.py を呼び出し
+    # テスト用四件だけ
+    urls = urls[:5]
     step01 = importlib.import_module("01_generate_raw_chunks")
 
     print("\n🚀 01_generate_raw_chunks.py を実行します...\n")
-    step01.main(urls)  # ← ここで全件URLを渡して実行！
+    
+    # 全処理実行 & 完了件数を取得
+    completed_count = step01.main(urls)
+
+    # 処理完了後にGitプッシュ & Cloudflareビルド判定（テスト用３件だけ）
+    push_to_github()
+    trigger_cloudflare_build_if_needed(completed_count, threshold=3)
