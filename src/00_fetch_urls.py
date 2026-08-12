@@ -46,7 +46,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # ★ 最新1件だけに絞り込む（テスト用）
-    urls = urls[:1]
+    urls = urls[:3]
 
     # 01_generate_raw_chunks.py を呼び出し
     step01 = importlib.import_module("01_generate_raw_chunks")
