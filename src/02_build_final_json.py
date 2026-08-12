@@ -70,7 +70,6 @@ def get_video_metadata(video_id: str):
         info = ydl.extract_info(url, download=False)
         return info.get("title", ""), info.get("upload_date", ""), info.get("tags", []) or []
 
-# ★【追加】YouTubeから字幕データを取得する関数
 def fetch_transcript(video_id: str):
     try:
         ytt_api = YouTubeTranscriptApi()
@@ -83,20 +82,25 @@ def fetch_transcript(video_id: str):
     except AttributeError:
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
 
+    # 優先順位 1: タイ語字幕（公式手動）
     try:
-        return transcript_list.find_manually_created_transcript(["th", "en", "ja"]).fetch()
+        return transcript_list.find_manually_created_transcript(["th"]).fetch()
     except Exception:
         pass
 
+    # 優先順位 2: タイ語字幕（自動生成）
     try:
-        return transcript_list.find_generated_transcript(["th", "en", "ja"]).fetch()
+        return transcript_list.find_generated_transcript(["th"]).fetch()
     except Exception:
         pass
 
-    for t in transcript_list:
-        return t.fetch()
+    # 優先順位 3: 英語字幕（公式手動）
+    try:
+        return transcript_list.find_manually_created_transcript(["en"]).fetch()
+    except Exception:
+        pass
 
-    raise RuntimeError("利用可能な字幕が見つかりませんでした。")
+    raise RuntimeError("対象の字幕（タイ語手動・タイ語自動・英語手動）が見つかりませんでした。")
 
 
 def build_final_json(
@@ -324,7 +328,15 @@ def build_final_json(
         print(f"⚠️ 一部エラー・空欄があるため `#NEED_FIX` 付与で 『{output_file}』 を出力しました。")
     else:
         print(f"✅ 『{output_file}』 および 『videos.json』 の保存に成功しました！")
-        #後で★　一時データ削除処理を入れる
+        
+    # 一時ファイルの削除処理
+    for temp_file in (temp_chunk_file, temp_source_file):
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except Exception as e:
+                print(f"⚠️ 一時ファイルの削除に失敗しました ({os.path.basename(temp_file)}): {e}")
+
     return True
 
 
@@ -339,5 +351,3 @@ if __name__ == "__main__":
             v_id = os.path.basename(t_file).replace("temp_raw_chunks_", "").replace(".json", "")
             build_final_json(v_id)
         print("\n✨ すべての手動ビルド処理が完了しました！")
-
-        #後で★　一時データ削除処理を入れる

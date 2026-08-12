@@ -451,7 +451,7 @@
 
     .transcript-section {
       width: 100%;
-      max-height: 350px;
+      max-height: 60vh;
       overflow-y: auto;
       border: 1px solid #eee;
       border-radius: 8px;
@@ -1057,7 +1057,7 @@
       });
     }
 
-    const mediaQuery960 = window.matchMedia('(max-width: 960px)');
+    const mediaQuery768 = window.matchMedia('(max-width: 768px)');
 
     function handleResponsiveLayout(e) {
       if (currentLayoutMode === 'fullscreen') return;
@@ -1074,8 +1074,8 @@
       }
     }
 
-    mediaQuery960.addEventListener('change', handleResponsiveLayout);
-    handleResponsiveLayout(mediaQuery960);
+    mediaQuery768.addEventListener('change', handleResponsiveLayout);
+    handleResponsiveLayout(mediaQuery768);
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && currentLayoutMode === 'fullscreen') {
@@ -1230,7 +1230,22 @@
           setupSearchEvents();
 
           resetVideoListDisplay();
-          selectVideoByIndex(0, filteredVideos[0].file, filteredVideos[0].id);
+
+          // ★ URLパラメータ (?v=...) から動画IDを取得
+          const urlParams = new URLSearchParams(window.location.search);
+          const initialVideoId = urlParams.get('v');
+
+          let targetIndex = 0;
+          if (initialVideoId) {
+            // ID または file名 で動画を検索
+            const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
+            if (foundIndex !== -1) {
+              targetIndex = foundIndex;
+            }
+          }
+
+          // 対象の動画を選択（URLパラメータ更新フラグ: false）
+          selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false);
           setupScrollListener();
         })
         .catch(error => {
@@ -1375,7 +1390,8 @@
       });
     }
 
-    function selectVideoByIndex(index, fileName, videoId) {
+    // ★ 引数に updateUrl（デフォルト: true）を追加
+    function selectVideoByIndex(index, fileName, videoId, updateUrl = true) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       currentVideoIndex = index;
@@ -1388,6 +1404,12 @@
           item.classList.remove('active');
         }
       });
+
+      // ★ 動画選択時にURLのパラメータ (?v=動画ID) を書き換える
+      if (updateUrl) {
+        const newUrl = `${window.location.pathname}?v=${videoId}`;
+        window.history.pushState({ videoId: videoId }, '', newUrl);
+      }
 
       loadVideo(fileName, videoId);
     }
@@ -1522,6 +1544,19 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
     }
+
+    // ★ ブラウザの「戻る」「進む」ボタンが押された時の処理
+    window.addEventListener('popstate', (e) => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const videoId = urlParams.get('v');
+      
+      if (videoId && filteredVideos.length > 0) {
+        const index = filteredVideos.findIndex(v => v.id === videoId || v.file === videoId);
+        if (index !== -1) {
+          selectVideoByIndex(index, filteredVideos[index].file, filteredVideos[index].id, false);
+        }
+      }
+    });
 
     document.addEventListener('keydown', (e) => {
       if (document.activeElement === searchInput) {

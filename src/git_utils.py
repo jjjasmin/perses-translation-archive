@@ -11,6 +11,13 @@ load_dotenv(dotenv_path)
 
 def push_to_github():
     """data/transcripts, data/videos.json, pipeline_status.json に差分がある場合のみGitへ自動プッシュ"""
+    # ★追加: スクリプトの場所からプロジェクトのルート階層（親フォルダ）の絶対パスを取得
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(script_dir, ".."))
+    
+    # ★追加: 必ずプロジェクトルートにカレントディレクトリを移動する
+    os.chdir(project_root)
+    
     target_files = ["data/transcripts", "data/videos.json", "pipeline_status.json"]
     try:
         status = subprocess.check_output(
@@ -39,6 +46,8 @@ def push_to_github():
 
 def trigger_cloudflare_build_if_needed(processed_count: int, threshold: int = 3):
     """今回完了した動画数が threshold (3件) 以上の場合のみ Deploy Hook を叩く"""
+    processed_count = processed_count or 0
+    
     if processed_count < threshold:
         print(f"ℹ️ Cloudflare: 今回完了した動画は {processed_count} 件です（閾値: {threshold} 件）。自動ビルドをスキップします。")
         return

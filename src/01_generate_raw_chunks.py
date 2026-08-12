@@ -3,10 +3,16 @@ import os
 import re
 import sys
 import time
+import random
 from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import ServerError
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import (
+    TranscriptsDisabled,
+    NoTranscriptFound,
+    CouldNotRetrieveTranscript,
+)
 from yt_dlp import YoutubeDL
 
 # 02の結合処理をモジュールとしてインポート
@@ -257,8 +263,13 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: st
     raise RuntimeError("Gemini APIのリトライ上限に達しました。")
 
 def repair_json_with_light_model(broken_raw_text: str, chunk_info: str = "") -> str:
-    repair_prompt = f"""以下のテキストは不完全なJSONです。文法的に正しい完全なJSONのみを出力してください。
-【制約事項】思考プロセス、解説、```json などの枠組みは一切出力しないこと。内容は変更せず、括弧の閉じ忘れやダブルクォーテーションのエスケープ漏れのみを修正すること。
+    repair_prompt = f"""以下のテキストは不完全または文法エラーのあるJSONです。厳格に正しいJSONに修正して出力してください。
+
+【厳格ルール】
+1. 行や要素（items内の配列データ）を【絶対に削除・省略・追加しない】こと。
+2. 各アイテムの [ID, カタカナ, 日本語訳] の3要素構造を必ず維持すること。
+3. 日本語訳やカタカナの中に含まれるダブルクォーテーション（"）は、すべて「」や『』などの鍵かっこに置換するか、\" にエスケープしてください。
+4. 思考プロセスや解説、```json などの枠組みは一切出力せず、JSONのみを出力してください。
 
 【対象テキスト】
 {broken_raw_text}"""
@@ -276,7 +287,6 @@ def get_video_metadata(video_id: str):
         return info.get("title", ""), info.get("upload_date", ""), info.get("tags", []) or []
 
 def fetch_transcript(video_id: str):
-    # 最新版(v0.6.3+)のインスタンス化呼び出しを試行
     try:
         ytt_api = YouTubeTranscriptApi()
         if hasattr(ytt_api, "list"):
@@ -284,29 +294,29 @@ def fetch_transcript(video_id: str):
         elif hasattr(ytt_api, "list_transcripts"):
             transcript_list = ytt_api.list_transcripts(video_id)
         else:
-            # 旧バージョン(クラス直接呼び出し)
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
     except AttributeError:
-        # クラス直接呼び出しのフォールバック
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
 
-    # 1. 手動作成された字幕（タイ語・英語・日本語）を探す
+    # 優先順位 1: タイ語字幕（公式手動）
     try:
-        return transcript_list.find_manually_created_transcript(["th", "en", "ja"]).fetch()
+        return transcript_list.find_manually_created_transcript(["th"]).fetch()
     except Exception:
         pass
 
-    # 2. 自動生成された字幕（タイ語・英語・日本語）を探す
+    # 優先順位 2: タイ語字幕（自動生成）
     try:
-        return transcript_list.find_generated_transcript(["th", "en", "ja"]).fetch()
+        return transcript_list.find_generated_transcript(["th"]).fetch()
     except Exception:
         pass
 
-    # 3. その他利用可能な字幕を取得
-    for t in transcript_list:
-        return t.fetch()
+    # 優先順位 3: 英語字幕（公式手動）
+    try:
+        return transcript_list.find_manually_created_transcript(["en"]).fetch()
+    except Exception:
+        pass
 
-    raise RuntimeError("利用可能な字幕が見つかりませんでした。")
+    raise RuntimeError("対象の字幕（タイ語手動・タイ語自動・英語手動）が見つかりませんでした。")
 
 # ==========================================
 # 3. メイン生成ループ
@@ -317,6 +327,7 @@ def main(urls=None):
 
     status_data = load_pipeline_status()
     need_fix_videos = []
+    completed_count = 0
     
     for url in target_list:
         video_id = extract_video_id(url)
@@ -327,6 +338,12 @@ def main(urls=None):
         if v_status.get("generate") == "completed":
             print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
             continue
+
+        # ★★★ 【ここから追加】アクセス制限回避のためのランダム待機 ★★★
+        wait_sec = random.uniform(3, 6) # 3〜6秒のランダム待機
+        print(f"☕ アクセス制限回避のため {wait_sec:.1f} 秒待機します...")
+        time.sleep(wait_sec)
+        # ★★★ 【ここまで追加】 ★★★
     
         print(f"\n==========================================")
         print(f"🎬 処理開始: VIDEO_ID = {video_id}")
@@ -368,8 +385,13 @@ def main(urls=None):
                     "transcript": transcript_list
                 }, f, ensure_ascii=False, indent=2)
 
+        except (TranscriptsDisabled, NoTranscriptFound, CouldNotRetrieveTranscript) as e:
+            print(f"⏩ 💡 スキップ: VIDEO_ID = {video_id} は字幕が無効または存在しません。")
+            continue
         except Exception as e:
-            print(f"❌ 字幕データ取得失敗: {e}")
+            # その他の予期せぬエラーは最初の1行だけスッキリ表示
+            err_first_line = str(e).splitlines()[0] if str(e) else "不明なエラー"
+            print(f"❌ 字幕データ取得失敗 (VIDEO_ID = {video_id}): {err_first_line}")
             continue
     
         chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
@@ -398,17 +420,38 @@ def main(urls=None):
             context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
             context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
 
-            output_format = f'{{\n  "title": "{original_title} の日本語訳タイトル",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
+            output_format = f'{{\n  "title": "{original_title} 　を自然な日本語に翻訳してタイトルを作成してください。",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
 
             prompt = f"""あなたはタイのボーイズグループ「PERSES」のコンテンツを日本語に翻訳・解析する専門家です。
 
 指定されたJSONフォーマットに従って完全なJSONデータのみを出力してください。
 
-【翻訳および発音カタカナ作成ルール】
-・自然で親しみやすい日本語会話体に翻訳してください。
-・感嘆詞や文末のニュアンスに合わせて、ファンが読みやすいカタカナ表記を作成してください。
-・【重要】発音カタカナでは、タイ文字（例: รอบ など）やアルファベットをそのまま出力することを【絶対厳禁】とし、すべての音を必ず日本語のカタカナのみで表記してください。
-・【重要】日本語訳に含まれるダブルクォーテーション（"）は、JSON破綻を防ぐため必ず「」や『』などの鍵かっこに置換してください。
+【出力配列構造の厳格ルール】
+配列の各要素は必ず [行ID, "発音カタカナ", "日本語訳"] の3要素で構成してください。
+
+1. 行ID: 入力データの "id" の数値をそのまま保持（例: 1）
+2. 発音カタカナ: タイ語原文の発音を【100%日本語のカタカナのみ】で表記してください。
+   ・タイ文字（ก〜ฮ、スラー等）やアルファベット、タイ語原文を混ぜることは【絶対厳禁】です。
+   ・単語や音節の区切りには「・」（中黒）を入れてください。
+   ・原文のタイ語をそのまま残すのではなく、必ず全ての音をカタカナに変換してください。
+3. 日本語訳: 自然で親しみやすい日本語会話体に翻訳してください。
+
+【文字・記号の厳格禁止ルール】
+・【絶対厳禁】発音カタカナの中にタイ文字（例: แลว, เพื่อน 等）や英語を残すこと。
+・【絶対厳禁】発音カタカナの中にタイ語原文（例: พุ่งขึ้นไป...）とカタカナを併記すること。
+・【絶対厳禁】出力内の全テキストで半角ダブルクォーテーション " を使用すること（引用やカッコは「」や『』を使用）。
+
+【正しく出力するための正解例（Few-Shot）】
+以下のような形式・クオリティで出力してください。
+
+・入力タイ語: "พุ่งขึ้นไปให้ดินไปเหอะ"
+  正解出力: [302, "プン・クン・パイ・ハイ・ディン・パイ・ホック", "思いっきり盛り上げていこう"]
+  ❌不可例1（原文混入）: [302, "พุ่งขึ้นไปให้ดินไปเหอะ・プン・クン・パイ...", "..."]
+  ❌不可例2（タイ文字残存）: [302, "プン・クン・パイ・ให้・ディン...", "..."]
+
+・入力タイ語: "ไม่มีอีกแล้วนะคนแบบฉัน"
+  正解出力: [3, "マイ・ミー・イーク・レオ・ナ・コン・ベーップ・チャン", "もう僕みたいな人なんて他にいないよ"]
+  ❌不可例（タイ文字残存）: [3, "マイ・ミー・イーク・แลว・ナ...", "..."]
 
 【グループおよび基本情報】
 ・グループ名: PERSES（読み方はパーセス） ／ ファンダム名: PIECES（読み方はピーセス）／所属会社: GNEST（読み方はジーネスト）
@@ -553,7 +596,8 @@ def main(urls=None):
             need_fix_videos.append(video_id)
         else:
             print(f"\n🎉 全チャンクが正常に揃いました！ 自動で 02 (データ結合処理) を呼び出します...")
-            build_final_json(video_id, original_title, upload_date, raw_tags, transcript_list)
+            if build_final_json(video_id, original_title, upload_date, raw_tags, transcript_list):
+                completed_count += 1  # ★追加: 正常完了時に+1
     
     tracker.print_summary()
     
@@ -562,6 +606,8 @@ def main(urls=None):
         print("手修正後に `python 02_build_final_json.py` を実行してください。")
     
     print("\n🎉 全URLの API生成処理が完了しました！")
+
+    return completed_count
 
 # 01 単体で直接実行された場合のみ呼び出す
 if __name__ == "__main__":
