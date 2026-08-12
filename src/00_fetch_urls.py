@@ -2,6 +2,7 @@ import os
 import sys
 import importlib
 from yt_dlp import YoutubeDL
+from logger import setup_logger
 
 # 取得したい再生リストやチャンネルのURL
 TARGET_SOURCES = [
@@ -39,6 +40,8 @@ def fetch_all_video_urls(sources):
     return unique_urls
 
 if __name__ == "__main__":
+    setup_logger()
+
     from git_utils import push_to_github, trigger_cloudflare_build_if_needed
 
     urls = fetch_all_video_urls(TARGET_SOURCES)
