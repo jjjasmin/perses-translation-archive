@@ -93,6 +93,8 @@ TARGET_URLS = [
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
+TEMP_DIR = os.path.join(DATA_DIR, "temp")
 status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json"))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -375,7 +377,7 @@ def main(urls=None):
             # ==========================================
             # ★【追加】YouTubeから取得した生データを別ファイルとして保存
             # ==========================================
-            temp_source_file = os.path.join(DATA_DIR, f"temp_source_{video_id}.json")
+            temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
             with open(temp_source_file, "w", encoding="utf-8") as f:
                 json.dump({
                     "video_id": video_id,
@@ -398,7 +400,7 @@ def main(urls=None):
         total_chunks = len(chunks)
         parsed_chunks_data = []
     
-        temp_chunk_file = os.path.join(DATA_DIR, f"temp_raw_chunks_{video_id}.json")
+        temp_chunk_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
         start_chunk_idx = v_status.get("last_processed_chunk", 0)
     
         if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):

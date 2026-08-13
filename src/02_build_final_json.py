@@ -15,6 +15,7 @@ except ImportError:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
+TEMP_DIR = os.path.join(DATA_DIR, "temp")
 TRANSCRIPTS_DIR = os.path.join(DATA_DIR, "transcripts")
 status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json"))
 videos_file = os.path.join(DATA_DIR, "videos.json")
@@ -113,8 +114,8 @@ def build_final_json(
     """temp_raw_chunks_{video_id}.json からデータを読み込んで最終JSONおよび videos.json を構築する"""
     print(f"\n⚙️ [ビルド処理] VIDEO_ID = {video_id} のデータ結合を開始します...")
 
-    temp_chunk_file = os.path.join(DATA_DIR, f"temp_raw_chunks_{video_id}.json")
-    temp_source_file = os.path.join(DATA_DIR, f"temp_source_{video_id}.json")  # ★【追加】元データ一時ファイル
+    temp_chunk_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
+    temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
     output_file = os.path.join(TRANSCRIPTS_DIR, f"video_{video_id}.json")
 
     if not os.path.exists(temp_chunk_file):
@@ -345,7 +346,7 @@ if __name__ == "__main__":
     setup_logger()
 
     # 手動単体実行時：dataディレクトリ内のすべての temp_raw_chunks_*.json を検出して一括ビルド
-    temp_files = glob.glob(os.path.join(DATA_DIR, "temp_raw_chunks_*.json"))
+    temp_files = glob.glob(os.path.join(TEMP_DIR, "temp_raw_chunks_*.json"))
     if not temp_files:
         print("ℹ️ 処理対象の `temp_raw_chunks_*.json` が見つかりませんでした。")
     else:

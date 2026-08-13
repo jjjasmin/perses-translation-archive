@@ -106,6 +106,7 @@ def call_gemini_api_with_retry(prompt: str):
 # ==========================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
+TEMP_DIR = os.path.join(DATA_DIR, "temp")
 
 target_files = sorted(glob.glob(os.path.join(DATA_DIR, "video_*.json")))
 
