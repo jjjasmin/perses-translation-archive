@@ -89,7 +89,7 @@ def get_client(key_index: int):
 client = get_client(current_key_index)
 
 TARGET_URLS = [
-    "https://www.youtube.com/watch?v=iZdVNGHTLmA",
+    "https://www.youtube.com/watch?v=Hsk88zgDK8Q",
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -340,7 +340,7 @@ def main(urls=None):
             continue
 
         # ★★★ 【ここから追加】アクセス制限回避のためのランダム待機 ★★★
-        wait_sec = random.uniform(3, 6) # 3〜6秒のランダム待機
+        wait_sec = random.uniform(40, 60) # 3〜6秒のランダム待機
         print(f"☕ アクセス制限回避のため {wait_sec:.1f} 秒待機します...")
         time.sleep(wait_sec)
         # ★★★ 【ここまで追加】 ★★★

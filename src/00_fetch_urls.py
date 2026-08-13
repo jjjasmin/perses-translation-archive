@@ -50,7 +50,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # テスト用四件だけ
-    urls = urls[:120]
+    urls = urls[:65]
     step01 = importlib.import_module("01_generate_raw_chunks")
 
     print("\n🚀 01_generate_raw_chunks.py を実行します...\n")

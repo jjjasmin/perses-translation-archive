@@ -330,17 +330,20 @@ def build_final_json(
         print(f"✅ 『{output_file}』 および 『videos.json』 の保存に成功しました！")
         
     # 一時ファイルの削除処理
-    for temp_file in (temp_chunk_file, temp_source_file):
-        if os.path.exists(temp_file):
-            try:
-                os.remove(temp_file)
-            except Exception as e:
-                print(f"⚠️ 一時ファイルの削除に失敗しました ({os.path.basename(temp_file)}): {e}")
+    # for temp_file in (temp_chunk_file, temp_source_file):
+    #     if os.path.exists(temp_file):
+    #         try:
+    #             os.remove(temp_file)
+    #         except Exception as e:
+    #             print(f"⚠️ 一時ファイルの削除に失敗しました ({os.path.basename(temp_file)}): {e}")
 
     return True
 
 
 if __name__ == "__main__":
+    from logger import setup_logger
+    setup_logger()
+
     # 手動単体実行時：dataディレクトリ内のすべての temp_raw_chunks_*.json を検出して一括ビルド
     temp_files = glob.glob(os.path.join(DATA_DIR, "temp_raw_chunks_*.json"))
     if not temp_files:

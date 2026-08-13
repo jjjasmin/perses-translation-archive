@@ -2,34 +2,37 @@ import os
 import sys
 from datetime import datetime
 
-class Logger:
-    """標準出力とログファイル（latest.log）の両方に追記出力するクラス"""
-    def __init__(self, log_filepath):
-        self.terminal = sys.stdout
-        # "a" モード（追記）でオープン
-        self.log_file = open(log_filepath, "a", encoding="utf-8")
+class StreamLogger:
+    """標準出力／標準エラー出力とログファイル（latest.log）の両方に書き出すクラス"""
+    def __init__(self, original_stream, log_file):
+        self.original_stream = original_stream
+        self.log_file = log_file
 
     def write(self, message):
-        self.terminal.write(message)
+        self.original_stream.write(message)
         self.log_file.write(message)
         self.log_file.flush()
 
     def flush(self):
-        self.terminal.flush()
+        self.original_stream.flush()
         self.log_file.flush()
 
 def setup_logger():
-    """logs/latest.log への追記ログを開始するセットアップ関数"""
+    """プロジェクトルート直下の logs/latest.log への追記ログを開始する"""
+    # src/logger.py の親ディレクトリ（=プロジェクトルート）を取得
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join(base_dir, "logs")
+    project_root = os.path.abspath(os.path.join(base_dir, ".."))
+    
+    log_dir = os.path.join(project_root, "logs")
     os.makedirs(log_dir, exist_ok=True)
 
-    # ログファイルの保存先（常に固定名）
     log_path = os.path.join(log_dir, "latest.log")
     
-    sys.stdout = Logger(log_path)
+    log_file = open(log_path, "a", encoding="utf-8")
+
+    sys.stdout = StreamLogger(sys.stdout, log_file)
+    sys.stderr = StreamLogger(sys.stderr, log_file)
     
-    # 追記ログの区切り用ヘッダー
     print(f"\n==========================================")
     print(f"🚀 実行開始: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"==========================================")

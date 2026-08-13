@@ -3,7 +3,7 @@
 .env
 00ごみ/
 data/temp_*
-logs/
+logs/*.log
 
 # 音声・動画の一時ファイルや環境変数ファイルも除外
 *.mp3
@@ -12,3 +12,4 @@ logs/
 *.env
 __pycache__/
 .DS_Store
+*.pyc
