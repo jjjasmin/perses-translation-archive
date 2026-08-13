@@ -1645,15 +1645,36 @@
     const copyUrlBtn = document.getElementById('copy-url-btn');
 
     // X（Twitter）でシェア
+    // X（Twitter）でシェア（4パターンの例文をランダム抽出）
     if (xShareBtn) {
       xShareBtn.addEventListener('click', () => {
         const currentVideo = filteredVideos[currentVideoIndex];
-        const videoTitle = currentVideo ? currentVideo.title : 'PERSES翻訳.jp';
+        const videoTitle = currentVideo ? currentVideo.title : 'PERSES動画';
         const currentUrl = window.location.href; // パラメータ(?v=ID)付きのURL
-        
-        // ポスト本文の組み立て
-        const text = `【動画】\nPERSES翻訳.jp #PERSES和訳\n`;
-        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(currentUrl)}`;
+
+        // 4パターンの例文テンプレート
+        const templates = [
+          // パターン1：エモさ・推し活共感重視
+          `🎬【日本語字幕付き】『${videoTitle}』\n\nPERSESメンバーのタイ語の発言やニュアンスを日本語字幕で楽しめます✨\n字幕をクリックで好きなシーンへジャンプ！\n\n#PERSES #パーセス #PERSES和訳\n`,
+
+          // パターン2：機能（字幕＆単語辞書）アピール重視(データ未完成のためコメントアウト)
+          //`💡 タイ語学習にも使える PERSES 日本語字幕アーカイブ\n\n『${videoTitle}』の和訳＆タイ語字幕を公開中！\n気になるタイ語単語をタップすると読み方と意味が出る辞書機能つき🔍\n\n#PERSES #PERSES_TH #PERSES和訳\n`,
+
+          // パターン2.5：機能（字幕＆単語辞書）アピール重視(データ未完成のためコメントアウト)
+          `💡 タイ語学習にも使える PERSES 日本語字幕アーカイブ\n\n『${videoTitle}』の和訳＆タイ語字幕を公開中！\nぜひチェックしてみてください✨\n\n#PERSES #PERSES_TH #PERSES和訳\n`,
+
+          // パターン3：短くすっきり
+          `PERSES『${videoTitle}』の日本語字幕動画です🎥\n動画と字幕が連動して流れるので推しの会話がリアルタイムで楽しめます✨\n\n🔽 翻訳付きで見る\n#PERSES #PERSES和訳\n`,
+
+          // パターン4：ファン（PIXES）への呼びかけ風
+          `日本のPIESESのみなさん🙌\n『${videoTitle}』の日本語翻訳字幕をアップしました！\n\n字幕と動画が連動しているので、可愛い発言を日本語でチェックしてみてください✨\n\n🔽 動画はこちらから\n#PERSES #PERSES和訳\n`
+        ];
+
+        // ランダムに1つ選択
+        const randomText = templates[Math.floor(Math.random() * templates.length)];
+
+        // シェア用URLの作成
+        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(randomText)}&url=${encodeURIComponent(currentUrl)}`;
 
         // 別ウィンドウで投稿画面を開く
         window.open(shareUrl, '_blank', 'width=550,height=420');
