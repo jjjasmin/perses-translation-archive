@@ -7,6 +7,7 @@ import random
 import glob
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from google.genai.errors import ServerError
 
 # 02の結合処理をモジュールとしてインポート
@@ -79,9 +80,16 @@ def get_client(key_index: int):
 
 client = get_client(current_key_index)
 
-TARGET_URLS = [
-    "https://www.youtube.com/watch?v=Hsk88zgDK8Q",
+AVAILABLE_MODELS = [
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash"
 ]
+
+# リペア用軽量モデルを定数として定義
+LIGHT_MODEL_NAME = "gemini-3.5-flash-lite"
+
+current_model_index = 0
 
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
@@ -89,7 +97,7 @@ status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-CHUNK_SIZE = 50
+CHUNK_SIZE = 30
 CONTEXT_SIZE = 3
 
 
@@ -196,17 +204,34 @@ def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -
 
     return expected_ids.issubset(found_ids)
 
-def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: str = "gemini-3.5-flash"):
-    global current_key_index, client
+
+# ==========================================
+# 該当箇所：call_gemini_api_with_retry 関数の修正 (差し替え)
+# ==========================================
+def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_idx: int = None, model_name: str = None):
+    global current_key_index, current_model_index, client
+    
     max_retries = 5
     base_backoff = 5
 
     for attempt in range(1, max_retries + 1):
+        # 1. 直接 model_name が指定されている場合はそれを優先（リペア時など）
+        # 2. default_model_idx が指定されている場合はそのインデックスのモデルを使用
+        # 3. 指定がなければグローバルの current_model_index を使用
+        if model_name:
+            target_model = model_name
+            model_idx = current_model_index
+        elif default_model_idx is not None:
+            model_idx = default_model_idx
+            target_model = AVAILABLE_MODELS[model_idx]
+        else:
+            model_idx = current_model_index
+            target_model = AVAILABLE_MODELS[model_idx]
+
         try:
             response = client.models.generate_content(
-                model=model_name,
+                model=target_model,
                 contents=prompt,
-                # call_gemini_api_with_retry 内の config を更新
                 config={
                     "response_mime_type": "application/json",
                     "response_schema": {
@@ -217,32 +242,72 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: st
                                 "type": "ARRAY",
                                 "items": {
                                     "type": "ARRAY",
-                                    "items": {"type": "STRING"} # [ID, カタカナ, 日本語]
+                                    "items": {"type": "STRING"}
                                 }
                             }
                         },
                         "required": ["items"]
                     },
-                    "max_output_tokens": 8192
+                    "max_output_tokens": 8192,
+                    # 👇 ここを追加してセーフティブロックを解除
+                    "safety_settings": [
+                        types.SafetySetting(
+                            category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                        ),
+                        types.SafetySetting(
+                            category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                        ),
+                        types.SafetySetting(
+                            category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                        ),
+                        types.SafetySetting(
+                            category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                        ),
+                    ],
                 }
             )
-            tracker.log(response, prefix=chunk_info)
+            tracker.log(response, prefix=f"{chunk_info} ({target_model})")
             return response.text.strip()
+
         except Exception as e:
             err_msg = str(e)
             is_429 = "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg
             is_503 = "503" in err_msg or isinstance(e, ServerError)
 
             if is_429:
-                print(f"⚠️ [429 クォータ制限検知] (現在 Index: {current_key_index})")
+                print(f"⚠️ [429 制限検知] モデル: {target_model} | キーIndex: {current_key_index}")
+                
+                # ① まだ次のAPIキーが残っている場合 ➔ キーを切り替え
                 if current_key_index + 1 < len(API_KEYS):
                     current_key_index += 1
-                    print(f"🔄 即座に APIキーを Index {current_key_index} に切り替えて再試行します...")
+                    print(f"🔄 APIキーを Index {current_key_index} に切り替えて再試行します...")
                     client = get_client(current_key_index)
-                    continue  # 待機せず即座に次のキーで再試行
+                    time.sleep(2)  # 念のため2秒待機
+                    # 💡 【重要】キーを切り替えたら、リトライ上限で落ちないようにこのループをやり直す
+                    # forループの外で while や再帰を使うか、一時的にループ上限を回避する
+                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
+                
+                # ② 全キー使い切り ＆ まだ次のモデルがある場合 ➔ モデルを変更してキーをIndex 0に戻す
+                elif model_idx + 1 < len(AVAILABLE_MODELS):
+                    model_idx += 1
+                    current_model_index = model_idx
+                    current_key_index = 0
+                    client = get_client(current_key_index)
+                    print(f"🔀 【モデル切り替え】 次のモデル 『{AVAILABLE_MODELS[model_idx]}』 (キーIndex: 0) へ切替えて続行します！")
+                    time.sleep(2)
+                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
+                
+                # ③ 全モデル ＆ 全キーを使い切った場合 ➔ 60秒待機して再試行（または中断）
                 else:
-                    print("❌ 利用可能なすべてのAPIキーでクォータ制限(429)に達しました。処理を中断します。")
-                    raise RuntimeError("All API keys quota exhausted (429).")
+                    print("⏳ 全キー・全モデルが制限に達しました。60秒待機して再試行します...")
+                    time.sleep(60)
+                    current_key_index = 0
+                    client = get_client(current_key_index)
+                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
 
             if is_503:
                 time.sleep(base_backoff * (2 ** (attempt - 1)))
@@ -251,6 +316,7 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: st
                 sys.exit(1)
 
     raise RuntimeError("Gemini APIのリトライ上限に達しました。")
+
 
 def repair_json_with_light_model(broken_raw_text: str, chunk_info: str = "") -> str:
     repair_prompt = f"""以下のテキストは不完全または文法エラーのあるJSONです。厳格に正しいJSONに修正して出力してください。
@@ -264,86 +330,43 @@ def repair_json_with_light_model(broken_raw_text: str, chunk_info: str = "") -> 
 【対象テキスト】
 {broken_raw_text}"""
     try:
-        return call_gemini_api_with_retry(repair_prompt, chunk_info=f"{chunk_info}-Repair", model_name="gemini-3.5-flash-lite")
+        return call_gemini_api_with_retry(repair_prompt, chunk_info=f"{chunk_info}-Repair", model_name=LIGHT_MODEL_NAME)
     except Exception as e:
         print(f"    ⚠️ リペアAPI実行エラー: {e}")
         return ""
 
-# ==========================================
-# 3. メイン生成ループ
-# ==========================================
-def main(video_ids_or_urls=None):
-    status_data = load_pipeline_status()
-    need_fix_videos = []
-    completed_count = 0
 
-    # 入力（URLまたはID）から video_id 一覧を抽出。引数がない場合は temp ディレクトリから自動検出
-    if video_ids_or_urls:
-        target_ids = [extract_video_id(item) for item in video_ids_or_urls]
+def process_batch_with_split(
+    batch,
+    transcript_list,
+    original_title,
+    is_first_chunk=False,
+    depth=0,
+    chunk_label="",
+):
+    """
+    バッチ（ID群）の翻訳を実行。
+    ハングアップ（タイムアウト）やJSON崩れ、リペア失敗時は自動でバッチを2分割（ID半減）して再帰実行する。
+    """
+    if not batch:
+        return []
+
+    start_id, end_id = batch[0]["id"], batch[-1]["id"]
+    expected_ids = set(item["id"] for item in batch)
+    indent = "  " * depth
+
+    if chunk_label:
+        display_label = f"{chunk_label} (ID {start_id}〜{end_id})" if depth == 0 else f"{chunk_label} [分割] (ID {start_id}〜{end_id})"
     else:
-        temp_sources = glob.glob(os.path.join(TEMP_DIR, "temp_source_*.json"))
-        target_ids = [os.path.basename(f).replace("temp_source_", "").replace(".json", "") for f in temp_sources]
+        display_label = f"ID {start_id}〜{end_id}"
 
-    for video_id in target_ids:
-        if not video_id:
-            continue
-    
-        v_status = status_data.get(video_id, {})
-        if v_status.get("generate") == "completed":
-            print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
-            continue
+    minimal_input = [{"id": item["id"], "text": item["text"]} for item in batch]
+    context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
+    context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
 
-        # ★【変更】YouTube通信を一切行わず、事前取得済みの一時ファイルを読み込む
-        temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
-        if not os.path.exists(temp_source_file):
-            print(f"⚠️ 一時ファイル 『{temp_source_file}』 が見つかりません。スキップします。")
-            continue
+    output_format = f'{{\n  "title": "{original_title}  を自然な日本語に翻訳してタイトルを作成してください。",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if is_first_chunk else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
 
-        try:
-            with open(temp_source_file, "r", encoding="utf-8") as f:
-                src_data = json.load(f)
-                original_title = src_data.get("original_title", "")
-                upload_date = src_data.get("upload_date", "")
-                raw_tags = src_data.get("raw_tags", [])
-                transcript_list = src_data.get("transcript", [])
-        except Exception as e:
-            print(f"❌ 一時ファイル読み込みエラー (VIDEO_ID = {video_id}): {e}")
-            continue
-
-        print(f"\n==========================================")
-        print(f"🎬 処理開始: VIDEO_ID = {video_id}")
-        print(f"==========================================")
-    
-        chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
-        total_chunks = len(chunks)
-        parsed_chunks_data = []
-    
-        temp_chunk_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
-        start_chunk_idx = v_status.get("last_processed_chunk", 0)
-    
-        if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
-            try:
-                with open(temp_chunk_file, "r", encoding="utf-8") as f:
-                    parsed_chunks_data = json.load(f)
-                print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
-            except Exception:
-                parsed_chunks_data, start_chunk_idx = [], 0
-    
-        has_unresolved_chunk = False
-        unresolved_chunks_info = []
-    
-        for chunk_idx in range(start_chunk_idx, total_chunks):
-            target_batch = chunks[chunk_idx]
-            start_id, end_id = target_batch[0]["id"], target_batch[-1]["id"]
-            expected_ids = set(item["id"] for item in target_batch)
-
-            minimal_input = [{"id": item["id"], "text": item["text"]} for item in target_batch]
-            context_before = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] < start_id][-CONTEXT_SIZE:]
-            context_after = [{"id": item["id"], "text": item["text"]} for item in transcript_list if item["id"] > end_id][:CONTEXT_SIZE]
-
-            output_format = f'{{\n  "title": "{original_title} 　を自然な日本語に翻訳してタイトルを作成してください。",\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}' if chunk_idx == 0 else '{{\n  "items": [[行ID, "発音カタカナ", "日本語訳"]]\n}}'
-
-            prompt = f"""あなたはタイのボーイズグループ「PERSES」のコンテンツを日本語に翻訳・解析する専門家です。
+    prompt = f"""あなたはタイのボーイズグループ「PERSES」のコンテンツを日本語に翻訳・解析する専門家です。
 
 指定されたJSONフォーマットに従って完全なJSONデータのみを出力してください。
 
@@ -431,98 +454,193 @@ def main(video_ids_or_urls=None):
 
 ---
 
-【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}\n【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
+【直前文脈】\n{json.dumps(context_before, ensure_ascii=False)}
+【直後文脈】\n{json.dumps(context_after, ensure_ascii=False)}
 【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
 【出力フォーマット】\n{output_format}"""
+
+    # メイン翻訳試行 (最大3回)
+    for main_attempt in range(1, 2):
+        chunk_info = f"{display_label} (メイン試行 {main_attempt}/3)"
+        print(f"{indent}🔄 処理中: {chunk_info}")
+
+        try:
+            raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
+        except Exception as e:
+            # 💡 【変更点】タイムアウトやハングアップ、APIエラー発生時も検知してログ出力
+            print(f"{indent}  ⚠️ メインAPI呼び出しエラー/ハングアップ検知 ({e})")
+            continue
+
+        candidate = parse_chunk_response(raw_text)
+
+        # 1. 一次検証成功
+        if validate_chunk_data(candidate, expected_ids, is_first_chunk=is_first_chunk):
+            print(f"{indent}  ✅ 一次パース ＆ 全ID検証成功！")
+            return [candidate]
+
+        # 2. ID全揃い時のリペア試行 (最大3回)
+        if check_id_completeness(raw_text, expected_ids):
+            print(f"{indent}  ⚠️ ID全揃い・JSON構造不全。リペアAPIを実行します...")
+            for repair_attempt in range(1, 4):
+                r_info = f"{chunk_info}-Repair_{repair_attempt}"
+                repaired_text = repair_json_with_light_model(raw_text, chunk_info=r_info)
+                if repaired_text:
+                    candidate_repaired = parse_chunk_response(repaired_text)
+                    if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=is_first_chunk):
+                        print(f"{indent}  🎉 リペア成功！")
+                        return [candidate_repaired]
+
+    # --- 💡 【変更点】メイン3回・リペア3回、またはハングアップ等で解決しない場合の「ID半減分割処理」 ---
+    if len(batch) > 1:
+        mid = len(batch) // 2
+        left_batch = batch[:mid]
+        right_batch = batch[mid:]
+        print(f"\n{indent}🚨 [ハングアップ/不全検知 ➔ ID半減] ID {start_id}〜{end_id} ({len(batch)}件) で失敗したため、データ量を半減 ({len(left_batch)}件 / {len(right_batch)}件) して再試行します...")
+
+        # 前半バッチを実行 (成功したら自動的に次の処理へ)
+        res_left = process_batch_with_split(left_batch, transcript_list, original_title, is_first_chunk=is_first_chunk, depth=depth + 1, chunk_label=chunk_label)
+        if res_left is None:
+            return None
+
+        # 後半バッチを実行
+        res_right = process_batch_with_split(right_batch, transcript_list, original_title, is_first_chunk=False, depth=depth + 1)
+        if res_right is None:
+            return None
+
+        # 前半・後半の両方が成功したら結合して返却（呼び出し元のmainループに戻ると自動的に50件に戻ります）
+        return res_left + res_right
+    else:
+        print(f"{indent}❌ 最小単位 (ID {start_id}) でも取得に失敗しました。")
+        return None
+
+
+# ==========================================
+# 3. メイン生成ループ
+# ==========================================
+def main(video_ids_or_urls=None):
+    status_data = load_pipeline_status()
+    need_fix_videos = []
+    completed_count = 0
+
+    # 入力（URLまたはID）から video_id 一覧を抽出。引数がない場合は temp ディレクトリから自動検出
+    if video_ids_or_urls:
+        target_ids = [extract_video_id(item) for item in video_ids_or_urls]
+    else:
+        temp_sources = glob.glob(os.path.join(TEMP_DIR, "temp_source_*.json"))
+        target_ids = [os.path.basename(f).replace("temp_source_", "").replace(".json", "") for f in temp_sources]
+
+    for video_id in target_ids:
+        if not video_id:
+            continue
     
-            parsed_res = None
-            is_chunk_success = False
-            failed_raw_history = []  # メイン翻訳APIの失敗生データ（最大3回分）を蓄積
+        v_status = status_data.get(video_id, {})
+        if v_status.get("generate") == "completed":
+            print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
+            continue
 
-            # メイン翻訳API（最大3回試行）
-            for main_attempt in range(1, 4):
-                chunk_info = f"Chunk {chunk_idx + 1}/{total_chunks} (メイン試行 {main_attempt}/3)"
-                print(f"🔄 処理中: {chunk_info} (ID {start_id}〜{end_id})")
+        # ★【変更】YouTube通信を一切行わず、事前取得済みの一時ファイルを読み込む
+        temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
+        if not os.path.exists(temp_source_file):
+            print(f"⚠️ 一時ファイル 『{temp_source_file}』 が見つかりません。スキップします。")
+            continue
 
-                try:
-                    raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info, model_name="gemini-3.5-flash")
-                    failed_raw_history.append(f"#NEED_FIX [メイン試行 {main_attempt}]\n" + raw_text)
-                except Exception as e:
-                    print(f"  ❌ APIエラー: {e}")
-                    continue
+        try:
+            with open(temp_source_file, "r", encoding="utf-8") as f:
+                src_data = json.load(f)
+                original_title = src_data.get("original_title", "")
+                upload_date = src_data.get("upload_date", "")
+                raw_tags = src_data.get("raw_tags", [])
+                transcript_list = src_data.get("transcript", [])
+        except Exception as e:
+            print(f"❌ 一時ファイル読み込みエラー (VIDEO_ID = {video_id}): {e}")
+            continue
 
-                candidate = parse_chunk_response(raw_text)
+        print(f"\n==========================================")
+        print(f"🎬 処理開始: VIDEO_ID = {video_id}")
+        print(f"==========================================")
+    
+        chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
+        total_chunks = len(chunks)
+        parsed_chunks_data = []
+    
+        temp_chunk_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
+        start_chunk_idx = v_status.get("last_processed_chunk", 0)
+    
+        if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
+            try:
+                with open(temp_chunk_file, "r", encoding="utf-8") as f:
+                    parsed_chunks_data = json.load(f)
+                print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
+            except Exception:
+                parsed_chunks_data, start_chunk_idx = [], 0
+    
+        has_unresolved_chunk = False
+        unresolved_chunks_info = []
+    
+        for chunk_idx in range(start_chunk_idx, total_chunks):
+            target_batch = chunks[chunk_idx]
+            is_first = (chunk_idx == 0)
 
-                # 1. 完璧に成功した場合
-                if validate_chunk_data(candidate, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                    print(f"  ✅ 一次パース ＆ 全ID検証成功！")
-                    parsed_res, is_chunk_success = candidate, True
-                    break
+            # 半減処理に対応したバッチ処理を呼び出し
+            results = process_batch_with_split(
+                batch=target_batch,
+                transcript_list=transcript_list,
+                original_title=original_title,
+                is_first_chunk=is_first,
+                chunk_label=f"Chunk {chunk_idx + 1}/{total_chunks}",
+            )
 
-                # 2. IDが不足している（データ欠落）場合 ➔ リペアせず即メイン再走
-                # 修正後：生のレスポンス文字列(raw_text)をそのまま渡す！
-                has_all_ids = check_id_completeness(raw_text, expected_ids)
-                if not has_all_ids:
-                    print(f"  ⚠️ IDの欠落（データ抜け）を検知しました。リペアは行わずメイン翻訳APIを再実行します...")
-                    continue
+            # 成功した場合（分割された場合は配列で複数返ってくるため extend で結合）
+            if results is not None:
+                parsed_chunks_data.extend(results)
 
-                # 3. IDは全揃いだがJSONが壊れている場合 ➔ リペアAPI（最大3回試行）
-                print(f"  ⚠️ ID全揃い・JSON構造不全。リペアAPI（最大3回）を実行します...")
-                repair_success = False
-                for repair_attempt in range(1, 4):
-                    r_info = f"{chunk_info}-Repair_{repair_attempt}"
-                    repaired_text = repair_json_with_light_model(raw_text, chunk_info=r_info)
-                    if repaired_text:
-                        candidate_repaired = parse_chunk_response(repaired_text)
-                        if validate_chunk_data(candidate_repaired, expected_ids, is_first_chunk=(chunk_idx == 0)):
-                            print(f"  🎉 リペア (試行 {repair_attempt}/3) ＆ 検証に成功しました！")
-                            parsed_res, is_chunk_success, repair_success = candidate_repaired, True, True
-                            break
-                    print(f"    ❌ リペア試行 {repair_attempt}/3 失敗")
+                with open(temp_chunk_file, "w", encoding="utf-8") as f:
+                    json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
 
-                if repair_success:
-                    break
-                else:
-                    print(f"  ❌ リペア3回失敗。メイン翻訳APIからやり直します...")
-
-            # 結果の保存判定
-            if is_chunk_success and parsed_res is not None:
-                parsed_chunks_data.append(parsed_res)
+                status_data[video_id] = {
+                    "title": original_title,
+                    "generate": "in_progress",
+                    "last_processed_chunk": chunk_idx + 1,
+                    "total_chunks": total_chunks,
+                }
+                save_pipeline_status(status_data)
+                time.sleep(1)
             else:
-                print(f"❌ チャンク {chunk_idx + 1} はメイン試行3回・リペア試行を経て正常化できませんでした。#NEED_FIX 生テキスト履歴を保持します。")
-                parsed_chunks_data.append({
-                    "status": "#NEED_FIX",
-                    "chunk": chunk_idx + 1,
-                    "raw_history": failed_raw_history
-                })
-                has_unresolved_chunk = True
-                unresolved_chunks_info.append(f"{chunk_idx + 1} (ID {start_id}〜{end_id})")
-
-            with open(temp_chunk_file, "w", encoding="utf-8") as f:
-                json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
-
-            status_data[video_id] = {
-                "title": original_title,
-                "generate": "in_progress",
-                "last_processed_chunk": chunk_idx + 1,
-                "total_chunks": total_chunks,
-            }
-            save_pipeline_status(status_data)
-            time.sleep(1)
+                # 分割しても解決しなかった場合のみ中断
+                print(f"\n⚠️ チャンク {chunk_idx + 1}/{total_chunks} の取得に失敗しました。")
+                print(f"🔄 直前までに成功した {chunk_idx} チャンク分を保持して処理を中断します。")
+                break
     
         # チャンク生成完了後の自動判定
-        if has_unresolved_chunk:
-            chunks_detail_str = "，".join(unresolved_chunks_info)
+        # 元データの最終IDを取得（例: 1654）
+        last_expected_id = transcript_list[-1]["id"] if transcript_list else 0
 
-            print(f"\n⚠️ 動画 [{video_id}] に手修正が必要なチャンクが含まれています。")
-            print(f"👉 修正対象チャンク {chunks_detail_str}")
-            print(f"👉 修正用ファイル: 『{temp_chunk_file}』")
-            print("💡 手動修正後、`python 02_build_final_json.py` を実行してください。02の自動実行はスキップして次の動画へ進みます。")
-            need_fix_videos.append(video_id)
+        # これまでに取得した全チャンクの中から「最大のID」を探す
+        max_fetched_id = 0
+        for chunk in parsed_chunks_data:
+            items = chunk.get("items", []) if isinstance(chunk, dict) else []
+            for item in items:
+                if isinstance(item, list) and len(item) > 0:
+                    try:
+                        item_id = int(item[0])
+                        if item_id > max_fetched_id:
+                            max_fetched_id = item_id
+                    except (ValueError, TypeError):
+                        pass
+
+        # 最終IDまでしっかり取得できている場合のみ 02 を実行
+        if max_fetched_id > 0 and max_fetched_id == last_expected_id:
+            print(
+                f"\n🎉 最終ID ({last_expected_id}) まで全ての翻訳が完了しました！ 自動で 02 (データ結合処理) を呼び出します..."
+            )
+            if build_final_json(
+                video_id, original_title, upload_date, raw_tags, transcript_list
+            ):
+                completed_count += 1
         else:
-            print(f"\n🎉 全チャンクが正常に揃いました！ 自動で 02 (データ結合処理) を呼び出します...")
-            if build_final_json(video_id, original_title, upload_date, raw_tags, transcript_list):
-                completed_count += 1  # ★追加: 正常完了時に+1
+            print(
+                f"\n⏸️ 動画 [{video_id}] は未完了です（到達ID: {max_fetched_id} / 最終ID: {last_expected_id}）。02の自動結合をスキップします。"
+            )
     
     tracker.print_summary()
     
