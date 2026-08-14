@@ -4,16 +4,10 @@ import re
 import sys
 import time
 import random
+import glob
 from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import ServerError
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import (
-    TranscriptsDisabled,
-    NoTranscriptFound,
-    CouldNotRetrieveTranscript,
-)
-from yt_dlp import YoutubeDL
 
 # 02の結合処理をモジュールとしてインポート
 import importlib
@@ -25,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 dotenv_path = os.path.join(BASE_DIR, "..", ".env")
 load_dotenv(dotenv_path)
 
-# その後で API キーを取得
+# GitHub Secrets / 環境変数からキー群を取得。github secretsに「GEMINI_API_KEYS」の名前で改行区切りで複数設定すること。
 raw_keys = os.getenv("GEMINI_API_KEYS", "")
 
 
@@ -67,9 +61,6 @@ tracker = TokenTracker()
 # ==========================================
 # 1. 設定項目
 # ==========================================
-# GitHub Secrets / 環境変数からキー群を取得。github secretsに「GEMINI_API_KEYS」の名前で改行区切りで複数設定すること。
-raw_keys = os.getenv("GEMINI_API_KEYS", "")
-
 if raw_keys:
     # 改行やカンマで分割し、空行や余計な空白を除去してリスト化
     API_KEYS = [k.strip() for k in raw_keys.replace(",", "\n").splitlines() if k.strip()]
@@ -92,12 +83,11 @@ TARGET_URLS = [
     "https://www.youtube.com/watch?v=Hsk88zgDK8Q",
 ]
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
 status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json"))
-DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 CHUNK_SIZE = 50
 CONTEXT_SIZE = 3
@@ -206,7 +196,7 @@ def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -
 
     return expected_ids.issubset(found_ids)
 
-def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: str = "gemini-3.5-flash-lite"):
+def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: str = "gemini-3.5-flash"):
     global current_key_index, client
     max_retries = 5
     base_backoff = 5
@@ -244,17 +234,15 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", model_name: st
             is_503 = "503" in err_msg or isinstance(e, ServerError)
 
             if is_429:
-                print(f"⚠️ [429 クォータ制限] (試行 {attempt}/{max_retries})")
+                print(f"⚠️ [429 クォータ制限検知] (現在 Index: {current_key_index})")
                 if current_key_index + 1 < len(API_KEYS):
                     current_key_index += 1
-                    print(f"🔄 APIキーをIndex {current_key_index} に切り替えます...")
+                    print(f"🔄 即座に APIキーを Index {current_key_index} に切り替えて再試行します...")
                     client = get_client(current_key_index)
-                    time.sleep(base_backoff)
-                    continue
+                    continue  # 待機せず即座に次のキーで再試行
                 else:
-                    wait_time = base_backoff * (2 ** (attempt - 1))
-                    time.sleep(wait_time)
-                    continue
+                    print("❌ 利用可能なすべてのAPIキーでクォータ制限(429)に達しました。処理を中断します。")
+                    raise RuntimeError("All API keys quota exhausted (429).")
 
             if is_503:
                 time.sleep(base_backoff * (2 ** (attempt - 1)))
@@ -281,58 +269,22 @@ def repair_json_with_light_model(broken_raw_text: str, chunk_info: str = "") -> 
         print(f"    ⚠️ リペアAPI実行エラー: {e}")
         return ""
 
-def get_video_metadata(video_id: str):
-    url = f"https://www.youtube.com/watch?v={video_id}"
-    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        return info.get("title", ""), info.get("upload_date", ""), info.get("tags", []) or []
-
-def fetch_transcript(video_id: str):
-    try:
-        ytt_api = YouTubeTranscriptApi()
-        if hasattr(ytt_api, "list"):
-            transcript_list = ytt_api.list(video_id)
-        elif hasattr(ytt_api, "list_transcripts"):
-            transcript_list = ytt_api.list_transcripts(video_id)
-        else:
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-    except AttributeError:
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-
-    # 優先順位 1: タイ語字幕（公式手動）
-    try:
-        return transcript_list.find_manually_created_transcript(["th"]).fetch()
-    except Exception:
-        pass
-
-    # 優先順位 2: タイ語字幕（自動生成）
-    try:
-        return transcript_list.find_generated_transcript(["th"]).fetch()
-    except Exception:
-        pass
-
-    # 優先順位 3: 英語字幕（公式手動）
-    try:
-        return transcript_list.find_manually_created_transcript(["en"]).fetch()
-    except Exception:
-        pass
-
-    raise RuntimeError("対象の字幕（タイ語手動・タイ語自動・英語手動）が見つかりませんでした。")
-
 # ==========================================
 # 3. メイン生成ループ
 # ==========================================
-def main(urls=None):
-    # urlsが渡されなければ直書きの TARGET_URLS を使用
-    target_list = urls if urls is not None else TARGET_URLS
-
+def main(video_ids_or_urls=None):
     status_data = load_pipeline_status()
     need_fix_videos = []
     completed_count = 0
-    
-    for url in target_list:
-        video_id = extract_video_id(url)
+
+    # 入力（URLまたはID）から video_id 一覧を抽出。引数がない場合は temp ディレクトリから自動検出
+    if video_ids_or_urls:
+        target_ids = [extract_video_id(item) for item in video_ids_or_urls]
+    else:
+        temp_sources = glob.glob(os.path.join(TEMP_DIR, "temp_source_*.json"))
+        target_ids = [os.path.basename(f).replace("temp_source_", "").replace(".json", "") for f in temp_sources]
+
+    for video_id in target_ids:
         if not video_id:
             continue
     
@@ -341,60 +293,26 @@ def main(urls=None):
             print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
             continue
 
-        # ★★★ 【ここから追加】アクセス制限回避のためのランダム待機 ★★★
-        wait_sec = random.uniform(40, 60) # 3〜6秒のランダム待機
-        print(f"☕ アクセス制限回避のため {wait_sec:.1f} 秒待機します...")
-        time.sleep(wait_sec)
-        # ★★★ 【ここまで追加】 ★★★
-    
+        # ★【変更】YouTube通信を一切行わず、事前取得済みの一時ファイルを読み込む
+        temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
+        if not os.path.exists(temp_source_file):
+            print(f"⚠️ 一時ファイル 『{temp_source_file}』 が見つかりません。スキップします。")
+            continue
+
+        try:
+            with open(temp_source_file, "r", encoding="utf-8") as f:
+                src_data = json.load(f)
+                original_title = src_data.get("original_title", "")
+                upload_date = src_data.get("upload_date", "")
+                raw_tags = src_data.get("raw_tags", [])
+                transcript_list = src_data.get("transcript", [])
+        except Exception as e:
+            print(f"❌ 一時ファイル読み込みエラー (VIDEO_ID = {video_id}): {e}")
+            continue
+
         print(f"\n==========================================")
         print(f"🎬 処理開始: VIDEO_ID = {video_id}")
         print(f"==========================================")
-    
-        try:
-            original_title, upload_date, raw_tags = get_video_metadata(video_id)
-            fetched = fetch_transcript(video_id)
-    
-            transcript_list = []
-            for idx, item in enumerate(fetched, 1):
-                # 辞書型(dict)かオブジェクト(FetchedTranscriptSnippet)かでアクセスを切り替え
-                if isinstance(item, dict):
-                    start_val = item.get("start", 0.0)
-                    duration_val = item.get("duration", 0.0)
-                    text_val = item.get("text", "")
-                else:
-                    start_val = getattr(item, "start", 0.0)
-                    duration_val = getattr(item, "duration", 0.0)
-                    text_val = getattr(item, "text", "")
-
-                transcript_list.append({
-                    "id": idx,
-                    "start": round(start_val, 2),
-                    "end": round(start_val + duration_val, 2),
-                    "text": re.sub(r'>>\s*', '', str(text_val)).strip()
-                })
-
-            # ==========================================
-            # ★【追加】YouTubeから取得した生データを別ファイルとして保存
-            # ==========================================
-            temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
-            with open(temp_source_file, "w", encoding="utf-8") as f:
-                json.dump({
-                    "video_id": video_id,
-                    "original_title": original_title,
-                    "upload_date": upload_date,
-                    "raw_tags": raw_tags,
-                    "transcript": transcript_list
-                }, f, ensure_ascii=False, indent=2)
-
-        except (TranscriptsDisabled, NoTranscriptFound, CouldNotRetrieveTranscript) as e:
-            print(f"⏩ 💡 スキップ: VIDEO_ID = {video_id} は字幕が無効または存在しません。")
-            continue
-        except Exception as e:
-            # その他の予期せぬエラーは最初の1行だけスッキリ表示
-            err_first_line = str(e).splitlines()[0] if str(e) else "不明なエラー"
-            print(f"❌ 字幕データ取得失敗 (VIDEO_ID = {video_id}): {err_first_line}")
-            continue
     
         chunks = [transcript_list[i : i + CHUNK_SIZE] for i in range(0, len(transcript_list), CHUNK_SIZE)]
         total_chunks = len(chunks)
@@ -412,6 +330,7 @@ def main(urls=None):
                 parsed_chunks_data, start_chunk_idx = [], 0
     
         has_unresolved_chunk = False
+        unresolved_chunks_info = []
     
         for chunk_idx in range(start_chunk_idx, total_chunks):
             target_batch = chunks[chunk_idx]
@@ -526,7 +445,7 @@ def main(urls=None):
                 print(f"🔄 処理中: {chunk_info} (ID {start_id}〜{end_id})")
 
                 try:
-                    raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
+                    raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info, model_name="gemini-3.5-flash")
                     failed_raw_history.append(f"#NEED_FIX [メイン試行 {main_attempt}]\n" + raw_text)
                 except Exception as e:
                     print(f"  ❌ APIエラー: {e}")
@@ -577,6 +496,7 @@ def main(urls=None):
                     "raw_history": failed_raw_history
                 })
                 has_unresolved_chunk = True
+                unresolved_chunks_info.append(f"{chunk_idx + 1} (ID {start_id}〜{end_id})")
 
             with open(temp_chunk_file, "w", encoding="utf-8") as f:
                 json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
@@ -592,7 +512,10 @@ def main(urls=None):
     
         # チャンク生成完了後の自動判定
         if has_unresolved_chunk:
+            chunks_detail_str = "，".join(unresolved_chunks_info)
+
             print(f"\n⚠️ 動画 [{video_id}] に手修正が必要なチャンクが含まれています。")
+            print(f"👉 修正対象チャンク {chunks_detail_str}")
             print(f"👉 修正用ファイル: 『{temp_chunk_file}』")
             print("💡 手動修正後、`python 02_build_final_json.py` を実行してください。02の自動実行はスキップして次の動画へ進みます。")
             need_fix_videos.append(video_id)

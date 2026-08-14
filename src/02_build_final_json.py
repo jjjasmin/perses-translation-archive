@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import shutil
 from youtube_transcript_api import YouTubeTranscriptApi
 from yt_dlp import YoutubeDL
 
@@ -16,6 +17,7 @@ except ImportError:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
+ARCHIVE_DIR = os.path.join(DATA_DIR, "temp_archive")
 TRANSCRIPTS_DIR = os.path.join(DATA_DIR, "transcripts")
 status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json"))
 videos_file = os.path.join(DATA_DIR, "videos.json")
@@ -23,6 +25,8 @@ tags_file = os.path.join(DATA_DIR, "tags.json")
 
 # フォルダが存在しなければ自動作成
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(TEMP_DIR, exist_ok=True)
+os.makedirs(ARCHIVE_DIR, exist_ok=True)
 os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 
 def load_allowed_tag_map():
@@ -102,6 +106,32 @@ def fetch_transcript(video_id: str):
         pass
 
     raise RuntimeError("対象の字幕（タイ語手動・タイ語自動・英語手動）が見つかりませんでした。")
+
+
+def archive_temp_files(video_id: str):
+    """正常終了時に一時ファイルを archive フォルダへ移動する"""
+    target_files = [
+        os.path.join(TEMP_DIR, f"temp_source_{video_id}.json"),
+        os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
+    ]
+    
+    for file_path in target_files:
+        if os.path.exists(file_path):
+            file_name = os.path.basename(file_path)
+            dest_path = os.path.join(ARCHIVE_DIR, file_name)
+            
+            # 過去に同じファイルが退避先に存在する場合は上書きできるよう事前削除
+            if os.path.exists(dest_path):
+                try:
+                    os.remove(dest_path)
+                except Exception:
+                    pass
+            
+            try:
+                shutil.move(file_path, dest_path)
+                print(f"📦 一時ファイルを退避しました: {file_name} -> temp_archive/")
+            except Exception as e:
+                print(f"⚠️ 一時ファイルの退避に失敗しました ({file_name}): {e}")
 
 
 def build_final_json(
@@ -330,13 +360,7 @@ def build_final_json(
     else:
         print(f"✅ 『{output_file}』 および 『videos.json』 の保存に成功しました！")
         
-    # 一時ファイルの削除処理
-    # for temp_file in (temp_chunk_file, temp_source_file):
-    #     if os.path.exists(temp_file):
-    #         try:
-    #             os.remove(temp_file)
-    #         except Exception as e:
-    #             print(f"⚠️ 一時ファイルの削除に失敗しました ({os.path.basename(temp_file)}): {e}")
+    archive_temp_files(video_id)
 
     return True
 
