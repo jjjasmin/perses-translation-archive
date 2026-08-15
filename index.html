@@ -1126,8 +1126,25 @@ body.dark-mode .search-clear-btn:hover {
       
       if (mode === 'fullscreen') {
         document.body.classList.add('mode-fullscreen');
+
+        // ★ 追加: ブラウザ自体を全画面化（アドレスバー・メニューを隠す）
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+          docElm.requestFullscreen().catch(() => {});
+        } else if (docElm.webkitRequestFullscreen) { /* Safari / iOS */
+          docElm.webkitRequestFullscreen();
+        }
       } else {
         document.body.classList.add(`mode-${mode}`);
+
+        // ★ 追加: 全画面解除時にブラウザの全画面も解除
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
       }
 
       currentLayoutMode = mode;
@@ -1202,15 +1219,14 @@ body.dark-mode .search-clear-btn:hover {
 
       if (player) {
         player.loadVideoById({ videoId: videoId });
-        player.mute();
       } else {
         player = new YT.Player('youtube-player', {
           videoId: videoId,
           playerVars: {
-            'autoplay': 1,
-            'mute': 1,
-            'playsinline': 1,
-            'cc_load_policy': 0
+            'autoplay': 0,　//自動再生しない
+            'mute': 0,　//ミュートしない
+            'playsinline': 1, //強制的に全画面表示（フルスクリーン）にしない
+            'cc_load_policy': 0 //字幕表示しない
           },
           events: {
             'onStateChange': onPlayerStateChange
