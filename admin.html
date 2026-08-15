@@ -667,6 +667,7 @@
   <script>
     // デフォルトのクイック選択用メンバーリスト
     let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY'];
+    let tagsDataGlobal = {}; // tags.json のデータを保持
 
     // 現在編集中のJSONデータおよびvideos.jsonの参照
     let currentData = null;
@@ -762,14 +763,16 @@
 
     // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
     function init() {
-      // 変更前: fetch('videos.json')
-      fetch('data/videos.json')
-        .then(res => res.json())
-        .then(videos => {
+        Promise.all([
+          fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+          fetch('data/videos.json').then(res => res.ok ? res.json() : [])
+        ])
+        .then(([tags, videos]) => {
+          tagsDataGlobal = tags;
           videosData = videos;
           document.getElementById('download-videos-btn').disabled = false;
 
-          // ▼ 追加: 頻出キーワードの初回生成
+          // tags.json に基づいてキーワード選択ボタン群を初期生成
           renderCommonKeywords();
 
           const select = document.getElementById('video-select');
@@ -791,10 +794,10 @@
           });
         })
         .catch(err => {
-          console.error("videos.json の読み込み失敗:", err);
-          document.getElementById('video-select').innerHTML = '<option value="">videos.json の読込失敗</option>';
+          console.error("データの読み込み失敗:", err);
+          document.getElementById('video-select').innerHTML = '<option value="">データの読込失敗</option>';
         });
-    }
+      }
 
     // 直接ファイル選択
     document.getElementById('direct-file-input').addEventListener('change', (e) => {
@@ -833,18 +836,19 @@
       document.getElementById('download-json-btn').disabled = false;
       document.getElementById('editor-toolbar').style.display = 'flex';
 
-      // メタデータ表示更新
-      const titleInput = document.getElementById('meta-title-input');
-      if (titleInput) {
-        titleInput.value = data.title || "";
-        autoResizeTextarea(titleInput);
-      }
+      // メタデータ表示更新 (videos.json のタイトルを優先的に取得)
+        const titleInput = document.getElementById('meta-title-input');
+        if (titleInput) {
+          const videoTitle = (currentVideoMeta && currentVideoMeta.title) ? currentVideoMeta.title : (data.title || "");
+          titleInput.value = videoTitle;
+          autoResizeTextarea(titleInput);
+        }
 
-      document.getElementById('meta-details').innerHTML = `
-        <strong>Video ID:</strong> ${data.video_id || '-'}<br>
-        <strong>公開日:</strong> ${data.published_at || '-'}<br>
-        <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
-      `;
+        document.getElementById('meta-details').innerHTML = `
+          <strong>Video ID:</strong> ${data.video_id || '-'}<br>
+          <strong>公開日:</strong> ${(currentVideoMeta && currentVideoMeta.published_at) || data.published_at || '-'}<br>
+          <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
+        `;
 
       // keywords 編集欄の表示と値設定
       const keywordsBox = document.getElementById('keywords-editor-box');
@@ -1142,48 +1146,26 @@ function updateVideoTitle(value) {
   }
 }
 
-// videos.json 全体から頻出キーワードを集計してボタン描画
+// tags.json のキー順通りに選択用ボタンを描画する関数
 function renderCommonKeywords() {
   const container = document.getElementById('common-keywords-container');
-  if (!container || !videosData || videosData.length === 0) return;
+  if (!container || !tagsDataGlobal) return;
 
-  // 1. 全動画の keywords を集計して出現数をカウント
-  const counts = {};
-  videosData.forEach(v => {
-    if (Array.isArray(v.keywords)) {
-      v.keywords.forEach(kw => {
-        const trimmed = kw.trim();
-        if (trimmed) {
-          counts[trimmed] = (counts[trimmed] || 0) + 1;
-        }
-      });
+  let html = '';
+
+  for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
+    html += `<div style="font-size:0.72rem; color:#475569; font-weight:bold; width:100%; margin-top:8px;">${escapeHtml(categoryName)}</div>`;
+    
+    for (const tagKey of Object.keys(categoryTags)) {
+      html += `
+        <button class="speaker-btn" type="button" 
+                style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
+                onclick="addKeywordToInput('${escapeHtml(tagKey)}')">
+          + ${escapeHtml(tagKey)}
+        </button>
+      `;
     }
-  });
-
-  // 出現頻度の高い順（件数が同じ場合は五十音・アルファベット順）にソート
-  const sortedKeywords = Object.keys(counts).sort((a, b) => {
-    if (counts[b] !== counts[a]) {
-      return counts[b] - counts[a];
-    }
-    return a.localeCompare(b);
-  });
-
-  if (sortedKeywords.length === 0) {
-    container.innerHTML = '';
-    return;
   }
-
-  // 上位 15 件を表示（必要に応じて調整可）
-  const topKeywords = sortedKeywords.slice(0, 15);
-
-  let html = `<span style="font-size: 0.72rem; color: #666; font-weight: bold; width: 100%;">頻出キーワード（クリックで追加）:</span>`;
-  html += topKeywords.map(kw => `
-    <button class="speaker-btn" type="button" 
-            style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
-            onclick="addKeywordToInput('${escapeHtml(kw)}')">
-      + ${escapeHtml(kw)}
-    </button>
-  `).join('');
 
   container.innerHTML = html;
 }

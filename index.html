@@ -565,43 +565,85 @@
     .video-list-section {
       width: 100%;
       max-height: 700px;
+      min-height: 400px;
       overflow-y: auto;
       border: 1px solid #f0f0f0;
       border-radius: 8px;
-      padding: 12px;
+      padding: 0px 12px;
       background-color: #ffffff;
       box-sizing: border-box;
     }
 
-    .video-list-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      margin-bottom: 12px;
-      color: #444;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      position: relative;
-    }
+/* 修正後 */
+.video-list-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  
+  /* ★ 追加: スクロール時に上部に固定 */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #ffffff; /* 背景が透けないように背景色を指定 */
+  padding-top: 18px;          /* 余白の調整（必要に応じて） */
+  padding-bottom: 8px;
+}
 
-    .search-wrapper {
-      display: flex;
-      gap: 4px;
-      position: relative;
-      flex: 1;
-      max-width: 240px;
-    }
+/* ★ 追加: ダークモード時の背景色補正 */
+body.dark-mode .video-list-title {
+  background-color: #252525;
+}
 
-    .search-input {
-      width: 100%;
-      padding: 4px 8px;
-      font-size: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      outline: none;
-    }
+.search-wrapper {
+  display: flex;
+  gap: 4px;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  align-items: center; /* 上下中央揃え */
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 28px 6px 10px; /* ★ 右側に×ボタン用の余白(28px)を確保 */
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+/* ★ 追加: クリアボタン(×)のスタイル */
+.search-clear-btn {
+  display: none; /* 初期状態は非表示 */
+  position: absolute;
+  right: 58px; /* 検索ボタンの左側に配置 */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #888;
+  cursor: pointer;
+  padding: 2px 6px;
+  user-select: none;
+  z-index: 5;
+  transition: color 0.15s;
+}
+
+.search-clear-btn:hover {
+  color: #333;
+}
+
+body.dark-mode .search-clear-btn {
+  color: #aaa;
+}
+
+body.dark-mode .search-clear-btn:hover {
+  color: #fff;
+}
 
     .search-btn {
       padding: 4px 10px;
@@ -631,7 +673,7 @@
       padding: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       z-index: 200;
-      max-height: 160px;
+      max-height: 300px;
       overflow-y: auto;
       flex-wrap: wrap;
       gap: 6px;
@@ -994,9 +1036,9 @@
       <div class="sidebar-section">
         <div id="video-list-section" class="video-list-section">
           <div class="video-list-title">
-            <span>関連動画</span>
             <div class="search-wrapper" id="search-wrapper">
               <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
+              <span id="search-clear-btn" class="search-clear-btn" title="クリア">×</span>
               <button type="button" id="search-btn" class="search-btn">検索</button>
               <div id="keyword-floating-box" class="keyword-floating-box"></div>
             </div>
@@ -1031,6 +1073,7 @@
     const overlayText = document.getElementById('overlay-text');
 
     const searchInput = document.getElementById('search-input');
+    const searchClearBtn = document.getElementById('search-clear-btn');
     const searchBtn = document.getElementById('search-btn');
     const searchWrapper = document.getElementById('search-wrapper');
     const keywordFloatingBox = document.getElementById('keyword-floating-box');
@@ -1259,91 +1302,111 @@
     }
 
     function init() {
-      fetch('data/videos.json')
-        .then(response => {
-          if (!response.ok) throw new Error('videos.json が見つかりません');
-          return response.json();
-        })
-        .then(videoList => {
+        // tags.json と videos.json を並行取得
+        Promise.all([
+          fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+          fetch('data/videos.json').then(res => res.ok ? res.json() : [])
+        ])
+        .then(([tagsData, videoList]) => {
           if (!videoList || videoList.length === 0) return;
 
           allVideos = videoList;
           filteredVideos = [...allVideos];
 
-          setupKeywordsFloatingBox();
+          // tags.json を元にキーワードチップを構築（並び順保持）
+          setupKeywordsFloatingBox(tagsData);
           setupSearchEvents();
 
           resetVideoListDisplay();
 
-          // ★ URLパラメータ (?v=...) から動画IDを取得
+          // URLパラメータ (?v=...) から動画IDを取得
           const urlParams = new URLSearchParams(window.location.search);
           const initialVideoId = urlParams.get('v');
 
           let targetIndex = 0;
           if (initialVideoId) {
-            // ID または file名 で動画を検索
             const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
             if (foundIndex !== -1) {
               targetIndex = foundIndex;
             }
           }
 
-          // 対象の動画を選択（URLパラメータ更新フラグ: false）
-          selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false);
+          selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
           setupScrollListener();
         })
         .catch(error => {
           console.error('初期化エラー:', error);
         });
-    }
+      }
 
-    function setupKeywordsFloatingBox() {
-      const keywordSet = new Set();
-      allVideos.forEach(v => {
-        if (Array.isArray(v.keywords)) {
-          v.keywords.forEach(k => keywordSet.add(k));
+      function setupKeywordsFloatingBox(tagsData) {
+        let html = '';
+
+        // カテゴリごとにグループ分けして出力
+        for (const [categoryName, categoryTags] of Object.entries(tagsData)) {
+          html += `<div class="keyword-category-title" style="font-size:0.7rem; color:#888; font-weight:bold; width:100%; margin-top:6px; margin-bottom:2px;">${escapeHtml(categoryName)}</div>`;
+          
+          for (const tagKey of Object.keys(categoryTags)) {
+            html += `<span class="keyword-chip" data-keyword="${escapeHtml(tagKey)}">${escapeHtml(tagKey)}</span>`;
+          }
         }
-      });
 
-      const uniqueKeywords = Array.from(keywordSet);
-      if (uniqueKeywords.length === 0) return;
+        keywordFloatingBox.innerHTML = html;
 
-      const html = uniqueKeywords.map(kw => `
-        <span class="keyword-chip" data-keyword="${kw}">${kw}</span>
-      `).join('');
+        keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetKw = chip.dataset.keyword;
+            searchInput.value = targetKw;
+            
+            // ★ 追加: キーワード選択時もクリアボタン(×)を表示状態にする
+            if (searchClearBtn) {
+              searchClearBtn.style.display = 'block';
+            }
 
-      keywordFloatingBox.innerHTML = html;
-
-      keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
-        chip.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const targetKw = chip.dataset.keyword;
-          searchInput.value = targetKw;
-          keywordFloatingBox.classList.remove('show');
-          executeSearch();
+            keywordFloatingBox.classList.remove('show');
+            executeSearch();
+          });
         });
-      });
-    }
+      }
 
-    function setupSearchEvents() {
-      searchInput.addEventListener('focus', () => {
-        keywordFloatingBox.classList.add('show');
-      });
+      function setupSearchEvents() {
+        searchInput.addEventListener('focus', () => {
+          keywordFloatingBox.classList.add('show');
+        });
 
-      document.addEventListener('click', (e) => {
-        if (!searchWrapper.contains(e.target)) {
-          keywordFloatingBox.classList.remove('show');
-        }
-      });
+        // ★ 追加: 文字入力時に「×」ボタンの表示/非表示を切り替え
+        searchInput.addEventListener('input', () => {
+          if (searchInput.value.length > 0) {
+            searchClearBtn.style.display = 'block';
+          } else {
+            searchClearBtn.style.display = 'none';
+          }
+        });
 
-      searchBtn.addEventListener('click', executeSearch);
+        // ★ 追加: ×ボタンクリック時のクリア処理
+        searchClearBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          searchInput.value = '';
+          searchClearBtn.style.display = 'none';
+          executeSearch(); // 検索リセット（全件表示）
+          searchInput.focus();
+        });
 
-      searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          executeSearch();
-        }
-      });
-    }
+        document.addEventListener('click', (e) => {
+          if (!searchWrapper.contains(e.target)) {
+            keywordFloatingBox.classList.remove('show');
+          }
+        });
+
+        searchBtn.addEventListener('click', executeSearch);
+
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            executeSearch();
+          }
+        });
+      }
 
     function executeSearch() {
       const query = searchInput.value.trim().toLowerCase();
@@ -1434,9 +1497,25 @@
       });
     }
 
-    // ★ 引数に updateUrl（デフォルト: true）を追加
-    function selectVideoByIndex(index, fileName, videoId, updateUrl = true) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 修正後
+    function selectVideoByIndex(index, fileName, videoId, updateUrl = true, scrollToContent = true) {
+      // ★ content-layout より下（画面外）にスクロールしている場合のみ、動画の位置まで戻す
+      if (scrollToContent) {
+        const contentLayout = document.querySelector('.content-layout');
+        if (contentLayout) {
+          const rect = contentLayout.getBoundingClientRect();
+          const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetScrollTop = rect.top + currentScrollTop;
+
+          // 現在のスクロール位置が content-layout の開始位置より下にある場合のみ実行
+          if (currentScrollTop > targetScrollTop) {
+            window.scrollTo({
+              top: targetScrollTop,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }
 
       currentVideoIndex = index;
 
@@ -1449,7 +1528,6 @@
         }
       });
 
-      // ★ 動画選択時にURLのパラメータ (?v=動画ID) を書き換える
       if (updateUrl) {
         const newUrl = `${window.location.pathname}?v=${videoId}`;
         window.history.pushState({ videoId: videoId }, '', newUrl);
@@ -1478,9 +1556,18 @@
       if (!fileName || !videoId) return;
 
       activeIndex = -1;
+
+      // ★ 追加: 直前に表示されていたオーバーレイ字幕をクリア
+      if (overlaySpeaker) overlaySpeaker.textContent = '';
+      if (overlayText) overlayText.textContent = '字幕を選択するとここに表示されます。';
+
+      // ★ 追加: 字幕エリアを一番上までスクロールアップ
+      if (transcriptSection) {
+        transcriptSection.scrollTop = 0;
+      }
+
       initPlayer(videoId);
 
-      // ★ フォルダパスを先頭に結合してfetchする
       const filePath = `data/transcripts/${fileName}`;
 
       fetch(filePath)
@@ -1648,9 +1735,10 @@
     // X（Twitter）でシェア（4パターンの例文をランダム抽出）
     if (xShareBtn) {
       xShareBtn.addEventListener('click', () => {
+        // currentVideoIndex に基づき、videos.json 由来の配列データからタイトルを取得
         const currentVideo = filteredVideos[currentVideoIndex];
-        const videoTitle = currentVideo ? currentVideo.title : 'PERSES動画';
-        const currentUrl = window.location.href; // パラメータ(?v=ID)付きのURL
+        const videoTitle = (currentVideo && currentVideo.title) ? currentVideo.title : 'PERSES動画';
+        const currentUrl = window.location.href;
 
         // 4パターンの例文テンプレート
         const templates = [

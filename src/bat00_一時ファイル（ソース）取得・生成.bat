@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 > nul
-echo 🚀 全自動パイプライン (00_fetch_urls.py) を開始します...
+echo 🚀 YOUTUBEから概要と字幕を取得し、一時ファイル（ソース）生成 (00_fetch_sources.py) を開始します...
 echo.
 
-python 00_fetch_urls.py
+00_fetch_sources.py
 
 echo.
 echo ------------------------------------------

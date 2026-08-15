@@ -444,6 +444,7 @@
 
   <script>
     let videoIndexData = [];
+    let tagsDataGlobal = {};
     let currentVideoDetail = null;
     let selectedTag = '#ALL';
     let ytPlayer = null;
@@ -480,39 +481,50 @@
     }
 
     async function loadVideoIndex() {
-      try {
-        // 変更前: fetch('videos.json')
-        const res = await fetch('data/videos.json');
-        videoIndexData = await res.json();
-        renderTags();
-        renderVideos();
-      } catch (err) {
-        console.error('videos.json の読み込みに失敗しました:', err);
-      }
-    }
+        try {
+          const [tagsRes, videosRes] = await Promise.all([
+            fetch('data/tags.json'),
+            fetch('data/videos.json')
+          ]);
+          
+          tagsDataGlobal = tagsRes.ok ? await tagsRes.json() : {};
+          videoIndexData = videosRes.ok ? await videosRes.json() : [];
 
-    function renderTags() {
-      const tagContainer = document.getElementById('tagContainer');
-      const tagsSet = new Set();
-      
-      videoIndexData.forEach(item => {
-        if (item.keywords) {
-          item.keywords.forEach(k => tagsSet.add(k));
+          renderTags();
+          renderVideos();
+        } catch (err) {
+          console.error('データの読み込みに失敗しました:', err);
         }
-      });
+      }
 
-      const sortedTags = Array.from(tagsSet).sort();
-      const finalTags = ['#ALL', ...sortedTags.filter(t => t !== '#ALL')];
+      function renderTags() {
+        const tagContainer = document.getElementById('tagContainer');
+        tagContainer.innerHTML = '';
 
-      tagContainer.innerHTML = '';
-      finalTags.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.className = `tag-btn focusable ${tag === selectedTag ? 'active' : ''}`;
-        btn.innerText = tag;
-        btn.onclick = () => filterByTag(tag);
-        tagContainer.appendChild(btn);
-      });
-    }
+        // まず #ALL ボタンを配置
+        const allBtn = document.createElement('button');
+        allBtn.className = `tag-btn focusable ${selectedTag === '#ALL' ? 'active' : ''}`;
+        allBtn.innerText = '#ALL';
+        allBtn.onclick = () => filterByTag('#ALL');
+        tagContainer.appendChild(allBtn);
+
+        // カテゴリごとに見出しとボタンを出力
+        for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
+          const titleEl = document.createElement('div');
+          titleEl.className = 'tag-category-title';
+          titleEl.style.cssText = 'font-size: 0.75rem; color: #00d2ff; margin-top: 1rem; font-weight: bold; text-transform: uppercase;';
+          titleEl.innerText = categoryName;
+          tagContainer.appendChild(titleEl);
+
+          for (const tagKey of Object.keys(categoryTags)) {
+            const btn = document.createElement('button');
+            btn.className = `tag-btn focusable ${tagKey === selectedTag ? 'active' : ''}`;
+            btn.innerText = tagKey;
+            btn.onclick = () => filterByTag(tagKey);
+            tagContainer.appendChild(btn);
+          }
+        }
+      }
 
     function renderVideos() {
       const grid = document.getElementById('videoGrid');

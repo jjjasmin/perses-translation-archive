@@ -1,59 +1,55 @@
 {
-　"#PERSES": ["perses", "all_member", "all member"],
-
-//PERSESのYTコンテンツ
-  "#MV": ["mv"], 
-  //企画名
-  "#PERSES'S_ARCHIVE": ["archive"], 
-  "#GNEST_PLAYROOM": ["PLAYROOM"],
-  "#ALTER_ROLE": ["ALTER"],
-
-  "#BEHIND": ["BEHIND"],
-  "#FANCHANT": ["fanchant"],
-  "#REACTION": ["REACTION"],
-  "#DANCE_PRACTICE": ["Dance Practice"],
-  "#MEDLEY": [""], //メドレーの原曲
-
-
-//ショート動画（専用ページ作ろうかな）
-  "#SHORT": ["short", "shorts"], 
-
-
-//動画のカテゴリ
-  "#STAGE_SHOW": ["show"], //ステージ
-  "#VARIETY_SHOW": ["tv", "play room"], //バラエティ、TV番組（ウォールとかタイランドエムカ）
-  "#ENTERTAINMENT": ["play room"], //屋内系企画（化粧とかゲームとか）
-  "#VLOG": ["vlog", "archive"],//日常系
-  "#MISSION": ["MISSION"], //任務系の動画
-  "#CHALLENGE": ["CHALLENGE"], //ダンスチャレンジ系
-  "#GAME": ["GAME"], //ゲーム系
-  "#INTERVIEW": ["INTERVIEW"], //インタビュー
-  "#IG_LIVE": ["ig"], //インライ
-  "#TIKTOK_LIVE": ["tikton"], //ttlive
-  "#COLLABORATION": [""],
-
-//メンバー、グループ
-  "#JUNG": ["jung"], 
-  "#NAY": ["nay"],
-  "#KRITTIN": ["krittin"],
-  "#PALM": ["palm"],
-  "#PLUGGY": ["pluggy"],
-　//グループ（思いついたら追加する）
-  "#VIIS": ["viis"], 
-  "#TIGGER": ["tigger"],
-  "#PROXIE": ["proxie"],
-  "#GNEST": ["GNEST"],
-  "#DAOU": ["DAOU"],
-  "#ATLAS": ["ATLAS"],
-  "#PiXXiE": ["PiXXiE"],
-  "#LYKN": ["LYKN"],
-
-//PERSES以外の番組名,テレビ局名(よく出演するやつ)
-  "#FANDOM_LIVE": ["EFMFandomlive", "ATIME","fandom live"], 
-  "#ATIME": ["ATIME"],
-
-//管理用タグ
-  "#NEED_FIX": ["need_fix"] 
+    "動画種類": {
+    "#SHORT": ["short", "shorts"],
+    "#★": ["administrator"]
+  },
+    "公式コンテンツ": {
+    "#MV": ["mv", "music video", "lyric video"],
+    "#PERSES'S_ARCHIVE": ["archive"],
+    "#GNEST_PLAYROOM": ["PLAYROOM"],
+    "#ALTER_ROLE": ["ALTER"],
+    "#BEHIND": ["BEHIND"],
+    "#FANCHANT": ["fanchant"],
+    "#REACTION": ["REACTION"],
+    "#DANCE_PRACTICE": ["Practice"],
+    "#DANCE_PERFORMANCE": ["PERFORMANCE"],
+    "#MEDLEY": ["administrator"]
+  },
+    "動画ジャンル": {
+    "#STAGE_SHOW": ["show", "stage"],
+    "#VARIETY_SHOW": ["tv", "PLAYROOM"],
+    "#ENTERTAINMENT": ["PLAYROOM"],
+    "#VLOG": ["vlog", "archive"],
+    "#MISSION": ["MISSION"],
+    "#CHALLENGE": ["CHALLENGE"],
+    "#GAME": ["GAME", "PLAYROOM"],
+    "#INTERVIEW": ["INTERVIEW"],
+    "#IG_LIVE": ["ig"],
+    "#TIKTOK_LIVE": ["tikton"],
+    "#COLLABORATION": ["COLLABORATION"]
+  },
+    "グループ・メンバー": {
+    "#JUNG": ["jung","Wikorn", "Buranapinyo", "วิกร", "บูรณภิญโญ", "จั๋ง"],
+    "#NAY": ["nay","Naran", "Vikairungroj", "ณรัณ", "วิกัยรุ่งโรจน์", "เน"],
+    "#KRITTIN": ["krittin", "Krittin", "Sosungnern", "กฤติน", "สอสูงเนิน"],
+    "#PALM": ["palm","Perawit", "Pinta", "พีรวิชญ์", "พินธะ", "ปาล์ม"],
+    "#PLUGGY": ["pluggy","Tharakorn", "Khamsing", "ธรากร", "คำสิงห์", "ปลั๊กกี้"],
+    "#PERSES": ["perses", "all_member", "all member"],
+    "#VIIS": ["viis"],
+    "#TIGGER": ["tigger"],
+    "#PROXIE": ["proxie"],
+    "#GNEST": ["GNEST"],
+    "#DAOU": ["DAOU"],
+    "#ATLAS": ["ATLAS"],
+    "#PiXXiE": ["PiXXiE"],
+    "#LYKN": ["LYKN"]
+  },
+    "企画・番組": {
+    "#FANDOM_LIVE": ["EFMFandomlive", "ATIME", "fandom live"],
+    "#ATIME": ["ATIME"]
+  },
+    "管理用": {
+    "#NEED_FIX": ["need_fix", "administrator"],
+    "#DISABLED": ["DISABLED", "administrator"]
+  }
 }
-
-

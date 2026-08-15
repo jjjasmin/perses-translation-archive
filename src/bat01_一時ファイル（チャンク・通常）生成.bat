@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 > nul
-echo タイ語字幕と概要の一時ファイルから翻訳文一時ファイルを生成 (01_generate_raw_chunks.py) を開始します...
+echo ★通常モード(FLUSH)★タイ語字幕と概要の一時ファイルから翻訳文一時ファイルを生成 (01_generate_raw_chunks.py) を開始します...
 echo.
 
 python 01_generate_raw_chunks.py

@@ -5,6 +5,7 @@ import sys
 import time
 import random
 import glob
+import argparse
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -60,7 +61,7 @@ tracker = TokenTracker()
 
 
 # ==========================================
-# 1. 設定項目
+# 1-1. 設定項目
 # ==========================================
 if raw_keys:
     # 改行やカンマで分割し、空行や余計な空白を除去してリスト化
@@ -80,11 +81,49 @@ def get_client(key_index: int):
 
 client = get_client(current_key_index)
 
-AVAILABLE_MODELS = [
-    "gemini-3.7-flash",
-    "gemini-3.6-flash",
-    "gemini-3.5-flash"
-]
+
+# ==========================================
+# 1-2. 起動引数（スイッチ）の解析
+# ==========================================
+parser = argparse.ArgumentParser(
+    description="YouTube字幕のタイ語・カタカナ翻訳スクリプト"
+)
+parser.add_argument(
+    "--lite",
+    "-l",
+    action="store_true",
+    help="Gemini Flash Lite モードで高速・大量生成します",
+)
+parser.add_argument(
+    "--force",
+    "-f",
+    action="store_true",
+    help="ランクや完了ステータスを無視して強制再生成します",
+)
+args = parser.parse_args()
+
+# ランク定義 (数字が大きいほど優先度高)
+MODE_RANK = {"none": 0, "lite": 1, "standard": 2}
+
+# 現在のモードとランクの確定
+current_mode = "lite" if args.lite else "standard"
+current_rank = MODE_RANK[current_mode]
+
+# スイッチによって設定を動的に変更
+if args.lite:
+    print(
+        "⚡ 【Liteモード起動】 gemini-3.5-flash-lite で高速・大量生成を実行します。"
+    )
+    AVAILABLE_MODELS = ["gemini-3.5-flash-lite"]
+    CHUNK_SIZE = 50  # Liteは処理が軽いので1度に50件処理してさらに高速化
+else:
+    print("🌟 【高精度モード起動】 賢い Gemini 3.7 Flash 等で高品質生成を実行します。")
+    AVAILABLE_MODELS = [
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+    ]
+    CHUNK_SIZE = 30  # 精度重視で30件ずつ
 
 # リペア用軽量モデルを定数として定義
 LIGHT_MODEL_NAME = "gemini-3.5-flash-lite"
@@ -97,7 +136,6 @@ status_file = os.path.abspath(os.path.join(BASE_DIR, "..", "pipeline_status.json
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-CHUNK_SIZE = 30
 CONTEXT_SIZE = 3
 
 
@@ -459,9 +497,9 @@ def process_batch_with_split(
 【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
 【出力フォーマット】\n{output_format}"""
 
-    # メイン翻訳試行 (最大3回)
+    # メイン翻訳試行 (トークン消費を抑えるため、試行1回で失敗した場合は分割処理)
     for main_attempt in range(1, 2):
-        chunk_info = f"{display_label} (メイン試行 {main_attempt}/3)"
+        chunk_info = f"{display_label} (メイン試行 {main_attempt})"
         print(f"{indent}🔄 処理中: {chunk_info}")
 
         try:
@@ -478,7 +516,7 @@ def process_batch_with_split(
             print(f"{indent}  ✅ 一次パース ＆ 全ID検証成功！")
             return [candidate]
 
-        # 2. ID全揃い時のリペア試行 (最大3回)
+        # 2. ID全揃い時のリペア試行
         if check_id_completeness(raw_text, expected_ids):
             print(f"{indent}  ⚠️ ID全揃い・JSON構造不全。リペアAPIを実行します...")
             for repair_attempt in range(1, 4):
@@ -490,7 +528,7 @@ def process_batch_with_split(
                         print(f"{indent}  🎉 リペア成功！")
                         return [candidate_repaired]
 
-    # --- 💡 【変更点】メイン3回・リペア3回、またはハングアップ等で解決しない場合の「ID半減分割処理」 ---
+    # --- 💡 【変更点】メイン1回・リペア3回、またはハングアップ等で解決しない場合の「ID半減分割処理」 ---
     if len(batch) > 1:
         mid = len(batch) // 2
         left_batch = batch[:mid]
@@ -519,7 +557,6 @@ def process_batch_with_split(
 # ==========================================
 def main(video_ids_or_urls=None):
     status_data = load_pipeline_status()
-    need_fix_videos = []
     completed_count = 0
 
     # 入力（URLまたはID）から video_id 一覧を抽出。引数がない場合は temp ディレクトリから自動検出
@@ -534,9 +571,33 @@ def main(video_ids_or_urls=None):
             continue
     
         v_status = status_data.get(video_id, {})
-        if v_status.get("generate") == "completed":
-            print(f"⏩ VIDEO_ID: {video_id} は処理完了済みのためスキップします。")
-            continue
+        existing_mode = v_status.get("mode", "none")
+        existing_rank = MODE_RANK.get(existing_mode, 0)
+        is_completed = v_status.get("generate") == "completed"
+        
+        # 自動判定（--force 指定時はすべてスルーして実行）
+        if not args.force:
+            # パターンA: 既に上位のモードで処理されている場合（Lite実行時にStandard既存など）
+            if existing_rank > current_rank:
+                print(
+                    f"⏭️ スキップ: VIDEO_ID [{video_id}] は既に高精度版 ({existing_mode}) で作成済みのため保護されました。"
+                )
+                continue
+        
+            # パターンB: 同等モードで既に完了している場合
+            if existing_rank == current_rank and is_completed:
+                print(
+                    f"⏭️ スキップ: VIDEO_ID [{video_id}] は既に {current_mode} モードで完了しています。"
+                )
+                continue
+        
+        # ★【追加】アップグレードまたは --force 実行時の初期化フラグ
+        is_upgrade_or_force = args.force or (existing_rank < current_rank and existing_rank > 0)
+        
+        if is_upgrade_or_force and existing_rank > 0:
+            print(
+                f"🔄 アップグレード: VIDEO_ID [{video_id}] を {existing_mode} ➔ {current_mode} (高品質) へ上書き生成します！"
+            )
 
         # ★【変更】YouTube通信を一切行わず、事前取得済みの一時ファイルを読み込む
         temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
@@ -564,15 +625,27 @@ def main(video_ids_or_urls=None):
         parsed_chunks_data = []
     
         temp_chunk_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
-        start_chunk_idx = v_status.get("last_processed_chunk", 0)
-    
-        if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
-            try:
-                with open(temp_chunk_file, "r", encoding="utf-8") as f:
-                    parsed_chunks_data = json.load(f)
-                print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
-            except Exception:
-                parsed_chunks_data, start_chunk_idx = [], 0
+
+        # ★【修正】アップグレード時や --force 時は、過去の再開位置やキャッシュをリセットする
+        if is_upgrade_or_force:
+            start_chunk_idx = 0
+            parsed_chunks_data = []
+            if os.path.exists(temp_chunk_file):
+                try:
+                    os.remove(temp_chunk_file) # 古いLiteキャッシュを削除
+                except Exception:
+                    pass
+        else:
+            # 同じモードでの「再開（レジューム）」処理
+            start_chunk_idx = v_status.get("last_processed_chunk", 0)
+            parsed_chunks_data = []
+            if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
+                try:
+                    with open(temp_chunk_file, "r", encoding="utf-8") as f:
+                        parsed_chunks_data = json.load(f)
+                    print(f"📂 前回の中断データ（{start_chunk_idx}チャンク完了）を復元しました。")
+                except Exception:
+                    parsed_chunks_data, start_chunk_idx = [], 0
     
         has_unresolved_chunk = False
         unresolved_chunks_info = []
@@ -600,6 +673,7 @@ def main(video_ids_or_urls=None):
                 status_data[video_id] = {
                     "title": original_title,
                     "generate": "in_progress",
+                    "mode": current_mode,
                     "last_processed_chunk": chunk_idx + 1,
                     "total_chunks": total_chunks,
                 }
@@ -636,6 +710,9 @@ def main(video_ids_or_urls=None):
             if build_final_json(
                 video_id, original_title, upload_date, raw_tags, transcript_list
             ):
+                status_data[video_id]["generate"] = "completed"
+                status_data[video_id]["mode"] = current_mode
+                save_pipeline_status(status_data)
                 completed_count += 1
         else:
             print(
@@ -643,10 +720,6 @@ def main(video_ids_or_urls=None):
             )
     
     tracker.print_summary()
-    
-    if need_fix_videos:
-        print(f"\n⚠️ 以下の動画は手作業の修正が必要です: {need_fix_videos}")
-        print("手修正後に `python 02_build_final_json.py` を実行してください。")
     
     print("\n🎉 全URLの API生成処理が完了しました！")
 
