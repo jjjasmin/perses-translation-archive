@@ -16,6 +16,11 @@
   <meta name="twitter:title" content="PERSES　翻訳pocket">
   <meta name="twitter:description" content="PERSESのタイ語動画・楽曲の日本語字幕翻訳ファンサイト。">
   <meta name="twitter:image" content="https://perses-translation-pocket.pages.dev/assets/ogp-main.jpg">
+
+  <link rel="manifest" href="manifest.json">
+  <!-- iOS Safari用のアドレスバー非表示・アプリ化設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
     * {
       box-sizing: border-box;
@@ -1115,7 +1120,7 @@ body.dark-mode .search-clear-btn:hover {
       });
     });
 
-    function setLayoutMode(mode) {
+    async function setLayoutMode(mode) {
       if (mode === currentLayoutMode) return;
 
       if (currentLayoutMode !== 'fullscreen') {
@@ -1127,17 +1132,33 @@ body.dark-mode .search-clear-btn:hover {
       if (mode === 'fullscreen') {
         document.body.classList.add('mode-fullscreen');
 
-        // ★ 追加: ブラウザ自体を全画面化（アドレスバー・メニューを隠す）
+        // ★ 1. ブラウザ自体を全画面化
         const docElm = document.documentElement;
-        if (docElm.requestFullscreen) {
-          docElm.requestFullscreen().catch(() => {});
-        } else if (docElm.webkitRequestFullscreen) { /* Safari / iOS */
-          docElm.webkitRequestFullscreen();
+        try {
+          if (docElm.requestFullscreen) {
+            await docElm.requestFullscreen();
+          } else if (docElm.webkitRequestFullscreen) { /* Safari */
+            await docElm.webkitRequestFullscreen();
+          }
+
+          // ★ 2. 全画面化に成功したら横画面（landscape）へ固定（Android / Chrome等）
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock('landscape').catch(err => {
+              console.log('画面回転固定非対応またはユーザー制限:', err);
+            });
+          }
+        } catch (err) {
+          console.log('フルスクリーン実行エラー:', err);
         }
+
       } else {
         document.body.classList.add(`mode-${mode}`);
 
-        // ★ 追加: 全画面解除時にブラウザの全画面も解除
+        // ★ 3. 全画面解除時に回転固定を解除＆全画面終了
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+
         if (document.fullscreenElement || document.webkitFullscreenElement) {
           if (document.exitFullscreen) {
             document.exitFullscreen().catch(() => {});
