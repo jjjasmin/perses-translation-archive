@@ -3,7 +3,7 @@ chcp 65001 > nul
 echo 🚀 YOUTUBEから概要と字幕を取得し、一時ファイル（ソース）生成 (00_fetch_sources.py) を開始します...
 echo.
 
-00_fetch_sources.py
+python 00_fetch_sources.py
 
 echo.
 echo ------------------------------------------

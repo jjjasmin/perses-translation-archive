@@ -23,11 +23,27 @@ TARGET_SOURCES = [
     # "https://www.youtube.com/watch?v=NvrHLb-4lkk",  # 特定の個別の動画だけを指定
 ]
 
-# --- [追加] パス定義と temp ディレクトリの自動作成 ---
+# --- パス定義と temp ディレクトリの自動作成 ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
+NO_TRANSCRIPT_FILE = os.path.join(TEMP_DIR, "no_transcript_ids.json")
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+def load_no_transcript_ids() -> set:
+    if os.path.exists(NO_TRANSCRIPT_FILE):
+        try:
+            with open(NO_TRANSCRIPT_FILE, "r", encoding="utf-8") as f:
+                return set(json.load(f))
+        except Exception:
+            return set()
+    return set()
+
+def save_no_transcript_id(video_id: str):
+    no_ids = load_no_transcript_ids()
+    no_ids.add(video_id)
+    with open(NO_TRANSCRIPT_FILE, "w", encoding="utf-8") as f:
+        json.dump(sorted(list(no_ids)), f, ensure_ascii=False, indent=2)
 
 def extract_video_id(url: str) -> str:
     match = re.search(r"(?:v=|\/([0-9A-Za-z_-]{11})(?:[?&]|$)|youtu\.be\/)([0-9A-Za-z_-]{11})", url)
@@ -111,32 +127,33 @@ def main():
     saved_video_ids = []
 
     print("\n📥 各動画のメタデータ・字幕の事前取得を開始します...")
+    no_transcript_ids = load_no_transcript_ids()
 
     for idx, url in enumerate(urls, 1):
         video_id = extract_video_id(url)
         if not video_id:
             continue
-
+        # 1. 字幕なしリストに記録済みの場合は即座にスキップ（通信も待機も行わない）
+        if video_id in no_transcript_ids:
+            print(f"⏩ [{idx}/{len(urls)}] VIDEO_ID: {video_id} は字幕なしとして記録済みのためスキップします。")
+            continue
+        # 2. 既に取得済みの一時ファイルが存在する場合はスキップ
         temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
         if os.path.exists(temp_source_file):
             print(f"⏩ [{idx}/{len(urls)}] VIDEO_ID: {video_id} の一時ファイルは存在するためスキップします。")
             saved_video_ids.append(video_id)
             continue
-
-        # IP制限対策: 1件ごとに3分〜5分（180〜300秒）のランダム待機
+        # IP制限対策: 1件ごとに3分〜5分（180〜300秒）のランダム待機（未処理の動画のみ待機）
         if idx > 1:
-            wait_sec = random.uniform(185, 523)
+            wait_sec = random.uniform(185, 315)
             print(f"☕ IP制限回避のため {wait_sec:.1f} 秒待機します...")
             time.sleep(wait_sec)
-
         print(f"\n==========================================")
         print(f"🎬 取得中 [{idx}/{len(urls)}]: VIDEO_ID = {video_id}")
         print(f"==========================================")
-
         try:
             original_title, upload_date, raw_tags = get_video_metadata(video_id)
             fetched = fetch_transcript(video_id)
-
             transcript_list = []
             for t_idx, item in enumerate(fetched, 1):
                 if isinstance(item, dict):
@@ -147,14 +164,12 @@ def main():
                     start_val = getattr(item, "start", 0.0)
                     duration_val = getattr(item, "duration", 0.0)
                     text_val = getattr(item, "text", "")
-
                 transcript_list.append({
                     "id": t_idx,
                     "start": round(start_val, 2),
                     "end": round(start_val + duration_val, 2),
                     "text": re.sub(r'>>\s*', '', str(text_val)).strip()
                 })
-
             with open(temp_source_file, "w", encoding="utf-8") as f:
                 json.dump({
                     "video_id": video_id,
@@ -163,12 +178,13 @@ def main():
                     "raw_tags": raw_tags,
                     "transcript": transcript_list
                 }, f, ensure_ascii=False, indent=2)
-
             print(f"💾 一時ファイルを保存しました: {temp_source_file}")
             saved_video_ids.append(video_id)
-
-        except (TranscriptsDisabled, NoTranscriptFound, CouldNotRetrieveTranscript):
-            print(f"⏩ 💡 スキップ: VIDEO_ID = {video_id} は字幕が無効または存在しません。")
+        except (TranscriptsDisabled, NoTranscriptFound, CouldNotRetrieveTranscript, RuntimeError) as e:
+            # 字幕が無効・存在しない・対象言語なし等の場合はリストに保存して記録
+            print(f"⏩ 💡 スキップ: VIDEO_ID = {video_id} は字幕が無効または存在しません。ブラックリストに登録します。")
+            save_no_transcript_id(video_id)
+            no_transcript_ids.add(video_id)  # メモリ上のセットも更新
             continue
         except Exception as e:
             err_first_line = str(e).splitlines()[0] if str(e) else "不明なエラー"
@@ -181,17 +197,17 @@ def main():
         print("❌ 処理可能な動画データが存在しません。")
         sys.exit(0)
 
-    # 01_generate_raw_chunks を呼び出して翻訳フェーズへ移行
-    import importlib
-    step01 = importlib.import_module("01_generate_raw_chunks")
-    from git_utils import push_to_github, trigger_cloudflare_build_if_needed
+    ## 01_generate_raw_chunks を呼び出して翻訳フェーズへ移行
+    # import importlib
+    # step01 = importlib.import_module("01_generate_raw_chunks")
+    # from git_utils import push_to_github, trigger_cloudflare_build_if_needed
 
-    print("\n🚀 01_generate_raw_chunks.py を実行します...\n")
-    completed_count = step01.main(saved_video_ids)
+    # print("\n🚀 01_generate_raw_chunks.py を実行します...\n")
+    # completed_count = step01.main(saved_video_ids)
 
-    # 処理完了後にGitプッシュ & Cloudflareビルド判定
-    push_to_github()
-    trigger_cloudflare_build_if_needed(completed_count, threshold=3)
+    ## 処理完了後にGitプッシュ & Cloudflareビルド判定
+    # push_to_github()
+    # trigger_cloudflare_build_if_needed(completed_count, threshold=3)
 
 if __name__ == "__main__":
     main()
