@@ -676,6 +676,8 @@ def main(video_ids_or_urls=None):
                     "mode": current_mode,
                     "last_processed_chunk": chunk_idx + 1,
                     "total_chunks": total_chunks,
+                    # ★ 既に priority が設定されていればそれを維持し、無ければ初期値　2:中（1:高 / 2:中 / 3:低 / 99:未設定）を設定
+                    "priority": v_status.get("priority", 2)
                 }
                 save_pipeline_status(status_data)
                 time.sleep(1)

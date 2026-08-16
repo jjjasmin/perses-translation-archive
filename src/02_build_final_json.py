@@ -176,31 +176,31 @@ def build_final_json(
     # ==========================================
     # ★【修正】temp_source に不足がある場合、YouTubeから直接フォールバック取得
     # ==========================================
-    if not transcript_list or not original_title or not upload_date:
-        print(f"🌐 欠損データがあるため、YouTubeから直接メタデータ・字幕を取得します...")
-        try:
-            if not original_title or not upload_date:
-                yt_title, yt_date, yt_tags = get_video_metadata(video_id)
-                original_title = original_title or yt_title
-                upload_date = upload_date or yt_date
-                raw_tags = raw_tags or yt_tags
+    # if not transcript_list or not original_title or not upload_date:
+    #     print(f"🌐 欠損データがあるため、YouTubeから直接メタデータ・字幕を取得します...")
+    #     try:
+    #         if not original_title or not upload_date:
+    #             yt_title, yt_date, yt_tags = get_video_metadata(video_id)
+    #             original_title = original_title or yt_title
+    #             upload_date = upload_date or yt_date
+    #             raw_tags = raw_tags or yt_tags
 
-            if not transcript_list:
-                fetched = fetch_transcript(video_id)
-                transcript_list = []
-                for idx, item in enumerate(fetched, 1):
-                    start_val = item.get("start", 0.0) if isinstance(item, dict) else getattr(item, "start", 0.0)
-                    duration_val = item.get("duration", 0.0) if isinstance(item, dict) else getattr(item, "duration", 0.0)
-                    text_val = item.get("text", "") if isinstance(item, dict) else getattr(item, "text", "")
+    #         if not transcript_list:
+    #             fetched = fetch_transcript(video_id)
+    #             transcript_list = []
+    #             for idx, item in enumerate(fetched, 1):
+    #                 start_val = item.get("start", 0.0) if isinstance(item, dict) else getattr(item, "start", 0.0)
+    #                 duration_val = item.get("duration", 0.0) if isinstance(item, dict) else getattr(item, "duration", 0.0)
+    #                 text_val = item.get("text", "") if isinstance(item, dict) else getattr(item, "text", "")
                     
-                    transcript_list.append({
-                        "id": idx,
-                        "start": round(start_val, 2),
-                        "end": round(start_val + duration_val, 2),
-                        "text": re.sub(r'>>\s*', '', str(text_val)).strip()
-                    })
-        except Exception as e:
-            print(f"⚠️ YouTubeからの再取得に失敗しました: {e}")
+    #                 transcript_list.append({
+    #                     "id": idx,
+    #                     "start": round(start_val, 2),
+    #                     "end": round(start_val + duration_val, 2),
+    #                     "text": re.sub(r'>>\s*', '', str(text_val)).strip()
+    #                 })
+    #     except Exception as e:
+    #         print(f"⚠️ YouTubeからの再取得に失敗しました: {e}")
 
     # 万が一YouTube通信エラー等の場合のための最終安全網
     if not original_title:
@@ -277,7 +277,6 @@ def build_final_json(
     final_json_data = {
         "video_id": video_id,
         "title": translated_title,
-        "published_at": formatted_date,
         "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg",
         "members": [],
         "transcript": final_transcript,
@@ -287,8 +286,6 @@ def build_final_json(
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(final_json_data, f, ensure_ascii=False, indent=2)
-
-    # --- (以下略: キーワード抽出・videos.json・status更新処理はそのまま) ---
 
     # キーワード抽出
     extracted_tags = []
@@ -320,6 +317,7 @@ def build_final_json(
         if item.get("id") == video_id:
             item["title"] = translated_title
             item["original_title"] = original_title
+            item["published_at"] = formatted_date
             item["file"] = file_relative_path
             merged = item.get("keywords", []) + final_keywords
             item["keywords"] = [t for t in dict.fromkeys(merged) if t in ALLOWED_TAG_MAP or t == "#NEED_FIX"]
@@ -331,6 +329,7 @@ def build_final_json(
             "id": video_id,
             "title": translated_title,
             "original_title": original_title,
+            "published_at": formatted_date,
             "file": file_relative_path,
             "subtitle_source": "処理完了",
             "keywords": final_keywords,
