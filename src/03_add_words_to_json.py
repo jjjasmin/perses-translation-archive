@@ -11,7 +11,10 @@ from google.genai.errors import ServerError
 # ==========================================
 # 1. APIキー・設定
 # ==========================================
-# GitHub Secrets / 環境変数からキー群を取得。github secretsに「GEMINI_API_KEYS」の名前で改行区切りで複数設定すること。
+# .env ファイルから環境変数を読み込む（※追加）
+load_dotenv()
+
+# GitHub Secrets / 環境変数からキー群を取得
 raw_keys = os.getenv("GEMINI_API_KEYS", "")
 
 if raw_keys:
@@ -104,9 +107,11 @@ def call_gemini_api_with_retry(prompt: str):
 # ==========================================
 # 3. パス設定および pipeline_status.json の読み込み
 # ==========================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
-STATUS_FILE = os.path.join(BASE_DIR, "pipeline_status.json")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # src ディレクトリ
+MAIN_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))  # main ディレクトリ
+# 02で出力された video_*.json が保存される場所 (data/transcripts) に合わせる
+DATA_DIR = os.path.join(MAIN_DIR, "data", "transcripts")
+STATUS_FILE = os.path.join(MAIN_DIR, "pipeline_status.json")
 
 status_data = {}
 if os.path.exists(STATUS_FILE):
@@ -120,10 +125,10 @@ if os.path.exists(STATUS_FILE):
 target_files = sorted(glob.glob(os.path.join(DATA_DIR, "video_*.json")))
 
 if not target_files:
-    print("❌ 対象となる `video_*.json` ファイルが見つかりませんでした。")
+    print(f"❌ 対象となる `video_*.json` ファイルが 『{DATA_DIR}』 に見つかりませんでした。")
     sys.exit(0)
 
-print(f"📁 処理対象ファイル: {len(target_files)} 件 ({target_files})")
+print(f"📁 処理対象ファイル: {len(target_files)} 件")
 
 # ==========================================
 # 4. メイン処理：video_*.json をスキャンして単語分解

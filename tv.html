@@ -481,21 +481,30 @@
     }
 
     async function loadVideoIndex() {
-        try {
-          const [tagsRes, videosRes] = await Promise.all([
-            fetch('data/tags.json'),
-            fetch('data/videos.json')
-          ]);
-          
-          tagsDataGlobal = tagsRes.ok ? await tagsRes.json() : {};
-          videoIndexData = videosRes.ok ? await videosRes.json() : [];
+            try {
+              const [tagsRes, videosRes] = await Promise.all([
+                fetch('data/tags.json'),
+                fetch('data/videos.json')
+              ]);
+              
+              tagsDataGlobal = tagsRes.ok ? await tagsRes.json() : {};
+              const videoList = videosRes.ok ? await videosRes.json() : [];
 
-          renderTags();
-          renderVideos();
-        } catch (err) {
-          console.error('データの読み込みに失敗しました:', err);
-        }
-      }
+              // ★ 追加: published_at の降順（新しい順）にソート
+              videoList.sort((a, b) => {
+                const dateA = a.published_at || '';
+                const dateB = b.published_at || '';
+                return dateB.localeCompare(dateA); // 降順比較
+              });
+
+              videoIndexData = videoList;
+
+              renderTags();
+              renderVideos();
+            } catch (err) {
+              console.error('データの読み込みに失敗しました:', err);
+            }
+          }
 
       function renderTags() {
         const tagContainer = document.getElementById('tagContainer');

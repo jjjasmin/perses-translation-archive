@@ -15,9 +15,9 @@ from logger import setup_logger
 
 # 取得したい再生リストやチャンネルのURL
 TARGET_SOURCES = [
-    "https://www.youtube.com/playlist?list=PLeucYdwFQU5Q&si=ajobTeQpmmZiQq3S", # 最優先
-    "https://www.youtube.com/playlist?list=PLKEeHm120d8k-KF25SU907XjSvI8ImEXG", # PERSES ARCHIVE
-    "https://www.youtube.com/playlist?list=PLXZZW-VJ5hCs&si=ETLN-YlraZb8XmSE", # 001翻訳する動画リスト
+    #"https://www.youtube.com/playlist?list=PLeucYdwFQU5Q&si=ajobTeQpmmZiQq3S", # 最優先
+    #"https://www.youtube.com/playlist?list=PLKEeHm120d8k-KF25SU907XjSvI8ImEXG", # PERSES ARCHIVE
+    #"https://www.youtube.com/playlist?list=PLXZZW-VJ5hCs&si=ETLN-YlraZb8XmSE", # 001翻訳する動画リスト
     "https://www.youtube.com/@PERSES_OFFICIAL/videos",  # PERSES　例: チャンネル動画一覧(ショート除く)
     # "https://www.youtube.com/@PERSES_OFFICIAL/shorts",  # 例: チャンネル動画一覧(ショートのみ)
     # "https://www.youtube.com/watch?v=NvrHLb-4lkk",  # 特定の個別の動画だけを指定
@@ -107,7 +107,7 @@ def main():
         sys.exit(0)
 
     # テスト用件数調整（必要に応じて変更）
-    urls = urls[:3]
+    urls = urls[:120]
     saved_video_ids = []
 
     print("\n📥 各動画のメタデータ・字幕の事前取得を開始します...")
@@ -125,7 +125,7 @@ def main():
 
         # IP制限対策: 1件ごとに3分〜5分（180〜300秒）のランダム待機
         if idx > 1:
-            wait_sec = random.uniform(180, 300)
+            wait_sec = random.uniform(185, 523)
             print(f"☕ IP制限回避のため {wait_sec:.1f} 秒待機します...")
             time.sleep(wait_sec)
 

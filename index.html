@@ -566,9 +566,9 @@ body.dark-mode .video-list-title {
 
 /* ★ 追加: クリアボタン(×)のスタイル */
 .search-clear-btn {
-  display: none; /* 初期状態は非表示 */
+  display: block !important; /* 常時表示 */
   position: absolute;
-  right: 58px; /* 検索ボタンの左側に配置 */
+  right: 115px; /* 検索ボタンの左側に配置 */
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
@@ -1161,6 +1161,9 @@ body.dark-mode .search-clear-btn:hover {
               <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
               <span id="search-clear-btn" class="search-clear-btn" title="クリア">×</span>
               <button type="button" id="search-btn" class="search-btn">検索</button>
+              <button type="button" id="sort-order-btn" class="search-btn" style="background-color: #6c757d; margin-left: 2px;" title="投稿日で並べ替え">
+                  <span id="sort-order-label">new⬇</span>
+                </button>
               <div id="keyword-floating-box" class="keyword-floating-box"></div>
             </div>
           </div>
@@ -1193,7 +1196,8 @@ body.dark-mode .search-clear-btn:hover {
     const overlaySpeaker = document.getElementById('overlay-speaker');
     const overlayText = document.getElementById('overlay-text');
     const subToggleBtn = document.getElementById('sub-toggle-btn');
-
+    const sortOrderBtn = document.getElementById('sort-order-btn');
+    const sortOrderLabel = document.getElementById('sort-order-label');
 
     const searchInput = document.getElementById('search-input');
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -1210,7 +1214,7 @@ body.dark-mode .search-clear-btn:hover {
     // 字幕表示フラグ（初期状態：通常画面なので OFF）
     let isSubtitleVisible = false;
     let hideControlsTimer = null;
-
+    let currentSortOrder = 'desc';
     let allVideos = [];
     let filteredVideos = [];
     let loadedCount = 0;
@@ -1311,6 +1315,18 @@ body.dark-mode .search-clear-btn:hover {
           btn.classList.add('active');
         } else {
           btn.classList.remove('active');
+        }
+      });
+    }
+
+    function sortVideos() {
+      filteredVideos.sort((a, b) => {
+        const dateA = a.published_at || '';
+        const dateB = b.published_at || '';
+        if (currentSortOrder === 'desc') {
+          return dateB.localeCompare(dateA); // 新しい順 (降順)
+        } else {
+          return dateA.localeCompare(dateB); // 古い順 (昇順)
         }
       });
     }
@@ -1477,42 +1493,71 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     function init() {
-        // tags.json と videos.json を並行取得
-        Promise.all([
-          fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
-          fetch('data/videos.json').then(res => res.ok ? res.json() : [])
-        ])
-        .then(([tagsData, videoList]) => {
-          if (!videoList || videoList.length === 0) return;
+            // tags.json と videos.json を並行取得
+            Promise.all([
+              fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+              fetch('data/videos.json').then(res => res.ok ? res.json() : [])
+            ])
+            .then(([tagsData, videoList]) => {
+              if (!videoList || videoList.length === 0) return;
 
-          allVideos = videoList;
-          filteredVideos = [...allVideos];
+              // ★ 追加: published_at の降順（新しい順）にソート
+              videoList.sort((a, b) => {
+                const dateA = a.published_at || '';
+                const dateB = b.published_at || '';
+                return dateB.localeCompare(dateA); // 降順比較
+              });
 
-          // tags.json を元にキーワードチップを構築（並び順保持）
-          setupKeywordsFloatingBox(tagsData);
-          setupSearchEvents();
+              allVideos = videoList;
+              filteredVideos = [...allVideos];
 
-          resetVideoListDisplay();
+              sortVideos();
 
-          // URLパラメータ (?v=...) から動画IDを取得
-          const urlParams = new URLSearchParams(window.location.search);
-          const initialVideoId = urlParams.get('v');
+              // tags.json を元にキーワードチップを構築（データ順を保持）
+              setupKeywordsFloatingBox(tagsData);
+              setupSearchEvents();
+              setupSortEvent();
 
-          let targetIndex = 0;
-          if (initialVideoId) {
-            const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
-            if (foundIndex !== -1) {
-              targetIndex = foundIndex;
-            }
+              resetVideoListDisplay();
+
+              // URLパラメータ (?v=...) から動画IDを取得
+              const urlParams = new URLSearchParams(window.location.search);
+              const initialVideoId = urlParams.get('v');
+
+              let targetIndex = 0;
+              if (initialVideoId) {
+                const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
+                if (foundIndex !== -1) {
+                  targetIndex = foundIndex;
+                }
+              }
+
+              selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
+              setupScrollListener();
+            })
+            .catch(error => {
+              console.error('初期化エラー:', error);
+            });
           }
 
-          selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
-          setupScrollListener();
-        })
-        .catch(error => {
-          console.error('初期化エラー:', error);
-        });
-      }
+      function setupSortEvent() {
+            if (!sortOrderBtn) return;
+
+            sortOrderBtn.addEventListener('click', () => {
+              // 'desc' (新しい順) <-> 'asc' (古い順) をトグル切替
+              if (currentSortOrder === 'desc') {
+                currentSortOrder = 'asc';
+                sortOrderLabel.textContent = 'old⬆';
+              } else {
+                currentSortOrder = 'desc';
+                sortOrderLabel.textContent = 'new⬇';
+              }
+
+              // 並べ替えて一覧を再表示
+              sortVideos();
+              resetVideoListDisplay();
+            });
+          }
 
       function setupKeywordsFloatingBox(tagsData) {
         let html = '';
@@ -1550,14 +1595,14 @@ body.dark-mode .search-clear-btn:hover {
           keywordFloatingBox.classList.add('show');
         });
 
-        // ★ 追加: 文字入力時に「×」ボタンの表示/非表示を切り替え
-        searchInput.addEventListener('input', () => {
-          if (searchInput.value.length > 0) {
-            searchClearBtn.style.display = 'block';
-          } else {
-            searchClearBtn.style.display = 'none';
-          }
-        });
+        // ★ 削除/修正: 入力文字列の有無による非表示処理をコメントアウト
+                // searchInput.addEventListener('input', () => {
+                //   if (searchInput.value.length > 0) {
+                //     searchClearBtn.style.display = 'block';
+                //   } else {
+                //     searchClearBtn.style.display = 'none';
+                //   }
+                // });
 
         // ★ 追加: ×ボタンクリック時のクリア処理
         searchClearBtn.addEventListener('click', (e) => {
@@ -1596,6 +1641,7 @@ body.dark-mode .search-clear-btn:hover {
         });
       }
 
+      sortVideos();
       resetVideoListDisplay();
     }
 
