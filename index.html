@@ -17,10 +17,14 @@
   <meta name="twitter:description" content="PERSESのタイ語動画・楽曲の日本語字幕翻訳ファンサイト。">
   <meta name="twitter:image" content="https://perses-translation-pocket.pages.dev/assets/ogp-main.jpg">
 
-  <link rel="manifest" href="manifest.json">
-  <!-- iOS Safari用のアドレスバー非表示・アプリ化設定 -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- index.html の <head> 内 -->
+<link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+<meta name="theme-color" content="#ffffff">
+
+<!-- iOS (Safari) 用のネイティブアプリ化設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PERSES翻訳">
   <style>
     * {
       box-sizing: border-box;
@@ -202,68 +206,6 @@
 
     body.mode-fullscreen .header-area {
       display: none !important;
-    }
-
-    .exit-fullscreen-btn {
-      display: none;
-      position: absolute;
-      bottom: 80px;
-      right: 30px;
-      opacity: 0;
-      z-index: 1000;
-      background: rgba(0, 0, 0, 0.75);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      padding: 12px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
-    }
-    
-    .exit-fullscreen-btn:hover {
-      background: rgba(0, 123, 255, 0.9);
-      border-color: #007bff;
-      color: #ffffff;
-      transform: scale(1);
-      opacity: 1.0;
-    }
-
-    body.mode-fullscreen .exit-fullscreen-btn {
-      display: block;
-    }
-
-    .fullscreen-btn {
-      display: block;
-      position: absolute;
-      bottom: 80px;
-      right: 30px;
-      opacity: 0;
-      z-index: 1000;
-      background: rgba(0, 0, 0, 0.75);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      padding: 12px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
-    }
-    
-    .fullscreen-btn:hover {
-      background: rgba(0, 123, 255, 0.9);
-      border-color: #007bff;
-      color: #ffffff;
-      transform: scale(1);
-      opacity: 1.0;
-    }
-
-    body.mode-fullscreen .fullscreen-btn {
-      display: none;
     }
 
     h1 {
@@ -794,25 +736,6 @@ body.dark-mode .search-clear-btn:hover {
       display: inline-block;
     }
 
-    .overlay-subtitle-container {
-      display: none;
-      position: absolute;
-      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      z-index: 99;
-      pointer-events: none;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    body.mode-fullscreen .overlay-subtitle-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-
     .overlay-subtitle-box {
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -846,6 +769,191 @@ body.dark-mode .search-clear-btn:hover {
       font-weight: 500;
       display: inline;
     }
+
+    /* ==========================================
+       フルスクリーン字幕コントロール＆カスタムスタイル
+       ========================================== */
+       .overlay-subtitle-container {
+         display: flex !important; /* 常時表示（非表示判定はJS/CSSクラスで行う） */
+         position: absolute;
+         bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+         left: 50%;
+         transform: translateX(-50%);
+         width: 80%;
+         z-index: 1001;
+         flex-direction: column;
+         align-items: center;
+         gap: 8px;
+         pointer-events: none;
+       }
+
+       /* 非表示（字幕なし）状態の挙動 */
+       .overlay-subtitle-container.sub-hidden #overlay-subtitle-box {
+         display: none !important;
+       }
+
+       /* 字幕テキストが空の時は枠自体を隠す */
+       #overlay-subtitle-box:empty,
+       #overlay-subtitle-box:has(#overlay-text:empty) {
+         display: none !important;
+       }
+
+           /* 字幕コントロールボタン群の初期状態 */
+       .subtitle-controls {
+         display: flex;
+         gap: 8px;
+         pointer-events: auto;
+         opacity: 0; /* 初期状態は隠す */
+         transition: opacity 0.3s ease;
+       }
+
+       /* 動画エリア（.iframe-wrapper）で操作があった（.user-active クラスが付いた）場合のみ表示 */
+       .iframe-wrapper.user-active .fullscreen-btn,
+       .iframe-wrapper.user-active .exit-fullscreen-btn,
+       .iframe-wrapper.user-active .subtitle-controls {
+         opacity: 1;
+       }
+
+       /* Hover時の共通ハイライト */
+       .fullscreen-btn:hover,
+       .exit-fullscreen-btn:hover,
+       .sub-ctrl-btn:hover {
+         background: rgba(0, 123, 255, 0.9);
+         border-color: #007bff;
+         color: #ffffff;
+       }
+
+    .sub-ctrl-btn {
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+    }
+
+    .sub-ctrl-btn:hover {
+      background: #007bff;
+      border-color: #007bff;
+    }
+
+    /* ON / OFF ボタンのアクティブ状態表記 */
+    .sub-ctrl-btn.active {
+      background: #007bff;
+      border-color: #0056b3;
+    }
+
+    /* --- 文字サイズ設定 --- */
+    .overlay-subtitle-box.size-small {
+      font-size: 0.9rem !important;
+      padding: 6px 12px !important;
+    }
+
+    .overlay-subtitle-box.size-medium {
+      font-size: 1.15rem !important;
+      padding: 8px 16px !important;
+    }
+
+    .overlay-subtitle-box.size-large {
+      font-size: 1.5rem !important;
+      padding: 10px 20px !important;
+    }
+
+    .overlay-subtitle-box.size-xlarge {
+      font-size: 1.9rem !important;
+      padding: 12px 24px !important;
+    }
+
+    /* --- デザイン・背景スタイル設定 --- */
+    /* 1. デフォルト（黒半透明背景 + 白文字） */
+    .overlay-subtitle-box.style-default {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      text-shadow: none;
+    }
+
+    /* 2. 映画風・アウトライン（背景なし + 太い黒縁取り） */
+        .overlay-subtitle-box.style-outline {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          color: #ffffff;
+          font-weight: 800; /* より太字にして縁取りを引き立てる */
+          text-shadow: 
+            /* 1px 範囲のくっきり縁取り */
+            -1px -1px 0 #000,  1px -1px 0 #000, -1px  1px 0 #000,  1px  1px 0 #000,
+            /* 2px 範囲の太め縁取り */
+            -2px -2px 0 #000,  2px -2px 0 #000, -2px  2px 0 #000,  2px  2px 0 #000,
+            -2px  0px 0 #000,  2px  0px 0 #000,  0px -2px 0 #000,  0px  2px 0 #000,
+            /* 3px 範囲の極太縁取り（周囲をしっかりカバー） */
+            -3px -3px 0 #000,  3px -3px 0 #000, -3px  3px 0 #000,  3px  3px 0 #000,
+            -3px  0px 0 #000,  3px  0px 0 #000,  0px -3px 0 #000,  0px  3px 0 #000,
+            /* 全体のドロップシャドウ（可読性UP用の外側の落ち影） */
+             0px  3px 8px rgba(0, 0, 0, 0.9);
+        }
+        
+    /* 3. ハイコントラスト（黄文字 + 漆黒背景） */
+    .overlay-subtitle-box.style-highcontrast {
+      background: #000000 !important;
+      border: 2px solid #ffeb3b !important;
+      color: #ffeb3b !important;
+    }
+    .overlay-subtitle-box.style-highcontrast .overlay-text {
+      color: #ffeb3b !important;
+    }
+    .overlay-subtitle-box.style-highcontrast .overlay-speaker {
+      color: #64b5f6 !important;
+    }
+
+    /* 4. マイルド（濃グレー背景 + ソフトテキスト） */
+    .overlay-subtitle-box.style-soft {
+      background: rgba(30, 41, 59, 0.85) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #f1f5f9 !important;
+    }
+
+
+
+    /* ==========================================
+       動画プレイヤー上のUIボタン自動非表示・表示制御
+       ========================================== */
+
+    /* 全画面ボタン / 戻るボタンの初期状態設定 */
+    .fullscreen-btn,
+    .exit-fullscreen-btn {
+      display: block;
+      position: absolute;
+      bottom: 80px;
+      right: 30px;
+      opacity: 0; /* 初期状態は隠す */
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.75);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 12px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.3s ease, transform 0.2s ease, background-color 0.2s ease;
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
+    }
+
+    /* モードによるボタン切り替え */
+    body.mode-fullscreen .fullscreen-btn {
+      display: none !important;
+    }
+
+    body:not(.mode-fullscreen) .exit-fullscreen-btn {
+      display: none !important;
+    }
+
 
     @media (max-width: 1100px) and (min-width: 769px) {
       .mode-2col-a .sidebar-section {
@@ -1019,15 +1127,23 @@ body.dark-mode .search-clear-btn:hover {
         <div class="video-section">
           <div class="iframe-wrapper">
             <div id="youtube-player"></div>
-            <button class="fullscreen-btn" data-mode="fullscreen">全</button>
-            <button id="exit-fullscreen-btn" class="exit-fullscreen-btn">戻</button>
+            <button class="fullscreen-btn" data-mode="fullscreen">全画面表示</button>
+            <button id="exit-fullscreen-btn" class="exit-fullscreen-btn">戻る</button>
 
             <div id="overlay-subtitle-container" class="overlay-subtitle-container">
-              <div id="overlay-subtitle-box" class="overlay-subtitle-box align-center">
+              <!-- 字幕コントロールバー（常に操作可能） -->
+              <div class="subtitle-controls">
+                <button type="button" class="sub-ctrl-btn" id="sub-toggle-btn" title="字幕表示/非表示切替">👁️</button>
+                <button type="button" class="sub-ctrl-btn" id="sub-size-btn" title="文字サイズ変更">A</button>
+                <button type="button" class="sub-ctrl-btn" id="sub-style-btn" title="字幕デザイン切替">🎨</button>
+              </div>
+
+              <div id="overlay-subtitle-box" class="overlay-subtitle-box align-center size-medium style-default">
                 <span id="overlay-speaker" class="overlay-speaker"></span>
-                <span id="overlay-text" class="overlay-text">字幕を選択するとここに表示されます。</span>
+                <span id="overlay-text" class="overlay-text"></span>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -1071,11 +1187,13 @@ body.dark-mode .search-clear-btn:hover {
     const transcriptContainer = document.getElementById('transcript-container');
     const videoListSection = document.getElementById('video-list-section');
     const videoListContainer = document.getElementById('video-list-container');
-    
+    const iframeWrapper = document.querySelector('.iframe-wrapper');
     const overlaySubtitleContainer = document.getElementById('overlay-subtitle-container');
     const overlaySubtitleBox = document.getElementById('overlay-subtitle-box');
     const overlaySpeaker = document.getElementById('overlay-speaker');
     const overlayText = document.getElementById('overlay-text');
+    const subToggleBtn = document.getElementById('sub-toggle-btn');
+
 
     const searchInput = document.getElementById('search-input');
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -1089,6 +1207,9 @@ body.dark-mode .search-clear-btn:hover {
     let activeIndex = -1;
     let isApiReady = false;
     let pendingVideoId = null;
+    // 字幕表示フラグ（初期状態：通常画面なので OFF）
+    let isSubtitleVisible = false;
+    let hideControlsTimer = null;
 
     let allVideos = [];
     let filteredVideos = [];
@@ -1131,6 +1252,9 @@ body.dark-mode .search-clear-btn:hover {
       
       if (mode === 'fullscreen') {
         document.body.classList.add('mode-fullscreen');
+        // ★ フルスクリーン時は「字幕表示 (ON)」にする
+        updateSubtitleVisibility(true);
+
 
         // ★ 1. ブラウザ自体を全画面化
         const docElm = document.documentElement;
@@ -1141,11 +1265,18 @@ body.dark-mode .search-clear-btn:hover {
             await docElm.webkitRequestFullscreen();
           }
 
-          // ★ 2. 全画面化に成功したら横画面（landscape）へ固定（Android / Chrome等）
+          // ★ 2. #SHORT キーワードを持たない「横長動画」のみ横画面に固定
           if (screen.orientation && screen.orientation.lock) {
-            await screen.orientation.lock('landscape').catch(err => {
-              console.log('画面回転固定非対応またはユーザー制限:', err);
-            });
+            const currentVideo = filteredVideos[currentVideoIndex];
+            
+            // keywords 配列に "#SHORT" または "SHORT" が含まれているか判定
+            const isShort = currentVideo && Array.isArray(currentVideo.keywords) && 
+              currentVideo.keywords.some(kw => kw.toUpperCase().includes('SHORT'));
+
+            // Shorts（縦型）ではない場合のみ横画面（landscape）にロック
+            if (!isShort) {
+              await screen.orientation.lock('landscape').catch(() => {});
+            }
           }
         } catch (err) {
           console.log('フルスクリーン実行エラー:', err);
@@ -1153,8 +1284,10 @@ body.dark-mode .search-clear-btn:hover {
 
       } else {
         document.body.classList.add(`mode-${mode}`);
+        // ★ フルスクリーン解除（通常画面）時は「字幕なし (OFF)」に戻す
+        updateSubtitleVisibility(false);
 
-        // ★ 3. 全画面解除時に回転固定を解除＆全画面終了
+        // ★ 3. 全画面解除時に画面ロックを解除
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
         }
@@ -1325,7 +1458,7 @@ body.dark-mode .search-clear-btn:hover {
         });
 
         const currentData = transcriptData[activeIndex];
-        if (currentData) {
+        if (currentData && currentData.translation) {
           if (currentData.speaker) {
             overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
             overlaySpeaker.style.display = 'inline';
@@ -1333,7 +1466,12 @@ body.dark-mode .search-clear-btn:hover {
             overlaySpeaker.textContent = '';
             overlaySpeaker.style.display = 'none';
           }
-          overlayText.textContent = currentData.translation || '';
+          overlayText.textContent = currentData.translation;
+          overlaySubtitleBox.style.display = 'block'; // テキストがある時は表示
+        } else {
+          overlayText.textContent = '';
+          overlaySpeaker.textContent = '';
+          overlaySubtitleBox.style.display = 'none'; // テキストがない時は枠ごと隠す
         }
       }
     }
@@ -1596,7 +1734,7 @@ body.dark-mode .search-clear-btn:hover {
 
       // ★ 追加: 直前に表示されていたオーバーレイ字幕をクリア
       if (overlaySpeaker) overlaySpeaker.textContent = '';
-      if (overlayText) overlayText.textContent = '字幕を選択するとここに表示されます。';
+      if (overlayText) overlayText.textContent = '';
 
       // ★ 追加: 字幕エリアを一番上までスクロールアップ
       if (transcriptSection) {
@@ -1764,6 +1902,52 @@ body.dark-mode .search-clear-btn:hover {
       }
     });
 
+    // 字幕設定用の要素
+    const subSizeBtn = document.getElementById('sub-size-btn');
+    const subStyleBtn = document.getElementById('sub-style-btn');
+
+    // 切り替え用クラスの一覧定義
+    const sizeClasses = ['size-small', 'size-medium', 'size-large', 'size-xlarge'];
+    const styleClasses = ['style-default', 'style-outline', 'style-highcontrast', 'style-soft'];
+
+    // 保存された設定の読み込み（デフォルト設定：medium / default）
+    let currentSizeIndex = parseInt(localStorage.getItem('sub_size_index') || '1', 10);
+    let currentStyleIndex = parseInt(localStorage.getItem('sub_style_index') || '0', 10);
+
+    // 初期設定の適用
+    function applySubtitleSettings() {
+      // サイズ設定の更新
+      sizeClasses.forEach(cls => overlaySubtitleBox.classList.remove(cls));
+      overlaySubtitleBox.classList.add(sizeClasses[currentSizeIndex]);
+
+      // デザイン設定の更新
+      styleClasses.forEach(cls => overlaySubtitleBox.classList.remove(cls));
+      overlaySubtitleBox.classList.add(styleClasses[currentStyleIndex]);
+    }
+
+    // ボタンイベント設定
+    if (subSizeBtn) {
+      subSizeBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 字幕位置の左右切替イベントへの波及を防止
+        currentSizeIndex = (currentSizeIndex + 1) % sizeClasses.length;
+        localStorage.setItem('sub_size_index', currentSizeIndex);
+        applySubtitleSettings();
+      });
+    }
+
+    if (subStyleBtn) {
+      subStyleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 字幕位置の左右切替イベントへの波及を防止
+        currentStyleIndex = (currentStyleIndex + 1) % styleClasses.length;
+        localStorage.setItem('sub_style_index', currentStyleIndex);
+        applySubtitleSettings();
+      });
+    }
+
+    // 初期化時にスタイル適用
+    applySubtitleSettings();
+    
+
     // ★ シェア＆URLコピー機能の実装
     const xShareBtn = document.getElementById('x-share-btn');
     const copyUrlBtn = document.getElementById('copy-url-btn');
@@ -1829,9 +2013,53 @@ body.dark-mode .search-clear-btn:hover {
       });
     }
 
+    // ボタンを表示し、タイマーをリセットする関数
+    function showVideoControls() {
+      if (!iframeWrapper) return;
 
+      // ボタンを表示状態にする
+      iframeWrapper.classList.add('user-active');
 
+      // 既存のタイマーをクリア
+      if (hideControlsTimer) {
+        clearTimeout(hideControlsTimer);
+      }
 
+      // 3秒間無操作状態が続いたら非表示にする
+      hideControlsTimer = setTimeout(() => {
+        iframeWrapper.classList.remove('user-active');
+      }, 3000);
+    }
+
+    // PC用：動画領域内でカーソルが動いた時
+    if (iframeWrapper) {
+      iframeWrapper.addEventListener('mousemove', showVideoControls);
+      iframeWrapper.addEventListener('mouseenter', showVideoControls);
+
+      // スマホ・タブレット用：動画領域をタップした時
+      iframeWrapper.addEventListener('touchstart', showVideoControls, { passive: true });
+      iframeWrapper.addEventListener('click', showVideoControls);
+    }
+
+    // 字幕の表示 / 非表示状態を更新する関数
+    function updateSubtitleVisibility(visible) {
+      isSubtitleVisible = visible;
+      if (isSubtitleVisible) {
+        overlaySubtitleContainer.classList.remove('sub-hidden');
+        if (subToggleBtn) subToggleBtn.classList.add('active');
+      } else {
+        overlaySubtitleContainer.classList.add('sub-hidden');
+        if (subToggleBtn) subToggleBtn.classList.remove('active');
+      }
+    }
+
+    // 1. ボタンの手動クリックで表示 / 非表示を切り替え
+    if (subToggleBtn) {
+      subToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateSubtitleVisibility(!isSubtitleVisible);
+      });
+    }
 
 
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -1859,6 +2087,10 @@ body.dark-mode .search-clear-btn:hover {
 
     window.addEventListener('DOMContentLoaded', () => {
       init();
+      
+      // 初期化（通常画面スタートなのでデフォルト「字幕なし」を適用）
+      updateSubtitleVisibility(false);
+      
       window.focus();
       document.body.focus();
     });
