@@ -969,9 +969,15 @@
       }, 0);
     }
 
+    // 修正後
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;'); // シングルクォーテーションのエスケープを追加
     }
 
     // --- 5. アクション関数群 ---
@@ -1157,14 +1163,15 @@ function renderCommonKeywords() {
     html += `<div style="font-size:0.72rem; color:#475569; font-weight:bold; width:100%; margin-top:8px;">${escapeHtml(categoryName)}</div>`;
     
     for (const tagKey of Object.keys(categoryTags)) {
-      html += `
-        <button class="speaker-btn" type="button" 
-                style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
-                onclick="addKeywordToInput('${escapeHtml(tagKey)}')">
-          + ${escapeHtml(tagKey)}
-        </button>
-      `;
-    }
+        // 引数をダブルクォーテーションで囲む
+        html += `
+          <button class="speaker-btn" type="button" 
+                  style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
+                  onclick='addKeywordToInput("${escapeHtml(tagKey)}")'>
+            + ${escapeHtml(tagKey)}
+          </button>
+        `;
+      }
   }
 
   container.innerHTML = html;

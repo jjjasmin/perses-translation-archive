@@ -287,19 +287,42 @@ def build_final_json(
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(final_json_data, f, ensure_ascii=False, indent=2)
 
-    # キーワード抽出
+    # ==========================================
+    # キーワード（タグ）自動抽出ロジック
+    # ==========================================
     extracted_tags = []
 
-    title_lower = original_title.lower()
-    for tag, keywords in ALLOWED_TAG_MAP.items():
-        for kw in keywords:
-            if re.search(r'\b' + re.escape(kw) + r'\b', title_lower):
-                extracted_tags.append(tag)
-                break
+    # 1. 検索対象テキストを1つに統合（小文字化）
+    # 元タイトル、日本語タイトル、YouTubeメタデータタグをすべて結合
+    search_target_text = f"{original_title} {translated_title} {' '.join(raw_tags)}".lower()
 
+    # 2. 階層化された ALLOWED_TAG_MAP（tags.json）を平坦化して走査する関数
+    def extract_matching_tags(tag_data):
+        for key, value in tag_data.items():
+            if isinstance(value, dict):
+                # 子カテゴリ（"公式コンテンツ"等）がある場合は再帰的に探索
+                extract_matching_tags(value)
+            elif isinstance(value, list):
+                # #MV などのタグ名（key）と、キーワードリスト（value）の処理
+                tag_name = key
+                keywords = value
+
+                for kw in keywords:
+                    if not kw:
+                        continue
+                    # 部分一致判定（スペース入り単語 "music video" やタイ語もそのまま判定可能）
+                    if kw.lower() in search_target_text:
+                        extracted_tags.append(tag_name)
+                        break  # このタグ内で1つでもマッチしたら次のタグへ
+
+    # 抽出実行
+    extract_matching_tags(ALLOWED_TAG_MAP)
+
+    # 3. リペアフラグがある場合は追加
     if is_need_fix:
         extracted_tags.append("#NEED_FIX")
 
+    # 重複を除去
     final_keywords = list(dict.fromkeys(extracted_tags))
     file_relative_path = f"{filename}"
 
@@ -319,8 +342,10 @@ def build_final_json(
             item["original_title"] = original_title
             item["published_at"] = formatted_date
             item["file"] = file_relative_path
+            
+            # 既存のタグと今回抽出されたタグを結合して重複除去
             merged = item.get("keywords", []) + final_keywords
-            item["keywords"] = [t for t in dict.fromkeys(merged) if t in ALLOWED_TAG_MAP or t == "#NEED_FIX"]
+            item["keywords"] = list(dict.fromkeys(merged))
             is_updated = True
             break
 

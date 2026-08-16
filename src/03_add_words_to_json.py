@@ -67,7 +67,7 @@ def call_gemini_api_with_retry(prompt: str):
     for attempt in range(1, max_retries + 1):
         try:
             response = client.models.generate_content(
-                model="gemini-3.5-flash",
+                model="gemini-3.5-flash-lite",
                 contents=prompt,
                 config={"response_mime_type": "application/json"},
             )
@@ -84,7 +84,7 @@ def call_gemini_api_with_retry(prompt: str):
                     client = get_client(current_key_index)
                     try:
                         response = client.models.generate_content(
-                            model="gemini-3.5-flash",
+                            model="gemini-3.5-flash-lite",
                             contents=prompt,
                             config={"response_mime_type": "application/json"},
                         )
@@ -102,11 +102,20 @@ def call_gemini_api_with_retry(prompt: str):
     raise RuntimeError("APIの試行回数が上限に達しました。")
 
 # ==========================================
-# 3. メイン処理：video_*.json を全件スキャンして words を追加
+# 3. パス設定および pipeline_status.json の読み込み
 # ==========================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
-TEMP_DIR = os.path.join(DATA_DIR, "temp")
+STATUS_FILE = os.path.join(BASE_DIR, "pipeline_status.json")
+
+status_data = {}
+if os.path.exists(STATUS_FILE):
+    with open(STATUS_FILE, "r", encoding="utf-8") as f:
+        try:
+            status_data = json.load(f)
+            print(f"📋 『{STATUS_FILE}』を読み込みました。")
+        except json.JSONDecodeError:
+            print("⚠️ ステータスファイルの読み込みに失敗しました。")
 
 target_files = sorted(glob.glob(os.path.join(DATA_DIR, "video_*.json")))
 
@@ -116,10 +125,21 @@ if not target_files:
 
 print(f"📁 処理対象ファイル: {len(target_files)} 件 ({target_files})")
 
+# ==========================================
+# 4. メイン処理：video_*.json をスキャンして単語分解
+# ==========================================
 for filepath in target_files:
-    print(f"\n==========================================")
-    print(f"🎬 単語追加処理の開始: {filepath}")
-    print(f"==========================================")
+    filename = os.path.basename(filepath)
+    video_id = filename.replace("video_", "").replace(".json", "")
+
+    print("\n==========================================")
+    print(f"🎬 単語追加処理の開始: {filepath} (ID: {video_id})")
+    print("==========================================")
+
+    # 1. pipeline_status.json 上で完了済みかチェック
+    if video_id in status_data and status_data[video_id].get("add_words") == "completed":
+        print("⏩ pipeline_status.json 上で `add_words` が完了済みのためスキップします。")
+        continue
 
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -129,9 +149,13 @@ for filepath in target_files:
         print("⚠️ transcript が空のためスキップします。")
         continue
 
-    # すでに単語追加が完了しているかチェック（先頭行に `words` があれば完了とみなす）
+    # 2. JSON実体データに `words` がすでにあるかチェック
     if "words" in transcript[0] and transcript[0]["words"]:
         print("⏩ すでに `words` が追加済みのためスキップします。")
+        if video_id in status_data:
+            status_data[video_id]["add_words"] = "completed"
+            with open(STATUS_FILE, "w", encoding="utf-8") as sf:
+                json.dump(status_data, sf, ensure_ascii=False, indent=2)
         continue
 
     total_items = len(transcript)
@@ -214,10 +238,20 @@ Markdownの枠（```json）も含めず、純粋なJSON配列のみを出力し�
         else:
             item["words"] = []
 
-    # 上書き保存
+    # 上書き保存 & ステータス書き込み
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     print(f"✅ 『{filepath}』を上書き更新しました！（`words` 追加成功: {updated_count}/{total_items} 行）")
+
+    if video_id not in status_data:
+        status_data[video_id] = {}
+
+    status_data[video_id]["add_words"] = "completed"
+
+    with open(STATUS_FILE, "w", encoding="utf-8") as sf:
+        json.dump(status_data, sf, ensure_ascii=False, indent=2)
+
+    print(f"📝 『pipeline_status.json』に `{video_id}` の `add_words: completed` を書き込みました。")
 
 print("\n🎉 全てのファイルの単語付与処理が完了しました！")
