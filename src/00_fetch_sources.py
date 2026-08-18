@@ -19,13 +19,16 @@ TARGET_SOURCES = [
     # "https://www.youtube.com/watch?v=NvrHLb-4lkk",  # 特定の個別の動画だけを指定
 ]
 
-# --- パス定義と temp ディレクトリの自動作成 ---
+# --- パス定義と ディレクトリ設定 ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "data"))
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
 ARCHIVE_DIR = os.path.join(DATA_DIR, "temp_archive")
-NO_TRANSCRIPT_FILE = os.path.join(TEMP_DIR, "no_transcript_ids.json")
+URL_TXT_FILE = os.path.join(DATA_DIR, "urls.txt")
 URL_CACHE_FILE = os.path.join(TEMP_DIR, "fetched_urls.json")
+NO_TRANSCRIPT_FILE = os.path.join(TEMP_DIR, "no_transcript_ids.json")
+COOKIE_FILE = os.path.join(DATA_DIR, "cookies.txt")
+
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(ARCHIVE_DIR, exist_ok=True)
 
@@ -59,56 +62,62 @@ def is_rate_limit_error(e: Exception) -> bool:
 
 
 
-def fetch_all_video_urls(sources, max_fetch_per_source: int = 2):
+def fetch_all_video_urls(sources):
     """
-    各ソースから最新 N 件（デフォルト2件）のみを取得し、既存キャッシュと結合して更新する
+    1. urls.txt（ブックマークレット出力）
+    2. fetched_urls.json（自動キャッシュ）
+    3. yt-dlpでの自動取得（最終フォールバック）
+    の優先順位でURLリストを取得・生成する
     """
-    # 既存のキャッシュを読み込む
-    cached_urls = []
+    # 1. 手動取得した urls.txt があれば最優先で読み込み（通信 0 回）
+    if os.path.exists(URL_TXT_FILE):
+        with open(URL_TXT_FILE, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+            unique_lines = list(dict.fromkeys(lines))
+            if unique_lines:
+                print(f"📄 手動ファイル (urls.txt) から {len(unique_lines)} 件のURLを読み込みました！（通信なし）")
+                return unique_lines
+
+    # 2. 自動保存されたキャッシュがあれば読み込み（通信 0 回）
     if os.path.exists(URL_CACHE_FILE):
         try:
             with open(URL_CACHE_FILE, "r", encoding="utf-8") as f:
-                cached_urls = json.load(f)
+                urls = json.load(f)
+                print(f"📦 キャッシュから {len(urls)} 件のURLを読み込みました！（通信なし）")
+                return urls
         except Exception:
-            cached_urls = []
+            pass
 
-    fetched_new_urls = []
-    ydl_opts = {
-        'extract_flat': True,
-        'quiet': True,
-        'skip_download': True,
-        'playlistend': max_fetch_per_source,  # 各ソースの最新 N 件のみ取得
-    }
+    # 3. ファイルが無い場合のみ yt-dlp で取得（最新2件に制限）
+    print("🔍 YouTubeから最新データを取得中...")
+    ydl_opts = {'extract_flat': True, 'quiet': True, 'skip_download': True, 'playlistend': 2}
 
-    print(f"🔍 YouTubeから最新データ（各ソース最大 {max_fetch_per_source} 件）を取得中...")
+    # 👈 追加: URL一覧取得時にも Cookie があれば適用
+    if os.path.exists(COOKIE_FILE):
+        ydl_opts["cookiefile"] = COOKIE_FILE
+
+    video_urls = []
     with YoutubeDL(ydl_opts) as ydl:
         for source in sources:
             try:
                 info = ydl.extract_info(source, download=False)
                 if 'entries' in info:
-                    for entry in info['entries']:
-                        if entry and 'url' in entry:
-                            fetched_new_urls.append(entry['url'])
+                    video_urls.extend([e['url'] for e in info['entries'] if e and 'url' in e])
                 else:
-                    fetched_new_urls.append(info.get('webpage_url', source))
+                    video_urls.append(info.get('webpage_url', source))
             except Exception as e:
                 print(f"⚠️ URL取得エラー ({source}): {e}")
 
-    # 新規取得分を先頭にし、既存キャッシュと結合して重複除外
-    all_urls = list(dict.fromkeys(fetched_new_urls + cached_urls))
-
-    # キャッシュを更新保存
-    if all_urls:
+    unique_urls = list(dict.fromkeys(video_urls))
+    if unique_urls:
         with open(URL_CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(all_urls, f, ensure_ascii=False, indent=2)
+            json.dump(unique_urls, f, ensure_ascii=False, indent=2)
 
-    print(f"🎉 キャッシュを更新しました！（合計 {len(all_urls)} 件）")
-    
-    # 安全対策：後続の処理へ移る前に少しだけ冷却（5〜10秒で十分です）
+    print(f"🎉 キャッシュを更新しました！（合計 {len(unique_urls)} 件）")
     print("☕ 通信負荷緩和のため 10 秒待機します...")
     time.sleep(10)
 
-    return all_urls
+    return unique_urls
 
 def fetch_video_data_with_ytdlp(video_id: str):
     """
@@ -122,7 +131,16 @@ def fetch_video_data_with_ytdlp(video_id: str):
         "writesubtitles": True,
         "writeautomaticsub": True,
         "subtitleslangs": ["th", "en"],
+        # ボット判定を回避するためのヘッダー追加
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "ja,en-US;q=0.9,en;q=0.8,th;q=0.7",
+        }
     }
+
+    # 👈 追加: cookies.txt が存在する場合に指定
+    if os.path.exists(COOKIE_FILE):
+        ydl_opts["cookiefile"] = COOKIE_FILE
 
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -197,7 +215,7 @@ def main():
 
     print("\n📥 各動画のメタデータ・字幕の事前取得を開始します...")
     no_transcript_ids = load_no_transcript_ids()
-    request_count = 0  # 実際に通信を行った回数をカウント
+    request_count = 0  # 実際の通信発生回数をカウント
 
     for idx, url in enumerate(urls, 1):
         video_id = extract_video_id(url)
@@ -219,20 +237,25 @@ def main():
             saved_video_ids.append(video_id)
             continue
 
-        # 直前に通信を行っている場合のみランダム待機を入れる
+        # 直前に実際の通信を行っている場合の待機処理
         if request_count > 0:
-            wait_sec = random.uniform(45, 70)
-            print(f"☕ IP制限回避のため {wait_sec:.1f} 秒待機します...")
-            time.sleep(wait_sec)
+            # 5件ごとに10分（615秒）の予防冷却
+            if request_count % 5 == 0:
+                print(f"\n☕ [予防冷却] 5件取得したため 10 分間程 (815秒) 休憩します...")
+                time.sleep(815)
+            else:
+                # 通常時の通信間隔（バッチ冷却を入れるため 20〜40秒 で十分です）
+                wait_sec = random.uniform(60, 80)
+                print(f"☕ 通信間隔調整のため {wait_sec:.1f} 秒待機します...")
+                time.sleep(wait_sec)
 
         print(f"\n==========================================")
         print(f"🎬 取得中 [{idx}/{len(urls)}]: VIDEO_ID = {video_id}")
         print(f"==========================================")
 
-        # 実際に通信を開始するためカウントを増やす
         request_count += 1
 
-        max_rate_limit_retries = 3
+        max_rate_limit_retries = 2
         rate_limit_retry_count = 0
 
         while rate_limit_retry_count < max_rate_limit_retries:
@@ -256,11 +279,10 @@ def main():
                 if is_rate_limit_error(e):
                     rate_limit_retry_count += 1
                     print(f"\n⚠️ [429 / アクセス制限検知] YouTubeからIP制限を受けた可能性があります。")
-                    print(f"🛑 15分間 (900秒) 処理を完全に停止して冷却します... (再試行 {rate_limit_retry_count}/{max_rate_limit_retries})")
-                    time.sleep(900)
-                    print("🔄 15分経過しました。処理を再開します...\n")
+                    print(f"🛑1時間 (3720秒) 処理を完全に停止して冷却します... (再試行 {rate_limit_retry_count}/{max_rate_limit_retries})")
+                    time.sleep(3720)
+                    print("🔄 1時間経過しました。処理を再開します...\n")
                 else:
-                    # 429以外の通常の字幕なし・取得エラー時のみブラックリスト登録
                     err_msg = str(e).splitlines()[0] if str(e) else "字幕なし/取得エラー"
                     print(f"⏩ 💡 スキップ: VIDEO_ID = {video_id} ({err_msg})")
                     save_no_transcript_id(video_id)

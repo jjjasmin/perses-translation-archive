@@ -18,7 +18,7 @@ def push_to_github():
     # ★追加: 必ずプロジェクトルートにカレントディレクトリを移動する
     os.chdir(project_root)
     
-    target_files = ["data/transcripts", "data/videos.json", "pipeline_status.json"]
+    target_files = ["data/transcripts", "data/videos.json", "pipeline_status.json", "data/tags.json"]
     try:
         status = subprocess.check_output(
             ["git", "status", "--porcelain"] + target_files,
