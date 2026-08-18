@@ -7,8 +7,13 @@ data/temp/temp_*
 temp_*
 data/temp_archive/temp_*
 logs/*.log
+data/cookies.txt
+data/urls.txt
+fetched_urls.json
+no_transcript_ids.json
 
 # 音声・動画の一時ファイルや環境変数ファイルも除外
+*.bat
 *.mp3
 *.wav
 *.mp4
