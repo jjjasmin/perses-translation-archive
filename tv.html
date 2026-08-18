@@ -281,7 +281,10 @@
     .style-text-only {
       background-color: transparent;
       color: #ffffff;
-      text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 2px 0 #000, 2px 0 0 #000, 0 -2px 0 #000, -2px 0 0 #000;
+      font-weight: bold;
+      -webkit-text-stroke: 4px #000000; /* 黒縁取りの太さ */
+      paint-order: stroke fill;           /* 輪郭線を文字の塗りの背面に描画 */
+      text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8); /* 視認性向上のための薄い落ち影 */
     }
 
     /* 字幕サイズ (SS / S / M / L / LL) */

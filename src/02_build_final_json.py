@@ -294,7 +294,11 @@ def build_final_json(
 
     # 1. 検索対象テキストを1つに統合（小文字化）
     # 元タイトル、日本語タイトル、YouTubeメタデータタグをすべて結合
-    search_target_text = f"{original_title} {translated_title} {' '.join(raw_tags)}".lower()
+    # search_target_text = f"{original_title} {translated_title} {' '.join(raw_tags)}".lower()
+
+    # 1. 検索対象テキストを1つに統合（小文字化）
+    # 元タイトル、日本語タイトルのみを結合（YouTubeメタデータタグ raw_tags は除外）
+    search_target_text = f"{original_title} {translated_title}".lower()    
 
     # 2. 階層化された ALLOWED_TAG_MAP（tags.json）を平坦化して走査する関数
     def extract_matching_tags(tag_data):

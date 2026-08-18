@@ -243,9 +243,6 @@ def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -
     return expected_ids.issubset(found_ids)
 
 
-# ==========================================
-# 該当箇所：call_gemini_api_with_retry 関数の修正 (差し替え)
-# ==========================================
 def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_idx: int = None, model_name: str = None):
     global current_key_index, current_model_index, client
     
@@ -324,7 +321,7 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                     current_key_index += 1
                     print(f"🔄 APIキーを Index {current_key_index} に切り替えて再試行します...")
                     client = get_client(current_key_index)
-                    time.sleep(2)  # 念のため2秒待機
+                    time.sleep(5)  # 念のため2秒待機
                     # 💡 【重要】キーを切り替えたら、リトライ上限で落ちないようにこのループをやり直す
                     # forループの外で while や再帰を使うか、一時的にループ上限を回避する
                     return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
@@ -336,7 +333,7 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                     current_key_index = 0
                     client = get_client(current_key_index)
                     print(f"🔀 【モデル切り替え】 次のモデル 『{AVAILABLE_MODELS[model_idx]}』 (キーIndex: 0) へ切替えて続行します！")
-                    time.sleep(2)
+                    time.sleep(5)
                     return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
                 
                 # ③ 全モデル ＆ 全キーを使い切った場合 ➔ 60秒待機して再試行（または中断）
@@ -348,10 +345,13 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                     return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
 
             if is_503:
-                time.sleep(base_backoff * (2 ** (attempt - 1)))
+                # 503は指数バックオフで長めに待機 (5秒、10秒、20秒...)
+                sleep_time = base_backoff * (2 ** (attempt - 1))
+                print(f"⚠️ [503 サーバー混雑] {sleep_time}秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                time.sleep(sleep_time)
             else:
                 print(f"❌ 予期せぬAPIエラー: {e}")
-                sys.exit(1)
+                time.sleep(5)
 
     raise RuntimeError("Gemini APIのリトライ上限に達しました。")
 
@@ -505,9 +505,9 @@ def process_batch_with_split(
         try:
             raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
         except Exception as e:
-            # 💡 【変更点】タイムアウトやハングアップ、APIエラー発生時も検知してログ出力
-            print(f"{indent}  ⚠️ メインAPI呼び出しエラー/ハングアップ検知 ({e})")
-            continue
+            # ★ API通信エラー（429/503/リトライ上限等）の場合は分割へ進めず、呼び出し元に None を返してバッチを保持
+            print(f"{indent}  ❌ API通信エラー発生のためバッチを保持します: {e}")
+            return None
 
         candidate = parse_chunk_response(raw_text)
 
@@ -528,24 +528,21 @@ def process_batch_with_split(
                         print(f"{indent}  🎉 リペア成功！")
                         return [candidate_repaired]
 
-    # --- 💡 【変更点】メイン1回・リペア3回、またはハングアップ等で解決しない場合の「ID半減分割処理」 ---
+    # ★【通信成功後にフォーマット不全となった場合のみここへ到達する】
     if len(batch) > 1:
         mid = len(batch) // 2
         left_batch = batch[:mid]
         right_batch = batch[mid:]
-        print(f"\n{indent}🚨 [ハングアップ/不全検知 ➔ ID半減] ID {start_id}〜{end_id} ({len(batch)}件) で失敗したため、データ量を半減 ({len(left_batch)}件 / {len(right_batch)}件) して再試行します...")
+        print(f"\n{indent}🚨 [JSON構造・ID不全検知 ➔ ID半減] ID {start_id}〜{end_id} ({len(batch)}件) で失敗したため、データ量を半減 ({len(left_batch)}件 / {len(right_batch)}件) して再試行します...")
 
-        # 前半バッチを実行 (成功したら自動的に次の処理へ)
         res_left = process_batch_with_split(left_batch, transcript_list, original_title, is_first_chunk=is_first_chunk, depth=depth + 1, chunk_label=chunk_label)
         if res_left is None:
             return None
 
-        # 後半バッチを実行
         res_right = process_batch_with_split(right_batch, transcript_list, original_title, is_first_chunk=False, depth=depth + 1)
         if res_right is None:
             return None
 
-        # 前半・後半の両方が成功したら結合して返却（呼び出し元のmainループに戻ると自動的に50件に戻ります）
         return res_left + res_right
     else:
         print(f"{indent}❌ 最小単位 (ID {start_id}) でも取得に失敗しました。")
@@ -559,13 +556,32 @@ def main(video_ids_or_urls=None):
     status_data = load_pipeline_status()
     completed_count = 0
 
+    # ARCHIVE_DIR は関数冒頭で共通定義しておく
+    ARCHIVE_DIR = os.path.join(DATA_DIR, "temp_archive")
+
     # 入力（URLまたはID）から video_id 一覧を抽出。引数がない場合は temp ディレクトリから自動検出
     if video_ids_or_urls:
         target_ids = [extract_video_id(item) for item in video_ids_or_urls]
     else:
-        temp_sources = glob.glob(os.path.join(TEMP_DIR, "temp_source_*.json"))
-        target_ids = [os.path.basename(f).replace("temp_source_", "").replace(".json", "") for f in temp_sources]
+        # 参照元のフォルダ情報を保持しながらファイル一覧を取得
+        temp_files = [(f, "temp") for f in glob.glob(os.path.join(TEMP_DIR, "temp_source_*.json"))]
+        
+        if current_mode == "standard" and os.path.exists(ARCHIVE_DIR):
+            temp_files.extend([(f, "archive") for f in glob.glob(os.path.join(ARCHIVE_DIR, "temp_source_*.json"))])
 
+        # ★【解決策A】ソート順: 1. priority(昇順) ➔ 2. フォルダ(temp優先: "temp" < "archive") ➔ 3. video_id(昇順)
+        temp_files.sort(
+            key=lambda item: (
+                status_data.get(os.path.basename(item[0]).replace("temp_source_", "").replace(".json", ""), {}).get("priority", 2),
+                0 if item[1] == "temp" else 1,
+                os.path.basename(item[0]).replace("temp_source_", "").replace(".json", "")
+            )
+        )
+
+        # 変数名を f[0] に修正して抽出
+        target_ids = [os.path.basename(f[0]).replace("temp_source_", "").replace(".json", "") for f in temp_files]
+
+    # （※ここにあった二重ソートの target_ids.sort(...) は削除）
     for video_id in target_ids:
         if not video_id:
             continue
@@ -599,11 +615,15 @@ def main(video_ids_or_urls=None):
                 f"🔄 アップグレード: VIDEO_ID [{video_id}] を {existing_mode} ➔ {current_mode} (高品質) へ上書き生成します！"
             )
 
-        # ★【変更】YouTube通信を一切行わず、事前取得済みの一時ファイルを読み込む
+        # 事前取得済みの一時ファイルを読み込む（TEMP_DIR になければ ARCHIVE_DIR から読み込み）
         temp_source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
         if not os.path.exists(temp_source_file):
-            print(f"⚠️ 一時ファイル 『{temp_source_file}』 が見つかりません。スキップします。")
-            continue
+            archive_source_file = os.path.join(ARCHIVE_DIR, f"temp_source_{video_id}.json")
+            if current_mode == "standard" and os.path.exists(archive_source_file):
+                temp_source_file = archive_source_file
+            else:
+                print(f"⚠️ 一時ファイル 『{temp_source_file}』 が見つかりません。スキップします。")
+                continue
 
         try:
             with open(temp_source_file, "r", encoding="utf-8") as f:

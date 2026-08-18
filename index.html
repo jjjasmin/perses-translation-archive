@@ -275,7 +275,15 @@
       padding: 0 8px !important;
     }
 
+    .title-prefix {
+      font-size: 0.8em;
+      margin-right: 4px;
+      color: #888;
+    }
 
+    body.dark-mode .title-prefix {
+      color: #aaa;
+    }
 
     /* レイアウトパターン定義 */
     .content-layout {
@@ -878,24 +886,16 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     /* 2. 映画風・アウトライン（背景なし + 太い黒縁取り） */
-        .overlay-subtitle-box.style-outline {
-          background: transparent !important;
-          border: none !important;
-          box-shadow: none !important;
-          color: #ffffff;
-          font-weight: 800; /* より太字にして縁取りを引き立てる */
-          text-shadow: 
-            /* 1px 範囲のくっきり縁取り */
-            -1px -1px 0 #000,  1px -1px 0 #000, -1px  1px 0 #000,  1px  1px 0 #000,
-            /* 2px 範囲の太め縁取り */
-            -2px -2px 0 #000,  2px -2px 0 #000, -2px  2px 0 #000,  2px  2px 0 #000,
-            -2px  0px 0 #000,  2px  0px 0 #000,  0px -2px 0 #000,  0px  2px 0 #000,
-            /* 3px 範囲の極太縁取り（周囲をしっかりカバー） */
-            -3px -3px 0 #000,  3px -3px 0 #000, -3px  3px 0 #000,  3px  3px 0 #000,
-            -3px  0px 0 #000,  3px  0px 0 #000,  0px -3px 0 #000,  0px  3px 0 #000,
-            /* 全体のドロップシャドウ（可読性UP用の外側の落ち影） */
-             0px  3px 8px rgba(0, 0, 0, 0.9);
-        }
+    .overlay-subtitle-box.style-outline {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      color: #ffffff;
+      font-weight: 800;
+      -webkit-text-stroke: 4px #000000; /* 縁取りの太さと色 */
+      paint-order: stroke fill;           /* 輪郭線を文字の塗りの背面に描画 */
+      text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8); /* 視認性を高める薄い落ち影のみ維持 */
+    }
         
     /* 3. ハイコントラスト（黄文字 + 漆黒背景） */
     .overlay-subtitle-box.style-highcontrast {
@@ -1493,52 +1493,63 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     function init() {
-            // tags.json と videos.json を並行取得
-            Promise.all([
-              fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
-              fetch('data/videos.json').then(res => res.ok ? res.json() : [])
-            ])
-            .then(([tagsData, videoList]) => {
-              if (!videoList || videoList.length === 0) return;
+      // tags.json, videos.json, pipeline_status.json を並行取得
+      Promise.all([
+        fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+        fetch('data/videos.json').then(res => res.ok ? res.json() : []),
+        fetch('pipeline_status.json').then(res => res.ok ? res.json() : {})
+      ])
+      .then(([tagsData, videoList, statusData]) => {
+        if (!videoList || videoList.length === 0) return;
 
-              // ★ 追加: published_at の降順（新しい順）にソート
-              videoList.sort((a, b) => {
-                const dateA = a.published_at || '';
-                const dateB = b.published_at || '';
-                return dateB.localeCompare(dateA); // 降順比較
-              });
+        // ★ pipeline_status.json の情報を videos.json のデータに結合
+        videoList = videoList.map(video => {
+          const status = statusData[video.id] || {};
+          return {
+            ...video,
+            mode: status.mode || video.mode,
+            add_words: status.add_words || video.add_words
+          };
+        });
 
-              allVideos = videoList;
-              filteredVideos = [...allVideos];
+        // ★ 追加: published_at の降順（新しい順）にソート
+        videoList.sort((a, b) => {
+          const dateA = a.published_at || '';
+          const dateB = b.published_at || '';
+          return dateB.localeCompare(dateA); // 降順比較
+        });
 
-              sortVideos();
+        allVideos = videoList;
+        filteredVideos = [...allVideos];
 
-              // tags.json を元にキーワードチップを構築（データ順を保持）
-              setupKeywordsFloatingBox(tagsData);
-              setupSearchEvents();
-              setupSortEvent();
+        sortVideos();
 
-              resetVideoListDisplay();
+        // tags.json を元にキーワードチップを構築（データ順を保持）
+        setupKeywordsFloatingBox(tagsData);
+        setupSearchEvents();
+        setupSortEvent();
 
-              // URLパラメータ (?v=...) から動画IDを取得
-              const urlParams = new URLSearchParams(window.location.search);
-              const initialVideoId = urlParams.get('v');
+        resetVideoListDisplay();
 
-              let targetIndex = 0;
-              if (initialVideoId) {
-                const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
-                if (foundIndex !== -1) {
-                  targetIndex = foundIndex;
-                }
-              }
+        // URLパラメータ (?v=...) から動画IDを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialVideoId = urlParams.get('v');
 
-              selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
-              setupScrollListener();
-            })
-            .catch(error => {
-              console.error('初期化エラー:', error);
-            });
+        let targetIndex = 0;
+        if (initialVideoId) {
+          const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
+          if (foundIndex !== -1) {
+            targetIndex = foundIndex;
           }
+        }
+
+        selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
+        setupScrollListener();
+      })
+      .catch(error => {
+        console.error('初期化エラー:', error);
+      });
+    }
 
       function setupSortEvent() {
             if (!sortOrderBtn) return;
@@ -1675,12 +1686,19 @@ body.dark-mode .search-clear-btn:hover {
           keywordsHtml = `<div class="video-keywords">${kwItems}</div>`;
         }
 
+        let prefix = '';
+        if (video.mode === 'lite') {
+          prefix = '<small class="title-prefix">(仮)</small>';
+        } else if (video.add_words === 'completed') {
+          prefix = '<small class="title-prefix">[単語]</small>';
+        }
+
         return `
           <div class="video-item ${isActive}" data-index="${globalIndex}" data-file="${video.file}" data-id="${video.id}">
             <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail" />
             <div class="video-info">
               <span class="playing-badge">▶ 再生中</span>
-              <div class="video-title">${video.title}</div>
+              <div class="video-title">${prefix}${video.title}</div>
               ${keywordsHtml}
             </div>
           </div>

@@ -8,6 +8,13 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import ServerError
 
+# ------------------------------------------
+# 実行オプション設定（必要に応じて変更）
+# ------------------------------------------
+# 特定の priority のみ処理したい場合は数字を指定（例: TARGET_PRIORITY = 1）
+# 全ての priority を順番に処理したい場合は None にする
+TARGET_PRIORITY = None
+
 # ==========================================
 # 1. APIキー・設定
 # ==========================================
@@ -112,6 +119,7 @@ MAIN_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))  # main ディレクト
 # 02で出力された video_*.json が保存される場所 (data/transcripts) に合わせる
 DATA_DIR = os.path.join(MAIN_DIR, "data", "transcripts")
 STATUS_FILE = os.path.join(MAIN_DIR, "pipeline_status.json")
+VIDEOS_FILE = os.path.join(MAIN_DIR, "data", "videos.json")
 
 status_data = {}
 if os.path.exists(STATUS_FILE):
@@ -122,13 +130,21 @@ if os.path.exists(STATUS_FILE):
         except json.JSONDecodeError:
             print("⚠️ ステータスファイルの読み込みに失敗しました。")
 
-target_files = sorted(glob.glob(os.path.join(DATA_DIR, "video_*.json")))
+# 動画IDを取得して priority 順（昇順: 1 -> 2 -> 3...）にソート
+def get_priority(filepath):
+    filename = os.path.basename(filepath)
+    v_id = filename.replace("video_", "").replace(".json", "")
+    # priority が設定されていない場合はデフォルトで 999（後回し）にする
+    return status_data.get(v_id, {}).get("priority", 999)
+
+# glob取得したファイルを priority 順にソート
+target_files = sorted(glob.glob(os.path.join(DATA_DIR, "video_*.json")), key=get_priority)
 
 if not target_files:
     print(f"❌ 対象となる `video_*.json` ファイルが 『{DATA_DIR}』 に見つかりませんでした。")
     sys.exit(0)
 
-print(f"📁 処理対象ファイル: {len(target_files)} 件")
+print(f"📁 処理対象ファイル: {len(target_files)} 件（priority 順にソート済み）")
 
 # ==========================================
 # 4. メイン処理：video_*.json をスキャンして単語分解
@@ -137,12 +153,25 @@ for filepath in target_files:
     filename = os.path.basename(filepath)
     video_id = filename.replace("video_", "").replace(".json", "")
 
+    status_info = status_data.get(video_id, {})
+    priority_val = status_info.get("priority", "未設定")
+
     print("\n==========================================")
-    print(f"🎬 単語追加処理の開始: {filepath} (ID: {video_id})")
+    print(f"🎬 単語追加処理の開始: {filepath} (ID: {video_id} / Priority: {priority_val})")
     print("==========================================")
 
+    # ★特定 priority 限定オプションが有効な場合チェック
+    if TARGET_PRIORITY is not None and status_info.get("priority") != TARGET_PRIORITY:
+        print(f"⏩ priority が {TARGET_PRIORITY} ではないためスキップします。 (現在のpriority: {priority_val})")
+        continue
+
+    # ★ mode が "standard" 以外の場合はスキップ
+    if status_info.get("mode") != "standard":
+        print(f"⏩ mode が 'standard' ではないためスキップします。 (現在のmode: {status_info.get('mode', '未設定')})")
+        continue
+
     # 1. pipeline_status.json 上で完了済みかチェック
-    if video_id in status_data and status_data[video_id].get("add_words") == "completed":
+    if status_info.get("add_words") == "completed":
         print("⏩ pipeline_status.json 上で `add_words` が完了済みのためスキップします。")
         continue
 
@@ -248,6 +277,29 @@ Markdownの枠（```json）も含めず、純粋なJSON配列のみを出力し�
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     print(f"✅ 『{filepath}』を上書き更新しました！（`words` 追加成功: {updated_count}/{total_items} 行）")
+
+    # ★追加: videos.json 側の keywords に "#単語辞書つき" を追加更新
+    if os.path.exists(VIDEOS_FILE):
+        with open(VIDEOS_FILE, "r", encoding="utf-8") as vf:
+            try:
+                videos_data = json.load(vf)
+                updated_v = False
+                for item in videos_data:
+                    if item.get("id") == video_id:
+                        keywords = item.get("keywords", [])
+                        if "#単語辞書つき" not in keywords:
+                            keywords.append("#単語辞書つき")
+                            item["keywords"] = keywords
+                            updated_v = True
+                        break
+                
+                if updated_v:
+                    with open(VIDEOS_FILE, "w", encoding="utf-8") as vf:
+                        json.dump(videos_data, vf, ensure_ascii=False, indent=2)
+                    print(f"🏷️ 『videos.json』の {video_id} にキーワード `#単語辞書つき` を追加しました。")
+            except Exception as e:
+                print(f"⚠️ videos.json の更新中にエラーが発生しました: {e}")
+
 
     if video_id not in status_data:
         status_data[video_id] = {}
