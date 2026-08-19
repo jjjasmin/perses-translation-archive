@@ -632,6 +632,24 @@ def main(video_ids_or_urls=None):
                 upload_date = src_data.get("upload_date", "")
                 raw_tags = src_data.get("raw_tags", [])
                 transcript_list = src_data.get("transcript", [])
+
+            # ---------------------------------------------------------
+            # 💡 【追加】字幕本文のタイ文字判定（タイ語なし・完全英語はスキップ）
+            # ---------------------------------------------------------
+            full_text = "".join([item.get("text", "") for item in transcript_list])
+            has_thai = bool(re.search(r'[\u0E00-\u0E7F]', full_text))
+
+            if not has_thai:
+                print(f"⏭️ スキップ: VIDEO_ID [{video_id}] は完全英語（タイ語なし）字幕のため除外します。")
+                status_data[video_id] = {
+                    "title": original_title,
+                    "generate": "skipped_english_only",
+                    "priority": v_status.get("priority", 2)
+                }
+                save_pipeline_status(status_data)
+                continue
+            # ---------------------------------------------------------
+
         except Exception as e:
             print(f"❌ 一時ファイル読み込みエラー (VIDEO_ID = {video_id}): {e}")
             continue
