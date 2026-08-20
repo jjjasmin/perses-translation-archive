@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タイ語 文字ピッカー（ハイライト）デモ</title>
+  <style>
+    /* ===================================================
+       1. 基本レイアウト・カードデザイン
+       =================================================== */
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    /* ===================================================
+       2. 文字ピッカー テキスト表示エリア
+       =================================================== */
+    .sentence-box {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 2.8rem;
+      font-weight: bold;
+      line-height: 1.5;
+      padding: 10px 0;
+      user-select: none;
+    }
+
+    /* 各文字（トークン）の共通スタイル */
+    .char-token {
+      position: relative;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 通常のホバー / 一括ハイライト効果 */
+    .char-token:hover,
+    .char-token.is-highlighted {
+      background-color: #ffe600;
+      color: #000;
+      transform: translateY(-2px);
+    }
+
+    /* ===================================================
+       3. ルールごとの視覚的フィードバック（Visual Styles）
+       =================================================== */
+
+    /* 【ルール1】読まない文字（黙音・ガラン付き） */
+    .char-token.style-ghost-strike {
+      opacity: 0.35;
+      color: #888;
+      text-decoration: line-through;
+      text-decoration-color: #ff4d4f;
+      text-decoration-thickness: 3px;
+    }
+    .char-token.style-ghost-strike:hover,
+    .char-token.style-ghost-strike.is-highlighted {
+      opacity: 1;
+      background-color: #fff1f0;
+      color: #ff4d4f;
+      transform: scale(0.95); /* シュッと縮む視覚効果 */
+    }
+
+    /* 【ルール2】前置母音（セット枠＋矢印） */
+    .char-token.style-frame-arrow {
+      border: 2px dashed #1890ff;
+      border-radius: 8px;
+      margin: 0 2px;
+      background-color: #e6f7ff;
+    }
+    .char-token.style-frame-arrow::after {
+      content: "🔄";
+      font-size: 0.9rem;
+      position: absolute;
+      top: -12px;
+      right: -6px;
+    }
+
+    /* 【ルール3】無形母音（隠れ母音の補完挿入） */
+    .char-token.style-dotted-insert::after {
+      content: "(o)";
+      font-size: 1.2rem;
+      color: #fa8c16;
+      font-weight: normal;
+      margin-left: 4px;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+    }
+    .char-token.style-dotted-insert:hover::after,
+    .char-token.style-dotted-insert.is-highlighted::after {
+      opacity: 1;
+      font-weight: bold;
+    }
+
+    /* 【ルール4】声調サポート文字（導音等） */
+    .char-token.style-ghost-support {
+      opacity: 0.5;
+      border-bottom: 2px dotted #722ed1;
+    }
+
+    /* ===================================================
+       4. フローティング・ポップアップ（ツールチップ）
+       =================================================== */
+    .popup-tooltip {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      background: #1f1f1f;
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: normal;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+
+    /* 吹き出しの矢印 */
+    .popup-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: #1f1f1f transparent transparent transparent;
+    }
+
+    /* バッジ */
+    .popup-badge {
+      font-size: 0.75rem;
+      background: #333;
+      padding: 2px 8px;
+      border-radius: 12px;
+      color: #ffd666;
+    }
+
+    /* アクティブ時の表示 */
+    .char-token.is-active .popup-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .translation-text {
+      margin-top: 16px;
+      font-size: 1.1rem;
+      color: #555;
+      border-top: 1px dashed #ddd;
+      padding-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 例1: 黙音記号が含まれる単語（月曜日: วันจันทร์） -->
+    <div class="card">
+      <div class="card-title">例文 1: 黙音記号（ガラン）の例</div>
+      <div class="sentence-box" id="sentence1"></div>
+      <div class="translation-text">日本語訳: 月曜日 (wan chan)</div>
+    </div>
+
+    <!-- 例2: 前置母音 ＋ 無形母音の例 -->
+    <div class="card">
+      <div class="card-title">例文 2: 前置母音と隠れ母音(o)の例</div>
+      <div class="sentence-box" id="sentence2"></div>
+      <div class="translation-text">日本語訳: ゲーム (gem) / 人 (khon)</div>
+    </div>
+  </div>
+
+  <script>
+    // ===================================================
+    // 1. サイト共通：タイ語ルールマスタ（辞書データ）
+    // ===================================================
+    const ruleMaster = {
+      "R_SILENT": {
+        "visual_style": "style-ghost-strike",
+        "popup_text": "この灰色の文字は読みません 🤫",
+        "badge": "無音（黙音記号）"
+      },
+      "R_PRE_VOWEL": {
+        "visual_style": "style-frame-arrow",
+        "popup_text": "子音の後ろに並び替えて読みます 🔄",
+        "badge": "前置母音"
+      },
+      "R_HIDDEN_O": {
+        "visual_style": "style-dotted-insert",
+        "popup_text": "隠れた「o」の音を挟んで読みます 💡",
+        "badge": "隠れ母音 [o]"
+      },
+      "R_HO_HOA": {
+        "visual_style": "style-ghost-support",
+        "popup_text": "声調を変化させるだけのサポート文字です 🎵",
+        "badge": "声調サポート"
+      }
+    };
+
+    // ===================================================
+    // 2. 字幕データ（サンプル）
+    // ===================================================
+    const sampleData1 = [
+      { "char": "วั", "roman": "wa", "char_id": "char_w" },
+      { "char": "น", "roman": "n", "char_id": "char_n" },
+      { "char": "จั", "roman": "cha", "char_id": "char_ch" },
+      { "char": "น", "roman": "n", "char_id": "char_n" },
+      // 「ทร์」は黙音ルール適用
+      { "char": "ทร์", "roman": "", "rule_id": "R_SILENT", "char_id": "char_silent1" }
+    ];
+
+    const sampleData2 = [
+      // 前置母音 「เ」 ＋ 子音 「ก」 ＋ 子音 「ม」
+      { "char": "เ", "roman": "e", "rule_id": "R_PRE_VOWEL", "char_id": "char_e" },
+      { "char": "ก", "roman": "g", "char_id": "char_g" },
+      { "char": "ม", "roman": "m", "char_id": "char_m" },
+      { "char": " ", "roman": "" }, // スペース
+      // 無形母音 「ค」 ＋ 「น」（間に o の音）
+      { "char": "ค", "roman": "kh", "rule_id": "R_HIDDEN_O", "char_id": "char_kh" },
+      { "char": "น", "roman": "n", "char_id": "char_n" }
+    ];
+
+    // ===================================================
+    // 3. レンダリング & インタラクションロジック
+    // ===================================================
+    function renderSentence(containerId, tokens) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      tokens.forEach(token => {
+        // スペースの処理
+        if (token.char === " ") {
+          const space = document.createElement('span');
+          space.style.width = "16px";
+          container.appendChild(space);
+          return;
+        }
+
+        const charEl = document.createElement('div');
+        charEl.className = 'char-token';
+        charEl.dataset.char = token.char;
+        charEl.dataset.charId = token.char_id || token.char;
+
+        // マスタデータからのルール読み込み・スタイル付与
+        let ruleInfo = null;
+        if (token.rule_id && ruleMaster[token.rule_id]) {
+          ruleInfo = ruleMaster[token.rule_id];
+          charEl.classList.add(ruleInfo.visual_style);
+        }
+
+        // タイ語文字本体
+        const textNode = document.createTextNode(token.char);
+        charEl.appendChild(textNode);
+
+        // ツールチップ（ポップアップ）の生成
+        const tooltip = document.createElement('div');
+        tooltip.className = 'popup-tooltip';
+
+        if (ruleInfo) {
+          // ルールがある場合：直感的な一言解説 ＋ バッジ
+          tooltip.innerHTML = `
+            <span class="popup-badge">${ruleInfo.badge}</span>
+            <span>${ruleInfo.popup_text}</span>
+          `;
+        } else {
+          // 通常文字の場合：シンプルにアルファベット音を提示
+          tooltip.innerHTML = `<span>音: <strong>[ ${token.roman} ]</strong></span>`;
+        }
+        charEl.appendChild(tooltip);
+
+        // --- イベントハンドラ（ホバー ＆ タップ） ---
+        const handleActivate = () => {
+          // 他の要素の指定を解除
+          document.querySelectorAll('.char-token').forEach(el => {
+            el.classList.remove('is-active', 'is-highlighted');
+          });
+
+          // 1. 自分自身をアクティブ化（ポップアップ表示）
+          charEl.classList.add('is-active');
+
+          // 2. 同じ文字（または同ID）を持つ画面内の全文字を一斉ハイライト
+          const targetChar = charEl.dataset.char;
+          document.querySelectorAll(`.char-token[data-char="${targetChar}"]`).forEach(el => {
+            el.classList.add('is-highlighted');
+          });
+        };
+
+        const handleDeactivate = () => {
+          document.querySelectorAll('.char-token').forEach(el => {
+            el.classList.remove('is-active', 'is-highlighted');
+          });
+        };
+
+        // マウスイベント（PC）
+        charEl.addEventListener('mouseenter', handleActivate);
+        charEl.addEventListener('mouseleave', handleDeactivate);
+
+        // タッチイベント（スマホ・タブレット）
+        charEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (charEl.classList.contains('is-active')) {
+            handleDeactivate();
+          } else {
+            handleActivate();
+          }
+        });
+
+        container.appendChild(charEl);
+      });
+    }
+
+    // 画面外をタップした時にポップアップを閉じる
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.char-token').forEach(el => {
+        el.classList.remove('is-active', 'is-highlighted');
+      });
+    });
+
+    // 初期化実行
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSentence('sentence1', sampleData1);
+      renderSentence('sentence2', sampleData2);
+    });
+  </script>
+</body>
+</html>

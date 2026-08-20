@@ -654,6 +654,13 @@
       <!-- ツールバー（一括クリアなど） -->
       <div class="editor-toolbar" id="editor-toolbar" style="display: none;">
         <span style="font-size: 0.82rem; font-weight: bold; color: #666;" id="card-count-label">字幕数: 0</span>
+        <!-- ▼ 追加: 自動スクロール切替ボタン -->
+        <button id="auto-scroll-btn" 
+                type="button" 
+                onclick="toggleAutoScroll()"
+                style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer;">
+          自動スクロール: ON
+        </button>
         <button class="clear-all-btn" type="button" onclick="clearAllSpeakers()">⚠️ 発言者を全クリア</button>
       </div>
 
@@ -679,6 +686,8 @@
     let syncInterval = null;
     let activeIndex = -1;
     let currentLoadedFileName = "updated_transcript.json";
+    // ▼ 追加: 自動スクロール状態の管理変数
+    let isAutoScrollEnabled = true;
 
     // --- 1. ハンバーガーメニュー ＆ テーマ切り替え ---
     const menuToggle = document.getElementById('menu-toggle');
@@ -734,32 +743,35 @@
     }
 
     function updateActiveCard() {
-      if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
-      const currentTime = player.getCurrentTime();
-      let currentIndex = -1;
+          if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
+          const currentTime = player.getCurrentTime();
+          let currentIndex = -1;
 
-      for (let i = 0; i < currentData.transcript.length; i++) {
-        const start = parseFloat(currentData.transcript[i].start || 0);
-        const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
-        if (currentTime >= start && currentTime < nextStart) {
-          currentIndex = i;
-          break;
-        }
-      }
-
-      if (currentIndex !== -1 && currentIndex !== activeIndex) {
-        activeIndex = currentIndex;
-        const cards = document.querySelectorAll('.transcript-card');
-        cards.forEach((card, idx) => {
-          if (idx === activeIndex) {
-            card.classList.add('active');
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          } else {
-            card.classList.remove('active');
+          for (let i = 0; i < currentData.transcript.length; i++) {
+            const start = parseFloat(currentData.transcript[i].start || 0);
+            const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
+            if (currentTime >= start && currentTime < nextStart) {
+              currentIndex = i;
+              break;
+            }
           }
-        });
-      }
-    }
+
+          if (currentIndex !== -1 && currentIndex !== activeIndex) {
+            activeIndex = currentIndex;
+            const cards = document.querySelectorAll('.transcript-card');
+            cards.forEach((card, idx) => {
+              if (idx === activeIndex) {
+                card.classList.add('active');
+                // ▼ 修正: isAutoScrollEnabled が true の時のみスクロール
+                if (isAutoScrollEnabled) {
+                  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              } else {
+                card.classList.remove('active');
+              }
+            });
+          }
+        }
 
     // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
     function init() {
@@ -887,87 +899,100 @@
     }
 
     // --- 4. 発言者編集用UIの描画 ---
-    function renderEditor() {
-      const container = document.getElementById('transcript-editor-container');
-      if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
-        document.getElementById('card-count-label').textContent = '字幕数: 0';
-        return;
-      }
+        function renderEditor() {
+          const container = document.getElementById('transcript-editor-container');
+          if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
+            document.getElementById('card-count-label').textContent = '字幕数: 0';
+            return;
+          }
 
-      const totalItems = currentData.transcript.length;
-      document.getElementById('card-count-label').textContent = `字幕数: ${totalItems}`;
+          const totalItems = currentData.transcript.length;
+          document.getElementById('card-count-label').textContent = `字幕数: ${totalItems}`;
 
-      const html = currentData.transcript.map((item, index) => {
-        const startSec = parseFloat(item.start || 0).toFixed(1);
-        const endSec = item.end ? parseFloat(item.end).toFixed(1) : '-';
+          const html = currentData.transcript.map((item, index) => {
+            const startSec = item.start !== undefined && item.start !== null && item.start !== '' ? parseFloat(item.start).toFixed(1) : '';
+            const endSec = item.end !== undefined && item.end !== null && item.end !== '' ? parseFloat(item.end).toFixed(1) : '';
 
-        const buttonsHtml = speakerOptions.map(spk => 
-          `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
-        ).join('');
+            const buttonsHtml = speakerOptions.map(spk => 
+              `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
+            ).join('');
 
-        const isLastItem = index === totalItems - 1;
+            const isLastItem = index === totalItems - 1;
 
-        return `
-          <div class="transcript-card" id="card-${index}">
-            <div class="card-header-row">
-              <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ ${startSec}s - ${endSec}s</span>
-              <div class="card-actions-right">
-                <button class="action-mini-btn merge-btn" type="button" onclick="mergeCardWithNext(${index})" ${isLastItem ? 'disabled' : ''}>👇 下と結合</button>
-                <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
-                <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
-                <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
+            return `
+              <div class="transcript-card" id="card-${index}">
+                <div class="card-header-row">
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; flex-wrap: wrap;">
+                    <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ 再生</span>
+                    
+                    <!-- Start 時間の取得・編集 -->
+                    <label style="font-weight: bold;">Start:</label>
+                    <input type="number" step="0.1" value="${startSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'start', this.value)">
+                    <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'start')">📍 Startに設定</button>
+
+                    <!-- End 時間の取得・編集 -->
+                    <label style="font-weight: bold; margin-left: 4px;">End:</label>
+                    <input type="number" step="0.1" value="${endSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'end', this.value)">
+                    <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'end')">📍 Endに設定</button>
+                  </div>
+
+                  <div class="card-actions-right">
+                    <button class="action-mini-btn merge-btn" type="button" onclick="mergeCardWithNext(${index})" ${isLastItem ? 'disabled' : ''}>👇 下と結合</button>
+                    <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
+                    <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
+                    <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
+                  </div>
+                </div>
+
+                <div class="speaker-editor">
+                  <div class="speaker-buttons">
+                    <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
+                    ${buttonsHtml}
+                    <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
+                  </div>
+                  <div class="speaker-input-group">
+                    <input type="text" class="speaker-input" id="speaker-input-${index}" 
+                           value="${item.speaker || ''}" 
+                           placeholder="発言者（自由入力可）"
+                           oninput="updateSpeakerText(${index}, this.value)">
+                    <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
+                  </div>
+                </div>
+
+                <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
+                <div class="field-input-group">
+                  <textarea class="card-input input-translation" 
+                            rows="1"
+                            placeholder="日本語訳 (translation)"
+                            oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.translation || '')}</textarea>
+
+                  <textarea class="card-input input-thai" 
+                            rows="1"
+                            placeholder="タイ語原文 (text)"
+                            oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
+
+                  <textarea class="card-input input-kana" 
+                            rows="1"
+                            placeholder="発音カナ (pronunciation_kana)"
+                            oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
+
+                  <textarea class="card-input input-roman" 
+                            rows="1"
+                            placeholder="発音ローマ字 (pronunciation_roman)"
+                            oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
+                </div>
               </div>
-            </div>
+            `;
+          }).join('');
 
-            <div class="speaker-editor">
-              <div class="speaker-buttons">
-                <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
-                ${buttonsHtml}
-                <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
-              </div>
-              <div class="speaker-input-group">
-                <input type="text" class="speaker-input" id="speaker-input-${index}" 
-                       value="${item.speaker || ''}" 
-                       placeholder="発言者（自由入力可）"
-                       oninput="updateSpeakerText(${index}, this.value)">
-                <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
-              </div>
-            </div>
+          container.innerHTML = html;
 
-            <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
-            <div class="field-input-group">
-              <textarea class="card-input input-translation" 
-                        rows="1"
-                        placeholder="日本語訳 (translation)"
-                        oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.translation || '')}</textarea>
-
-              <textarea class="card-input input-thai" 
-                        rows="1"
-                        placeholder="タイ語原文 (text)"
-                        oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
-
-              <textarea class="card-input input-kana" 
-                        rows="1"
-                        placeholder="発音カナ (pronunciation_kana)"
-                        oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
-
-              <textarea class="card-input input-roman" 
-                        rows="1"
-                        placeholder="発音ローマ字 (pronunciation_roman)"
-                        oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      container.innerHTML = html;
-
-      // 描画完了後、既存テキストの量に合わせて高さを一括フィッティング
-      setTimeout(() => {
-        container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
-      }, 0);
-    }
+          // 描画完了後、既存テキストの量に合わせて高さを一括フィッティング
+          setTimeout(() => {
+            container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
+          }, 0);
+        }
 
     // 修正後
     function escapeHtml(str) {
@@ -981,6 +1006,40 @@
     }
 
     // --- 5. アクション関数群 ---
+
+    // シークバーの現在時間を取得して start / end に反映
+    function setSeekTimeToField(index, field) {
+      if (!currentData || !currentData.transcript[index]) return;
+      if (!player || typeof player.getCurrentTime !== 'function') {
+        alert("動画プレイヤーが準備できていません。");
+        return;
+      }
+
+      const currentTime = parseFloat(player.getCurrentTime().toFixed(1));
+      currentData.transcript[index][field] = currentTime;
+      renderEditor();
+    }
+
+    // 数値入力エリアから直接編集された時間を反映
+    function updateTimeValue(index, field, value) {
+      if (!currentData || !currentData.transcript[index]) return;
+      const numVal = parseFloat(value);
+      if (!isNaN(numVal)) {
+        currentData.transcript[index][field] = numVal;
+      }
+    }
+
+    function toggleAutoScroll() {
+      isAutoScrollEnabled = !isAutoScrollEnabled;
+      const btn = document.getElementById('auto-scroll-btn');
+      if (isAutoScrollEnabled) {
+        btn.textContent = "自動スクロール: ON";
+        btn.style.background = "#007bff";
+      } else {
+        btn.textContent = "自動スクロール: OFF";
+        btn.style.background = "#6c757d";
+      }
+    }
 
     function setSpeaker(index, name) {
       if (!currentData || !currentData.transcript[index]) return;
