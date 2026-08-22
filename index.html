@@ -519,7 +519,7 @@
 
     .video-list-section {
       width: 100%;
-      max-height: 700px;
+      max-height: 90vh;
       min-height: 400px;
       overflow-y: auto;
       border: 1px solid #f0f0f0;
@@ -1445,18 +1445,22 @@ body.dark-mode .search-clear-btn:hover {
 
       const currentTime = player.getCurrentTime();
 
+      // ★ 変更点1: start と end の範囲内にあるデータを探す
       let currentIndex = -1;
       for (let i = 0; i < transcriptData.length; i++) {
         const itemStart = parseFloat(transcriptData[i].start || 0);
+        // end が未設定の場合は次の start をフォールバック値として使用
         const nextStart = (i < transcriptData.length - 1) ? parseFloat(transcriptData[i + 1].start) : Infinity;
+        const itemEnd = transcriptData[i].end !== undefined ? parseFloat(transcriptData[i].end) : nextStart;
 
-        if (currentTime >= itemStart && currentTime < nextStart) {
+        if (currentTime >= itemStart && currentTime <= itemEnd) {
           currentIndex = i;
           break;
         }
       }
 
-      if (currentIndex !== -1 && currentIndex !== activeIndex) {
+      // アクティブな字幕インデックスが切り替わった場合のみUIを更新
+      if (currentIndex !== activeIndex) {
         activeIndex = currentIndex;
 
         const cards = transcriptContainer.querySelectorAll('.transcript-card');
@@ -1473,21 +1477,29 @@ body.dark-mode .search-clear-btn:hover {
           }
         });
 
-        const currentData = transcriptData[activeIndex];
-        if (currentData && currentData.translation) {
-          if (currentData.speaker) {
-            overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
-            overlaySpeaker.style.display = 'inline';
+        // ★ 変更点2: 有効な字幕（範囲内）がある場合のみオーバーレイ字幕を表示し、無音区間（-1）では消す
+        if (activeIndex !== -1) {
+          const currentData = transcriptData[activeIndex];
+          if (currentData && currentData.translation) {
+            if (currentData.speaker) {
+              overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
+              overlaySpeaker.style.display = 'inline';
+            } else {
+              overlaySpeaker.textContent = '';
+              overlaySpeaker.style.display = 'none';
+            }
+            overlayText.textContent = currentData.translation;
+            overlaySubtitleBox.style.display = 'block';
           } else {
+            overlayText.textContent = '';
             overlaySpeaker.textContent = '';
-            overlaySpeaker.style.display = 'none';
+            overlaySubtitleBox.style.display = 'none';
           }
-          overlayText.textContent = currentData.translation;
-          overlaySubtitleBox.style.display = 'block'; // テキストがある時は表示
         } else {
+          // 該当する字幕がない時間帯（発言がない無音区間など）は字幕を非表示にする
           overlayText.textContent = '';
           overlaySpeaker.textContent = '';
-          overlaySubtitleBox.style.display = 'none'; // テキストがない時は枠ごと隠す
+          overlaySubtitleBox.style.display = 'none';
         }
       }
     }

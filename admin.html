@@ -296,7 +296,12 @@
       padding: 10px 14px;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
+      /* ▼ 追加: スクロール時に画面上部に固定する設定 */
+      position: sticky;
+      top: 0px;
+      z-index: 100;
     }
+
     body.dark-mode .editor-toolbar {
       background: #1e1e1e;
       border-color: #333;
@@ -520,6 +525,18 @@
       gap: 6px;
     }
 
+    /* ▼ 追加: 頻出キーワードコンテナのスクロール表示設定 */
+    #common-keywords-container {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
     .card-input {
       width: 100%;
       padding: 6px 8px;
@@ -673,7 +690,7 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     // デフォルトのクイック選択用メンバーリスト
-    let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY'];
+    let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY', 'PERSES', 'PIECES'];
     let tagsDataGlobal = {}; // tags.json のデータを保持
 
     // 現在編集中のJSONデータおよびvideos.jsonの参照
@@ -790,7 +807,12 @@
           const select = document.getElementById('video-select');
           select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
 
-          videos.forEach(v => {
+          // ▼ 修正点: id の昇順（アルファベット・数値順）にソートしてドロップダウンを生成
+          const sortedVideos = [...videos].sort((a, b) => {
+            return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+          });
+
+          sortedVideos.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.file;
             opt.textContent = `${v.title} (${v.id})`;
@@ -1017,6 +1039,13 @@
 
       const currentTime = parseFloat(player.getCurrentTime().toFixed(1));
       currentData.transcript[index][field] = currentTime;
+
+      // ▼ 追加: start が更新された際、1つ前の字幕カードが存在すればその end を「start - 0.01」に自動設定
+      if (field === 'start' && index > 0) {
+        const prevEnd = parseFloat((currentTime - 0.01).toFixed(2));
+        currentData.transcript[index - 1].end = prevEnd;
+      }
+
       renderEditor();
     }
 
