@@ -790,48 +790,71 @@
           }
         }
 
-    // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
-    function init() {
-        Promise.all([
-          fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
-          fetch('data/videos.json').then(res => res.ok ? res.json() : [])
-        ])
-        .then(([tags, videos]) => {
-          tagsDataGlobal = tags;
-          videosData = videos;
-          document.getElementById('download-videos-btn').disabled = false;
+// --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
+function init() {
+    Promise.all([
+      fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+      fetch('data/videos.json').then(res => res.ok ? res.json() : [])
+    ])
+    .then(([tags, videos]) => {
+      tagsDataGlobal = tags;
+      videosData = videos;
+      document.getElementById('download-videos-btn').disabled = false;
 
-          // tags.json に基づいてキーワード選択ボタン群を初期生成
-          renderCommonKeywords();
+      // tags.json に基づいてキーワード選択ボタン群を初期生成
+      renderCommonKeywords();
 
-          const select = document.getElementById('video-select');
-          select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
+      const select = document.getElementById('video-select');
+      select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
 
-          // ▼ 修正点: id の昇順（アルファベット・数値順）にソートしてドロップダウンを生成
-          const sortedVideos = [...videos].sort((a, b) => {
-            return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
-          });
+      // id の昇順（アルファベット・数値順）にソートしてドロップダウンを生成
+      const sortedVideos = [...videos].sort((a, b) => {
+        return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+      });
 
-          sortedVideos.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.file;
-            opt.textContent = `${v.title} (${v.id})`;
-            select.appendChild(opt);
-          });
+      sortedVideos.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.file;
+        opt.textContent = `${v.title} (${v.id})`;
+        select.appendChild(opt);
+      });
 
-          select.addEventListener('change', (e) => {
-            if (e.target.value) {
-              currentLoadedFileName = e.target.value;
-              currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
-              loadJsonFile(e.target.value);
-            }
-          });
-        })
-        .catch(err => {
-          console.error("データの読み込み失敗:", err);
-          document.getElementById('video-select').innerHTML = '<option value="">データの読込失敗</option>';
-        });
+      // ▼ 追加: URLパラメータ (?v=XXX) のチェックと初期ロード
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramV = urlParams.get('v');
+
+      if (paramV) {
+        // vパラメータが id または file(video_XXX.json) のいずれかにマッチするものを検索
+        const matchedVideo = videosData.find(v => v.id === paramV || v.file === paramV || v.file === `video_${paramV}.json`);
+        if (matchedVideo) {
+          select.value = matchedVideo.file;
+          currentLoadedFileName = matchedVideo.file;
+          currentVideoMeta = matchedVideo;
+          loadJsonFile(matchedVideo.file);
+        }
       }
+
+      select.addEventListener('change', (e) => {
+        if (e.target.value) {
+          currentLoadedFileName = e.target.value;
+          currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
+
+          // ▼ 追加: ドロップダウン変更時にURLの?v=XXXを更新（リロードなし）
+          if (currentVideoMeta && currentVideoMeta.id) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('v', currentVideoMeta.id);
+            window.history.pushState({}, '', newUrl);
+          }
+
+          loadJsonFile(e.target.value);
+        }
+      });
+    })
+    .catch(err => {
+      console.error("データの読み込み失敗:", err);
+      document.getElementById('video-select').innerHTML = '<option value="">データの読込失敗</option>';
+    });
+  }
 
     // 直接ファイル選択
     document.getElementById('direct-file-input').addEventListener('change', (e) => {

@@ -120,9 +120,6 @@ def fetch_all_video_urls(sources):
     return unique_urls
 
 def fetch_video_data_with_ytdlp(video_id: str):
-    """
-    yt-dlp のみを使用してメタデータと字幕（th手動 -> th自動 -> en手動）を一括取得する
-    """
     url = f"https://www.youtube.com/watch?v={video_id}"
     ydl_opts = {
         "quiet": True,
@@ -130,15 +127,20 @@ def fetch_video_data_with_ytdlp(video_id: str):
         "no_warnings": True,
         "writesubtitles": True,
         "writeautomaticsub": True,
-        "subtitleslangs": ["th", "en"],
-        # ボット判定を回避するためのヘッダー追加
+        "subtitleslangs": ["all"],  # 全言語を取得対象にする
+        "impersonate": "chrome",
+        "sleep_subtitles": 2,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"]
+            }
+        },
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept-Language": "ja,en-US;q=0.9,en;q=0.8,th;q=0.7",
         }
     }
 
-    # 👈 追加: cookies.txt が存在する場合に指定
     if os.path.exists(COOKIE_FILE):
         ydl_opts["cookiefile"] = COOKIE_FILE
 
@@ -152,22 +154,33 @@ def fetch_video_data_with_ytdlp(video_id: str):
     subs = info.get("subtitles", {})
     auto_subs = info.get("automatic_captions", {})
 
-    # 優先順位 1: タイ語手動 / 2: タイ語自動 / 3: 英語手動
-    target_formats = None
-    if "th" in subs:
-        target_formats = subs["th"]
-    elif "th" in auto_subs:
-        target_formats = auto_subs["th"]
-    elif "en" in subs:
-        target_formats = subs["en"]
+    # 字幕キーの探索（th, en を前方一致などで柔軟に探す）
+    def find_target_lang(sub_dict):
+        for lang_code in sub_dict.keys():
+            if lang_code.startswith("th"):  # th, th-TH, th-orig 等
+                return sub_dict[lang_code]
+        for lang_code in sub_dict.keys():
+            if lang_code.startswith("en"):  # en, en-US 等
+                return sub_dict[lang_code]
+        # いずれも無ければ最初の字幕データを使う（フォールバック）
+        if sub_dict:
+            return list(sub_dict.values())[0]
+        return None
+
+    target_formats = find_target_lang(subs) or find_target_lang(auto_subs)
 
     if not target_formats:
-        raise RuntimeError("対象の字幕が見つかりませんでした。")
+        raise RuntimeError("字幕データ（subtitles/automatic_captions）が存在しません。")
 
-    # JSON3 形式の字幕URLを探す
+    # json3優先、なければ vtt / srv1 等を探す
     json3_url = next((f["url"] for f in target_formats if f.get("ext") == "json3"), None)
+    
+    # json3 が取れなかった場合は、任意のフォーマットURLをそのまま使う等の処理
     if not json3_url:
-        raise RuntimeError("JSON3形式の字幕URLが見つかりませんでした。")
+        json3_url = target_formats[0].get("url")
+
+    if not json3_url:
+        raise RuntimeError("有効な字幕URLが見つかりませんでした。")
 
     # 字幕JSONのダウンロード
     req = urllib.request.Request(json3_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -176,7 +189,10 @@ def fetch_video_data_with_ytdlp(video_id: str):
 
     transcript_list = []
     t_idx = 1
-    for event in sub_data.get("events", []):
+    
+    # events構造があるか確認（json3形式）
+    events = sub_data.get("events", [])
+    for event in events:
         segs = event.get("segs")
         if not segs:
             continue
@@ -198,7 +214,7 @@ def fetch_video_data_with_ytdlp(video_id: str):
         t_idx += 1
 
     if not transcript_list:
-        raise RuntimeError("字幕テキストが空でした。")
+        raise RuntimeError("字幕テキストの抽出結果が空でした。")
 
     return title, upload_date, tags, transcript_list
 
