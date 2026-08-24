@@ -917,7 +917,16 @@ body.dark-mode .search-clear-btn:hover {
       color: #f1f5f9 !important;
     }
 
-
+    /* 5.X（旧Twitter）投稿用の見切れ防止スタイル */
+    .overlay-subtitle-box.style-x-fit {
+      max-width: 60% !important; /* 中央60%の幅に制限して見切れを防止 */
+      margin: 0 auto;
+      background: rgba(0, 0, 0, 0.85) !important;
+      border: 2px solid #ff7597 !important; /* ブランドカラー等で強調 */
+      color: #ffffff !important;
+      text-align: center;
+      word-break: break-word; /* 長い単語も折り返し */
+    }
 
     /* ==========================================
        動画プレイヤー上のUIボタン自動非表示・表示制御
@@ -1028,7 +1037,44 @@ body.dark-mode .search-clear-btn:hover {
           border-color: #1da1f2;
         }
 
+        .frame-seek-controls {
+          position: sticky;
+          top: 6px;
+          float: right;
+          z-index: 20;
+          display: flex;
+          gap: 4px;
+          background: rgba(255, 255, 255, 0.9);
+          padding: 4px;
+          border-radius: 6px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          backdrop-filter: blur(4px);
+        }
 
+        body.dark-mode .frame-seek-controls {
+          background: rgba(30, 30, 30, 0.9);
+        }
+
+        .frame-seek-btn {
+          background: #007bff;
+          color: #ffffff;
+          border: none;
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 0.75rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .frame-seek-btn:hover {
+          background: #0056b3;
+          transform: scale(1.03);
+        }
+
+        .frame-seek-btn:active {
+          transform: scale(0.97);
+        }
 
   </style>
 </head>
@@ -1119,6 +1165,12 @@ body.dark-mode .search-clear-btn:hover {
             <path d="M5 1.5A1.5 1.5 0 0 1 6.5 0h7A1.5 1.5 0 0 1 15 1.5v9A1.5 1.5 0 0 1 13.5 12h-7A1.5 1.5 0 0 1 5 10.5v-9zM6.5 1h7a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5z"/>
           </svg>
         </button>
+
+        <!-- ★ コマ送り・微調整フローティングボタン群 -->
+          <div class="frame-seek-controls">
+            <button type="button" class="frame-seek-btn" id="seek-prev-btn" title="約1フレーム戻る（0.05秒）">◀</button>
+            <button type="button" class="frame-seek-btn" id="seek-next-btn" title="約1フレーム進む（0.05秒）">▶</button>
+          </div>
       </div>
     </div>
 
@@ -1158,6 +1210,8 @@ body.dark-mode .search-clear-btn:hover {
         <div id="video-list-section" class="video-list-section">
           <div class="video-list-title">
             <div class="search-wrapper" id="search-wrapper">
+              <!-- ★ 追加：タグ一覧を開く専用ボタン -->
+                <button type="button" id="tag-toggle-btn" class="search-btn" style="background-color: #eef2f5; color: #007bff; border: 1px solid #d0e1f9; font-weight: bold;">🏷️ タグ</button>
               <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
               <span id="search-clear-btn" class="search-clear-btn" title="クリア">×</span>
               <button type="button" id="search-btn" class="search-btn">検索</button>
@@ -1198,7 +1252,9 @@ body.dark-mode .search-clear-btn:hover {
     const subToggleBtn = document.getElementById('sub-toggle-btn');
     const sortOrderBtn = document.getElementById('sort-order-btn');
     const sortOrderLabel = document.getElementById('sort-order-label');
-
+    // コマ送り・コマ戻しボタンのイベント設定
+    const seekPrevBtn = document.getElementById('seek-prev-btn');
+    const seekNextBtn = document.getElementById('seek-next-btn');
     const searchInput = document.getElementById('search-input');
     const searchClearBtn = document.getElementById('search-clear-btn');
     const searchBtn = document.getElementById('search-btn');
@@ -1245,6 +1301,28 @@ body.dark-mode .search-clear-btn:hover {
       });
     });
 
+    if (seekPrevBtn) {
+      seekPrevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (player && typeof player.getCurrentTime === 'function') {
+          player.pauseVideo(); // 微調整時は一時停止
+          const cur = player.getCurrentTime();
+          player.seekTo(Math.max(0, cur - 0.05), true);
+        }
+      });
+    }
+
+    if (seekNextBtn) {
+      seekNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (player && typeof player.getCurrentTime === 'function') {
+          player.pauseVideo(); // 微調整時は一時停止
+          const cur = player.getCurrentTime();
+          player.seekTo(cur + 0.05, true);
+        }
+      });
+    }
+
     async function setLayoutMode(mode) {
       if (mode === currentLayoutMode) return;
 
@@ -1288,8 +1366,6 @@ body.dark-mode .search-clear-btn:hover {
 
       } else {
         document.body.classList.add(`mode-${mode}`);
-        // ★ フルスクリーン解除（通常画面）時は「字幕なし (OFF)」に戻す
-        updateSubtitleVisibility(false);
 
         // ★ 3. 全画面解除時に画面ロックを解除
         if (screen.orientation && screen.orientation.unlock) {
@@ -1582,52 +1658,59 @@ body.dark-mode .search-clear-btn:hover {
             });
           }
 
-      function setupKeywordsFloatingBox(tagsData) {
-        let html = '';
+          function setupKeywordsFloatingBox(tagsData) {
+            let html = '';
 
-        // カテゴリごとにグループ分けして出力
-        for (const [categoryName, categoryTags] of Object.entries(tagsData)) {
-          html += `<div class="keyword-category-title" style="font-size:0.7rem; color:#888; font-weight:bold; width:100%; margin-top:6px; margin-bottom:2px;">${escapeHtml(categoryName)}</div>`;
-          
-          for (const tagKey of Object.keys(categoryTags)) {
-            html += `<span class="keyword-chip" data-keyword="${escapeHtml(tagKey)}">${escapeHtml(tagKey)}</span>`;
-          }
-        }
-
-        keywordFloatingBox.innerHTML = html;
-
-        keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
-          chip.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const targetKw = chip.dataset.keyword;
-            searchInput.value = targetKw;
-            
-            // ★ 追加: キーワード選択時もクリアボタン(×)を表示状態にする
-            if (searchClearBtn) {
-              searchClearBtn.style.display = 'block';
+            for (const [categoryName, categoryTags] of Object.entries(tagsData)) {
+              html += `<div class="keyword-category-title" style="font-size:0.7rem; color:#888; font-weight:bold; width:100%; margin-top:6px; margin-bottom:2px;">${escapeHtml(categoryName)}</div>`;
+              
+              for (const tagKey of Object.keys(categoryTags)) {
+                html += `<span class="keyword-chip" data-keyword="${escapeHtml(tagKey)}">${escapeHtml(tagKey)}</span>`;
+              }
             }
 
-            keywordFloatingBox.classList.remove('show');
-            executeSearch();
-          });
-        });
-      }
+            keywordFloatingBox.innerHTML = html;
+
+            keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
+              chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetKw = chip.dataset.keyword;
+                searchInput.value = targetKw;
+                
+                // ★ 追加: スマホでフォーカスを外してキーボードが開くのを防ぐ
+                searchInput.blur();
+
+                if (searchClearBtn) {
+                  searchClearBtn.style.display = 'block';
+                }
+
+                keywordFloatingBox.classList.remove('show');
+                executeSearch();
+              });
+            });
+          }
 
       function setupSearchEvents() {
+        const tagToggleBtn = document.getElementById('tag-toggle-btn');
+
+        // ★ 変更: 検索窓へのフォーカス時はタグ一覧を開かない（通常入力のみ）
+        // 代わりにタグ一覧が開いている場合は閉じる
         searchInput.addEventListener('focus', () => {
-          keywordFloatingBox.classList.add('show');
+          keywordFloatingBox.classList.remove('show');
         });
 
-        // ★ 削除/修正: 入力文字列の有無による非表示処理をコメントアウト
-                // searchInput.addEventListener('input', () => {
-                //   if (searchInput.value.length > 0) {
-                //     searchClearBtn.style.display = 'block';
-                //   } else {
-                //     searchClearBtn.style.display = 'none';
-                //   }
-                // });
+        // ★ 追加: 「🏷️ タグ」ボタンを押した時の処理
+        if (tagToggleBtn) {
+          tagToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // キーボードが出ていれば閉じる
+            searchInput.blur();
+            // タグ一覧を表示/非表示トグル
+            keywordFloatingBox.classList.toggle('show');
+          });
+        }
 
-        // ★ 追加: ×ボタンクリック時のクリア処理
+        // ×ボタンクリック時のクリア処理
         searchClearBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           searchInput.value = '';
@@ -1636,16 +1719,21 @@ body.dark-mode .search-clear-btn:hover {
           searchInput.focus();
         });
 
+        // 枠外タップでタグ一覧を閉じる
         document.addEventListener('click', (e) => {
           if (!searchWrapper.contains(e.target)) {
             keywordFloatingBox.classList.remove('show');
           }
         });
 
-        searchBtn.addEventListener('click', executeSearch);
+        searchBtn.addEventListener('click', () => {
+          keywordFloatingBox.classList.remove('show');
+          executeSearch();
+        });
 
         searchInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
+            keywordFloatingBox.classList.remove('show');
             executeSearch();
           }
         });
@@ -1952,17 +2040,28 @@ body.dark-mode .search-clear-btn:hover {
         e.preventDefault();
       }
 
+      // 既存の keydown イベント内の ArrowLeft / ArrowRight 処理を以下に置き換え
       if (key === 'ArrowLeft' || code === 37) {
         if (player && typeof player.getCurrentTime === 'function') {
           const cur = player.getCurrentTime();
-          player.seekTo(Math.max(0, cur - 10), true);
+          let step = 0.05; // デフォルト：コマ戻し (0.05秒)
+          if (e.shiftKey) step = 1.0; // Shift併用：1秒戻る
+          if (e.altKey) step = 10.0;  // Alt併用：10秒戻る
+
+          if (step === 0.05) player.pauseVideo(); // コマ送りの時は一時停止
+          player.seekTo(Math.max(0, cur - step), true);
         }
       }
 
       if (key === 'ArrowRight' || code === 39) {
         if (player && typeof player.getCurrentTime === 'function') {
           const cur = player.getCurrentTime();
-          player.seekTo(cur + 10, true);
+          let step = 0.05; // デフォルト：コマ送り (0.05秒)
+          if (e.shiftKey) step = 1.0; // Shift併用：1秒進む
+          if (e.altKey) step = 10.0;  // Alt併用：10秒進む
+
+          if (step === 0.05) player.pauseVideo(); // コマ送りの時は一時停止
+          player.seekTo(cur + step, true);
         }
       }
 
@@ -1984,7 +2083,7 @@ body.dark-mode .search-clear-btn:hover {
 
     // 切り替え用クラスの一覧定義
     const sizeClasses = ['size-small', 'size-medium', 'size-large', 'size-xlarge'];
-    const styleClasses = ['style-default', 'style-outline', 'style-highcontrast', 'style-soft'];
+    const styleClasses = ['style-default', 'style-outline', 'style-highcontrast', 'style-soft', 'style-x-fit'];
 
     // 保存された設定の読み込み（デフォルト設定：medium / default）
     let currentSizeIndex = parseInt(localStorage.getItem('sub_size_index') || '1', 10);
@@ -2165,7 +2264,7 @@ body.dark-mode .search-clear-btn:hover {
       init();
       
       // 初期化（通常画面スタートなのでデフォルト「字幕なし」を適用）
-      updateSubtitleVisibility(false);
+      updateSubtitleVisibility(true);
       
       window.focus();
       document.body.focus();
