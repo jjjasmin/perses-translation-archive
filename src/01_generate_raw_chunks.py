@@ -571,10 +571,10 @@ def main(video_ids_or_urls=None):
         if current_mode == "standard" and os.path.exists(ARCHIVE_DIR):
             temp_files.extend([(f, "archive") for f in glob.glob(os.path.join(ARCHIVE_DIR, "temp_source_*.json"))])
 
-        # ★【解決策A】ソート順: 1. priority(昇順) ➔ 2. フォルダ(temp優先: "temp" < "archive") ➔ 3. video_id(昇順)
+        # ★【解決策A】ソート順: 0. 未処理データ → 1. priority(昇順) ➔ 2. フォルダ(temp優先: "temp" < "archive") ➔ 3. video_id(昇順)
         temp_files.sort(
             key=lambda item: (
-                status_data.get(os.path.basename(item[0]).replace("temp_source_", "").replace(".json", ""), {}).get("priority", 2),
+                status_data.get(os.path.basename(item[0]).replace("temp_source_", "").replace(".json", ""), {}).get("priority", 0),
                 0 if item[1] == "temp" else 1,
                 os.path.basename(item[0]).replace("temp_source_", "").replace(".json", "")
             )
