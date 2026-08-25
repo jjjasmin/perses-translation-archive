@@ -629,7 +629,7 @@ body.dark-mode .search-clear-btn:hover {
       padding: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       z-index: 200;
-      max-height: 300px;
+      max-height: 400px;
       overflow-y: auto;
       flex-wrap: wrap;
       gap: 6px;
@@ -1046,9 +1046,7 @@ body.dark-mode .search-clear-btn:hover {
           display: flex;
           gap: 4px;
           background: rgba(255, 255, 255, 0.9);
-          padding: 4px;
           border-radius: 6px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
           backdrop-filter: blur(4px);
         }
 
@@ -1168,7 +1166,20 @@ body.dark-mode .search-clear-btn:hover {
           }
         }
 
+        .sub-ctrl-btn,
+        .frame-seek-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6px;
+          cursor: pointer;
+        }
 
+        .sub-ctrl-btn svg,
+        .frame-seek-btn svg {
+          display: block;
+          pointer-events: none; /* SVGへのマウスクリックイベント透過 */
+        }
 
   </style>
 </head>
@@ -1258,15 +1269,78 @@ body.dark-mode .search-clear-btn:hover {
         </button>
         <!-- ★ コマ送り・微調整フローティングボタン群 -->
         <div class="frame-seek-controls">
-          <!-- ★ 追加：字幕コントロールボタン -->
-          <button type="button" class="sub-ctrl-btn" id="seek-sub-toggle-btn" title="字幕表示/非表示切替">👁️</button>
-          <button type="button" class="sub-ctrl-btn" id="seek-sub-size-btn" title="文字サイズ変更">A</button>
-          <button type="button" class="sub-ctrl-btn" id="seek-sub-style-btn" title="字幕デザイン切替">🎨</button>
-          <button type="button" class="frame-seek-btn" id="seek-prev10-btn" title="10秒戻る">-10s</button>
-          <button type="button" class="frame-seek-btn" id="seek-prev-btn" title="約1フレーム戻る（0.05秒）">◀</button>
-          <button type="button" class="frame-seek-btn" id="seek-play-pause-btn" title="再生 / 一時停止">⏯</button>
-          <button type="button" class="frame-seek-btn" id="seek-next-btn" title="約1フレーム進む（0.05秒）">▶</button>
-          <button type="button" class="frame-seek-btn" id="seek-next10-btn" title="10秒進む">+10s</button>
+          <!-- ★ 字幕コントロールボタン -->
+          <!-- 1. 字幕表示/非表示切替（目） -->
+          <button type="button" class="sub-ctrl-btn" id="seek-sub-toggle-btn" title="字幕表示/非表示切替">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+
+          <!-- 2. 文字サイズ変更（大小のA） -->
+          <button type="button" class="sub-ctrl-btn" id="seek-sub-size-btn" title="文字サイズ変更">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 19 8.5 6 14 19"/>
+              <path d="M5 14h7"/>
+              <path d="M17 19l2.5-6 2.5 6"/>
+              <path d="M18 17h3"/>
+            </svg>
+          </button>
+
+          <!-- 3. 字幕デザイン切替（パレット） -->
+          <button type="button" class="sub-ctrl-btn" id="seek-sub-style-btn" title="字幕デザイン切替">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.12-.27-.29-.44-.69-.44-1.14 0-.89.72-1.61 1.61-1.61H16c3.31 0 6-2.69 6-6 0-5.52-4.5-9.5-10-9.5Z"/>
+            </svg>
+          </button>
+
+          <!-- ★ シーク・フレーム操作ボタン -->
+          <!-- 4. 10秒戻る（反時計回り矢印+10） -->
+          <button type="button" class="frame-seek-btn" id="seek-prev10-btn" title="10秒戻る">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <text x="12" y="15" font-size="8" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none">10</text>
+            </svg>
+          </button>
+
+          <!-- 1フレーム戻る（左矢印 + 1f） -->
+          <button type="button" class="frame-seek-btn" id="seek-prev-btn" title="約1フレーム戻る（0.05秒）">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18l-6-6 6-6"/>
+              <text x="16" y="15" font-size="9" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none">1f</text>
+            </svg>
+          </button>
+
+          <!-- 6. 再生 / 一時停止 -->
+          <button type="button" class="frame-seek-btn" id="seek-play-pause-btn" title="再生 / 一時停止">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 14,12 5,21"/>
+              <rect x="15" y="4" width="3" height="16"/>
+            </svg>
+          </button>
+
+          <!-- 1フレーム進む（右矢印 + 1f） -->
+          <button type="button" class="frame-seek-btn" id="seek-next-btn" title="約1フレーム進む（0.05秒）">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 6l6 6-6 6"/>
+              <text x="8" y="15" font-size="9" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none">1f</text>
+            </svg>
+          </button>
+
+          <!-- 8. 10秒進む（時計回り矢印+10） -->
+          <button type="button" class="frame-seek-btn" id="seek-next10-btn" title="10秒進む">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <text x="12" y="15" font-size="8" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none">10</text>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
