@@ -330,8 +330,8 @@
       });
 
       // ヘッダー（見出し）の生成 後で消す
-      const headerRowHtml = visibleHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('');
-      theadEl.innerHTML = `<tr>${headerRowHtml}</tr>`;
+      //const headerRowHtml = visibleHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+      //theadEl.innerHTML = `<tr>${headerRowHtml}</tr>`;
 
       // データ行の生成
       let bodyRowsHtml = '';
@@ -356,8 +356,8 @@
       tableEl.style.display = 'table';
     }
 
-    // ==================================================
-    // 5. セルデータの整形（URL・ハッシュタグリンク化）
+// ==================================================
+    // 5. セルデータの整形（URL・ハッシュタグリンク化 修正版）
     // ==================================================
     function formatCellValue(value, headerName) {
       if (!value) return '';
@@ -376,8 +376,11 @@
         const linkedTags = tags.map(tag => {
           if (tag.startsWith('#')) {
             const rawTag = tag.replace(/^#/, '');
-            const encodedTag = encodeURIComponent(rawTag);
-            const xUrl = `https://x.com/hashtag/${encodedTag}?src=hashtag_click`;
+            
+            // ⭕ `#` も含めて完全エンコード（# -> %23）して search?q= に渡す
+            const encodedQuery = encodeURIComponent('#' + rawTag);
+            const xUrl = `https://x.com/search?q=${encodedQuery}`;
+
             return `<a href="${xUrl}" target="_blank" rel="noopener noreferrer" class="hashtag">${escapeHtml(tag)}</a>`;
           }
           return escapeHtml(tag);
