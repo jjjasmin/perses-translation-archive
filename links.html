@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSESハッシュタグリンク</title>
+  
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .tab-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      border: 2px solid #333;
+      background-color: #fff;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-button:hover {
+      background-color: #eee;
+    }
+    .tab-button.active {
+      background-color: #333;
+      color: #fff;
+    }
+    .loading {
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .table-container {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-height: 75vh;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+    }
+    th {
+      background-color: #333;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    a.hashtag {
+      color: #1da1f2;
+      font-weight: bold;
+    }
+
+    /* 隠し列切替ボタンのスタイル */
+    .toggle-button {
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      border: 2px solid #666;
+      background-color: #f0f0f0;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: auto; /* 右寄せにする場合 */
+      transition: all 0.2s ease;
+    }
+    .toggle-button:hover {
+      background-color: #ddd;
+    }
+    .toggle-button.active {
+      background-color: #e67e22;
+      color: #fff;
+      border-color: #e67e22;
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <h1>PERSES Schedule & Program List</h1>
+  
+  <div class="tab-container" id="tab-container">
+    <button class="tab-button active" onclick="switchSheet('2026')">2026</button>
+    <button class="tab-button" onclick="switchSheet('2025')">2025</button>
+    <button class="tab-button" onclick="switchSheet('2024')">2024</button>
+    <button class="tab-button" onclick="switchSheet('2023')">2023</button>
+    <button class="tab-button" onclick="switchSheet('2022')">2022</button>
+    <button class="tab-button" onclick="switchSheet('Solo & Pre-Debut')">Solo & Pre-Debut</button>
+    <button class="tab-button" onclick="switchSheet('Performance/ Show')">Performance/ Show</button>
+    <button class="tab-button" onclick="switchSheet('Press Interview')">Press Interview</button>
+    <button class="tab-button" onclick="switchSheet('Mentioned & Other')">Mentioned & Other</button>
+    <button class="tab-button" onclick="switchSheet('Official Content')">Official Content</button>
+    <!-- 【追加】非表示列の表示切り替えボタン -->
+    <button class="toggle-button" id="toggle-hidden-btn" onclick="toggleHiddenColumns()">隠し列を表示</button>
+  </div>
+
+  <div id="status" class="loading">データを読み込み中...</div>
+  
+  <div class="table-container">
+    <table id="data-table" style="display: none;">
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // ==================================================
+    // 1. 設定項目
+    // ==================================================
+    // ❌ API_KEY の記述は削除（Cloudflare側で保持するため不要）
+    const SPREADSHEET_ID = '11JTSe6twASwnKU1rDbcead8Rm0raUtGGa33WeqS7nDk';
+    const CACHE_DURATION_MINUTES = 10;
+
+    // --------------------------------------------------
+    // 【シートごとの非表示設定】
+    // 数字（1始まりの列番号）または 文字列（列名）で自由に指定可能です。
+    // --------------------------------------------------
+    const SHEET_HIDDEN_COLUMNS = {
+      '2026': [1, 3, 4, 5, 6, 7, 10, 11, 12],
+      '2025': [1, 3, 4, 5, 6, 7, 10, 11, 12],
+      '2024': [1, 3, 4, 5, 6, 7, 10, 11, 12],
+      '2023': [1, 3, 5, 6, 7, 10, 11, 12],
+      '2022': [1, 3, 5, 6, 7, 10, 11, 12],
+      'Solo & Pre-Debut': [4,5,7,8,11],
+      'Performance/ Show': [3,5,6,7,10,11],
+      'Press Interview': [3,5,6,7,10,11],
+      'Mentioned & Other': [1,2,3,6,7,10,11],
+      'Official Content': [1,2,3,5,6,7,10,11]
+    };
+
+    let currentSheet = '2026';
+
+    // 表示モードの状態管理（false: 隠す / true: すべて表示）
+    let showAllColumns = false;
+
+    let currentRowsData = null; // 【追加】取得した行データを保持する変数
+
+    // ==================================================
+    // 2. シート切り替え処理
+    // ==================================================
+    function switchSheet(sheetName) {
+      if (currentSheet === sheetName) return;
+      currentSheet = sheetName;
+
+      const buttons = document.querySelectorAll('.tab-button');
+      buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === sheetName);
+      });
+
+      document.getElementById('data-table').style.display = 'none';
+      const statusEl = document.getElementById('status');
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#666';
+      statusEl.textContent = `${sheetName} のデータを読み込み中...`;
+
+      fetchSpreadsheetData(sheetName);
+    }
+
+    
+
+    // 非表示列の表示 / 非表示 切り替え処理
+    function toggleHiddenColumns() {
+      showAllColumns = !showAllColumns;
+      const btn = document.getElementById('toggle-hidden-btn');
+
+      if (showAllColumns) {
+        btn.textContent = '隠し列を非表示';
+        btn.classList.add('active');
+      } else {
+        btn.textContent = '隠し列を表示';
+        btn.classList.remove('active');
+      }
+
+      // 現在保持しているデータで再描画（APIの再通信は発生しません）
+      if (currentRowsData && currentRowsData.length > 0) {
+        renderTable(currentRowsData);
+      }
+    }
+
+// ==================================================
+    // 3. データ取得処理（キャッシュ対応・修正版）
+    // ==================================================
+    async function fetchSpreadsheetData(sheetName) {
+      const statusEl = document.getElementById('status');
+      const cacheKey = `sheet_data_${SPREADSHEET_ID}_${sheetName}`;
+      const cacheTimeKey = `${cacheKey}_time`;
+      const now = new Date().getTime();
+
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTime = localStorage.getItem(cacheTimeKey);
+
+      // キャッシュ判定
+      if (cachedData && cachedTime) {
+        const expirationTime = parseInt(cachedTime, 10) + (CACHE_DURATION_MINUTES * 60 * 1000);
+        if (now < expirationTime) {
+          console.log(`[Cache Hit] ${sheetName} のデータをキャッシュから表示`);
+          const parsedData = JSON.parse(cachedData);
+          currentRowsData = parsedData; // データ保持
+          renderTable(parsedData);
+          return;
+        }
+      }
+
+      // ⭕ 修正後: 自前の Cloudflare Functions へリクエストを送る
+      const apiUrl = `/api?sheet=${encodeURIComponent(sheetName)}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+        const data = await response.json();
+        const rows = data.values;
+
+        if (!rows || rows.length === 0) {
+          statusEl.textContent = `${sheetName} のデータは見つかりませんでした。`;
+          return;
+        }
+
+        localStorage.setItem(cacheKey, JSON.stringify(rows));
+        localStorage.setItem(cacheTimeKey, now.toString());
+
+        currentRowsData = rows; // API取得データを保持
+        renderTable(rows);
+
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        if (cachedData) {
+          console.warn('通信エラーのため古いキャッシュを表示します');
+          const parsedData = JSON.parse(cachedData);
+          currentRowsData = parsedData; // データ保持
+          renderTable(parsedData);
+        } else {
+          statusEl.textContent = `${sheetName} のデータ取得に失敗しました。`;
+          statusEl.style.color = 'red';
+        }
+      }
+    }
+
+    // ==================================================
+    // 4. テーブル描画処理（シート別非表示 ＆ 空行スキップ対応）
+    // ==================================================
+    function renderTable(rows) {
+      const statusEl = document.getElementById('status');
+      const tableEl = document.getElementById('data-table');
+      const theadEl = document.getElementById('table-head');
+      const tbodyEl = document.getElementById('table-body');
+
+      if (!rows || rows.length === 0) return;
+
+      // 全体の最大列数を取得
+      let maxCols = 0;
+      rows.forEach(r => {
+        if (r.length > maxCols) maxCols = r.length;
+      });
+
+      const rawHeaders = rows[0] || [];
+      const headers = [];
+
+      for (let c = 0; c < maxCols; c++) {
+        let rawText = rawHeaders[c] ? String(rawHeaders[c]) : '';
+        let cleanText = rawText.replace(/[\r\n\t]/g, '').trim();
+        headers.push(cleanText !== '' ? cleanText : `COLUMN ${c + 1}`);
+      }
+
+// 現在表示中のシートに対する非表示設定を取得
+      const hiddenRules = SHEET_HIDDEN_COLUMNS[currentSheet] || [];
+
+      const targetNames = [];
+      const targetIndexes = [];
+
+      hiddenRules.forEach(item => {
+        if (typeof item === 'number') {
+          targetIndexes.push(item - 1);
+        } else if (typeof item === 'string') {
+          targetNames.push(item.replace(/[\r\n\t]/g, '').trim().toUpperCase());
+        }
+      });
+
+      const visibleColumnIndexes = [];
+      const visibleHeaders = [];
+
+      headers.forEach((header, index) => {
+        const cleanHeaderUpper = header.toUpperCase();
+
+        const isHiddenByIndex = targetIndexes.includes(index);
+        const isHiddenByName = targetNames.some(name => cleanHeaderUpper.includes(name));
+
+        // 【変更】 showAllColumns が true の場合は隠し判定を無視してすべて表示
+        if (showAllColumns || (!isHiddenByIndex && !isHiddenByName)) {
+          visibleColumnIndexes.push(index);
+          visibleHeaders.push(header);
+        }
+      });
+
+      // ヘッダー（見出し）の生成 後で消す
+      const headerRowHtml = visibleHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+      theadEl.innerHTML = `<tr>${headerRowHtml}</tr>`;
+
+      // データ行の生成
+      let bodyRowsHtml = '';
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+
+        // 完全に空の行ならスキップ
+        const isEmptyRow = !row || row.every(cell => !cell || String(cell).trim() === '');
+        if (isEmptyRow) continue;
+
+        const cellsHtml = visibleColumnIndexes.map(colIndex => {
+          const cellValue = row[colIndex] || '';
+          const headerName = headers[colIndex] ? headers[colIndex].toUpperCase() : '';
+          return `<td>${formatCellValue(cellValue, headerName)}</td>`;
+        }).join('');
+
+        bodyRowsHtml += `<tr>${cellsHtml}</tr>`;
+      }
+      tbodyEl.innerHTML = bodyRowsHtml;
+
+      statusEl.style.display = 'none';
+      tableEl.style.display = 'table';
+    }
+
+    // ==================================================
+    // 5. セルデータの整形（URL・ハッシュタグリンク化）
+    // ==================================================
+    function formatCellValue(value, headerName) {
+      if (!value) return '';
+
+      // URLリンク化
+      if (value.startsWith('http://') || value.startsWith('https://')) {
+        const escapedUrl = escapeHtml(value.trim());
+        return `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer">Link 🔗</a>`;
+      }
+
+      // ハッシュタグリンク化
+      if (headerName.includes('HASHTAG') || value.includes('#') || value.includes('＃')) {
+        let cleanedValue = value.replace(/＃/g, '#').trim();
+        const tags = cleanedValue.split(/[\s ]+/);
+
+        const linkedTags = tags.map(tag => {
+          if (tag.startsWith('#')) {
+            const rawTag = tag.replace(/^#/, '');
+            const encodedTag = encodeURIComponent(rawTag);
+            const xUrl = `https://x.com/hashtag/${encodedTag}?src=hashtag_click`;
+            return `<a href="${xUrl}" target="_blank" rel="noopener noreferrer" class="hashtag">${escapeHtml(tag)}</a>`;
+          }
+          return escapeHtml(tag);
+        });
+
+        return linkedTags.join(' ');
+      }
+
+      return escapeHtml(value);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchSpreadsheetData('2026');
+    });
+  </script>
+</body>
+</html>
