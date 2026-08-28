@@ -671,7 +671,15 @@
       <!-- ツールバー（一括クリアなど） -->
       <div class="editor-toolbar" id="editor-toolbar" style="display: none;">
         <span style="font-size: 0.82rem; font-weight: bold; color: #666;" id="card-count-label">字幕数: 0</span>
-        <!-- ▼ 追加: 自動スクロール切替ボタン -->
+        
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <span style="font-size: 0.75rem; font-weight: bold; color: #666;">全体時間調整:</span>
+          <button class="action-mini-btn" type="button" onclick="shiftAllTimestamps(-1.0)">-1.0秒</button>
+          <button class="action-mini-btn" type="button" onclick="shiftAllTimestamps(-0.1)">-0.1秒</button>
+          <button class="action-mini-btn" type="button" onclick="shiftAllTimestamps(0.1)">+0.1秒</button>
+          <button class="action-mini-btn" type="button" onclick="shiftAllTimestamps(1.0)">+1.0秒</button>
+        </div>
+
         <button id="auto-scroll-btn" 
                 type="button" 
                 onclick="toggleAutoScroll()"
@@ -1302,6 +1310,24 @@ function addKeywordToInput(keyword) {
     updateKeywords(input.value);
   }
 }
+
+    // 全字幕の start / end 時間を引数 (seconds) の分だけ一括シフトする関数
+    function shiftAllTimestamps(seconds) {
+      if (!currentData || !currentData.transcript || currentData.transcript.length === 0) return;
+
+      currentData.transcript.forEach(item => {
+        if (item.start !== undefined && item.start !== null && item.start !== '') {
+          const newStart = parseFloat((parseFloat(item.start) + seconds).toFixed(3));
+          item.start = Math.max(0, newStart); // 0秒未満にならないよう制御
+        }
+        if (item.end !== undefined && item.end !== null && item.end !== '') {
+          const newEnd = parseFloat((parseFloat(item.end) + seconds).toFixed(3));
+          item.end = Math.max(0, newEnd); // 0秒未満にならないよう制御
+        }
+      });
+
+      renderEditor();
+    }
 
     // --- 6. JSONファイルの出力・ダウンロード ---
 
