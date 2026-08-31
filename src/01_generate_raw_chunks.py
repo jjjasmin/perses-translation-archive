@@ -119,9 +119,9 @@ if args.lite:
 else:
     print("🌟 【高精度モード起動】 賢い Gemini 3.7 Flash 等で高品質生成を実行します。")
     AVAILABLE_MODELS = [
-        "gemini-3.7-flash",
-        "gemini-3.6-flash",
         "gemini-3.5-flash",
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
     ]
     CHUNK_SIZE = 30  # 精度重視で30件ずつ
 
@@ -571,10 +571,11 @@ def main(video_ids_or_urls=None):
         if current_mode == "standard" and os.path.exists(ARCHIVE_DIR):
             temp_files.extend([(f, "archive") for f in glob.glob(os.path.join(ARCHIVE_DIR, "temp_source_*.json"))])
 
-        # ★【解決策A】ソート順: 0. 未処理データ → 1. priority(昇順) ➔ 2. フォルダ(temp優先: "temp" < "archive") ➔ 3. video_id(昇順)
+        # ★【修正】ソート順: 0. 未処理データ → 1. priority(昇順) ➔ 2. ファイルサイズ(小さい順: 昇順) ➔ 3. フォルダ(temp優先) ➔ 4. video_id(昇順)
         temp_files.sort(
             key=lambda item: (
                 status_data.get(os.path.basename(item[0]).replace("temp_source_", "").replace(".json", ""), {}).get("priority", 0),
+                os.path.getsize(item[0]),
                 0 if item[1] == "temp" else 1,
                 os.path.basename(item[0]).replace("temp_source_", "").replace(".json", "")
             )
