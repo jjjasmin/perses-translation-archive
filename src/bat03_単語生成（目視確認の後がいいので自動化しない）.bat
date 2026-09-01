@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 > nul
-echo 🛠️ 手動修正データのビルド (02_build_final_json.py) を開始します...
+echo 単語データの追加 (03_add_words_to_json.py) を開始します...
 echo.
 
-python 02_build_final_json.py
+python 03_add_words_to_json.py
 
 echo.
 echo ------------------------------------------
