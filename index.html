@@ -1182,6 +1182,35 @@ body.dark-mode .search-clear-btn:hover {
           pointer-events: none; /* SVGへのマウスクリックイベント透過 */
         }
 
+        /* 動画概要エリアのスタイル */
+        .video-description-box {
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          padding: 10px 12px;
+          margin-bottom: 12px;
+          font-size: 0.82rem;
+          line-height: 1.5;
+          color: #475569;
+        }
+
+        .video-description-title {
+          font-weight: bold;
+          font-size: 0.85rem;
+          margin-bottom: 4px;
+          color: #1e293b;
+        }
+
+        body.dark-mode .video-description-box {
+          background-color: #2d2d2d;
+          border-color: #383838;
+          color: #cbd5e1;
+        }
+
+        body.dark-mode .video-description-title {
+          color: #f1f5f9;
+        }
+
   </style>
 </head>
 <body class="mode-2col-a">
@@ -2127,6 +2156,21 @@ body.dark-mode .search-clear-btn:hover {
 
       initPlayer(videoId);
 
+      // ★ 追加: 現在の動画情報を取得（概要表示用）
+      const currentVideo = allVideos.find(v => v.id === videoId || v.file === fileName);
+      // keywordsの配列を半角スペース区切りに変換
+      const formattedKeywords = Array.isArray(currentVideo?.keywords)
+        ? currentVideo.keywords.join(' ')
+        : (currentVideo?.keywords || '');
+      
+      // 各プロパティを改行区切りで表示する文字列を作成
+      const videoDescription = currentVideo ? [
+        `${currentVideo.published_at || ''}`,
+        `${currentVideo.title || ''}`,
+        `${currentVideo.original_title || ''}`,
+        `${formattedKeywords}`
+      ].join('\n') : '';
+
       const filePath = `data/transcripts/${fileName}`;
 
       fetch(filePath)
@@ -2136,7 +2180,8 @@ body.dark-mode .search-clear-btn:hover {
         })
         .then(data => {
           transcriptData = data.transcript || [];
-          renderTranscript(transcriptData);
+          // 概要文（videoDescription）を第2引数として渡す
+          renderTranscript(transcriptData, videoDescription);
         })
         .catch(error => {
           console.error('字幕取得エラー:', error);
@@ -2146,10 +2191,21 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     /* ★ 修正・拡張：字幕と単語インライン辞書の描画関数 */
-    function renderTranscript(transcriptList) {
+    function renderTranscript(transcriptList, description = '') {
       if (!transcriptList || transcriptList.length === 0) {
         transcriptContainer.innerHTML = '<p style="text-align: center;">字幕データがありません。</p>';
         return;
+      }
+
+      // ★ 追加: 動画概要が存在する場合は先頭に概要HTMLを作成
+      let descriptionHtml = '';
+      if (description && description.trim() !== '') {
+        descriptionHtml = `
+          <div class="video-description-box">
+            <!--<div class="video-description-title">動画概要</div>-->
+            <div>${escapeHtml(description).replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
       }
 
       const html = transcriptList.map((item, index) => {
@@ -2181,7 +2237,8 @@ body.dark-mode .search-clear-btn:hover {
         `;
       }).join('');
 
-      transcriptContainer.innerHTML = html;
+      // 先頭に概要（descriptionHtml）を結合して挿入
+      transcriptContainer.innerHTML = descriptionHtml + html;
 
       // ★ 単語（dict-word）のクリックイベント処理を設定
       const dictWords = transcriptContainer.querySelectorAll('.dict-word');
