@@ -51,10 +51,10 @@ def extract_keywords_from_titles(
         year_str = published_at[:4]
         if year_str.isdigit():
             year = int(year_str)
-            if 2020 <= year <= 2030:
+            if 2021 <= year <= 2030:
                 extracted_tags.append(f"#{year}")
-            elif year <= 2019:
-                extracted_tags.append("#before2019")
+            elif year <= 2020:
+                extracted_tags.append("#before2020")
 
     # 重複を除去して返す
     return list(dict.fromkeys(extracted_tags))

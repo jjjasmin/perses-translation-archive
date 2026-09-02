@@ -637,20 +637,17 @@ def main(video_ids_or_urls=None):
                 transcript_list = src_data.get("transcript", [])
 
             # ---------------------------------------------------------
-            # 💡 【追加】字幕本文のタイ文字判定（タイ語なし・完全英語はスキップ）
+            # 💡 【修正】字幕本文のタイ文字判定（タイ語なし・完全英語時のフラグ付与）
             # ---------------------------------------------------------
             full_text = "".join([item.get("text", "") for item in transcript_list])
             has_thai = bool(re.search(r'[\u0E00-\u0E7F]', full_text))
 
             if not has_thai:
-                print(f"⏭️ スキップ: VIDEO_ID [{video_id}] は完全英語（タイ語なし）字幕のため除外します。")
-                status_data[video_id] = {
-                    "title": original_title,
-                    "generate": "skipped_english_only",
-                    "priority": v_status.get("priority", 2)
-                }
+                print(f"ℹ️ タイ語なし（完全英語）字幕を検知: VIDEO_ID [{video_id}] に english_sub を設定して通常処理を続行します。")
+                if video_id not in status_data:
+                    status_data[video_id] = {}
+                status_data[video_id]["english_sub"] = True
                 save_pipeline_status(status_data)
-                continue
             # ---------------------------------------------------------
 
         except Exception as e:
