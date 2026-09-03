@@ -534,20 +534,19 @@
 .video-list-title {
   font-size: 0.95rem;
   font-weight: bold;
-  margin-bottom: 12px;
   color: #444;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
   
   /* ★ 追加: スクロール時に上部に固定 */
   position: sticky;
   top: 0;
   z-index: 10;
   background-color: #ffffff; /* 背景が透けないように背景色を指定 */
-  padding-top: 18px;          /* 余白の調整（必要に応じて） */
-  padding-bottom: 8px;
+  padding-top: 12px;          /* 余白の調整（必要に応じて） */
+  padding-bottom: 6px;
 }
 
 /* ★ 追加: ダークモード時の背景色補正 */
@@ -1211,6 +1210,55 @@ body.dark-mode .search-clear-btn:hover {
           color: #f1f5f9;
         }
 
+
+
+
+        /* 選択中タグのコンテナ */
+        .active-tags-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        /* 選択中タグ（×ボタン付き） */
+        .selected-tag-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.75rem;
+          padding: 2px 8px;
+          background-color: #007bff;
+          color: #ffffff;
+          border-radius: 12px;
+          user-select: none;
+        }
+
+        /* タグ削除ボタン(×) */
+        .selected-tag-remove {
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 0.85rem;
+          line-height: 1;
+          margin-left: 2px;
+          opacity: 0.8;
+        }
+
+        .selected-tag-remove:hover {
+          opacity: 1;
+        }
+
+        /* ダークモード対応 */
+        body.dark-mode .selected-tag-chip {
+          background-color: #3182ce;
+          color: #ffffff;
+        }
+
+
+
+
+
+
+
   </style>
 </head>
 <body class="mode-2col-a">
@@ -1412,16 +1460,18 @@ body.dark-mode .search-clear-btn:hover {
         <div id="video-list-section" class="video-list-section">
           <div class="video-list-title">
             <div class="search-wrapper" id="search-wrapper">
-              <!-- ★ 追加：タグ一覧を開く専用ボタン -->
-                <button type="button" id="tag-toggle-btn" class="search-btn" style="background-color: #eef2f5; color: #007bff; border: 1px solid #d0e1f9; font-weight: bold;">🏷️ タグ</button>
+              
+
+              <button type="button" id="tag-toggle-btn" class="search-btn" style="background-color: #eef2f5; color: #007bff; border: 1px solid #d0e1f9; font-weight: bold;">🏷️ タグ</button>
               <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
               <span id="search-clear-btn" class="search-clear-btn" title="クリア">×</span>
               <button type="button" id="search-btn" class="search-btn">検索</button>
               <button type="button" id="sort-order-btn" class="search-btn" style="background-color: #6c757d; margin-left: 2px;" title="投稿日で並べ替え">
                   <span id="sort-order-label">new⬇</span>
-                </button>
+              </button>
               <div id="keyword-floating-box" class="keyword-floating-box"></div>
-            </div>
+            </div><!-- ★ 追加: 選択されたタグが表示されるエリア -->
+              <div id="active-tags-container" class="active-tags-container"></div>
           </div>
           <div id="video-list-container" class="video-grid"></div>
         </div>
@@ -1469,6 +1519,7 @@ body.dark-mode .search-clear-btn:hover {
     const searchBtn = document.getElementById('search-btn');
     const searchWrapper = document.getElementById('search-wrapper');
     const keywordFloatingBox = document.getElementById('keyword-floating-box');
+    const activeTagsContainer = document.getElementById('active-tags-container');
 
     let player = null;
     let transcriptData = [];
@@ -1486,12 +1537,140 @@ body.dark-mode .search-clear-btn:hover {
     const PAGE_SIZE = 10;
     let isLoadingMore = false;
     let currentVideoIndex = 0;
+    let selectedTags = []; // 選択中のタグを保持する配列
 
     let previousLayoutMode = '2col-a';
     let currentLayoutMode = '2col-a';
     let userSelectedMode = '2col-a';
 
     const layoutBtns = document.querySelectorAll('.layout-btn');
+
+
+// タグの追加
+function addTag(tag) {
+  const trimmed = tag.trim();
+  if (!trimmed) return;
+  if (!selectedTags.includes(trimmed)) {
+    selectedTags.push(trimmed);
+    renderActiveTags();
+    executeSearch();
+  }
+}
+
+// タグの削除
+function removeTag(tag) {
+  selectedTags = selectedTags.filter(t => t !== tag);
+  renderActiveTags();
+  executeSearch();
+}
+
+// 選択中タグの描画関数
+function renderActiveTags() {
+  const container = document.getElementById('active-tags-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  selectedTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'selected-tag-chip';
+    chip.textContent = tag;
+
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'selected-tag-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeTag(tag);
+    });
+
+    chip.appendChild(removeBtn);
+    container.appendChild(chip);
+  });
+}
+
+// AND検索フィルター処理
+function filterVideos() {
+  const textInput = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  const videoItems = document.querySelectorAll('.video-item');
+
+  videoItems.forEach(item => {
+    // 動画タイトルとキーワードを取得
+    const title = item.querySelector('.video-title')?.textContent.toLowerCase() || '';
+    const keywordsText = item.querySelector('.video-keywords')?.textContent.toLowerCase() || '';
+    
+    // 対象テキスト全体
+    const combinedText = title + ' ' + keywordsText;
+
+    // 1. 選択されたすべてのタグが含まれているかチェック (AND条件)
+    const matchesTags = selectedTags.every(tag => 
+      combinedText.includes(tag.toLowerCase())
+    );
+
+    // 2. 入力欄に入力中のテキストも含まれているかチェック
+    const matchesInput = !textInput || combinedText.includes(textInput);
+
+    // 両方を満たす場合のみ表示
+    if (matchesTags && matchesInput) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+// --- イベント設定 ---
+
+// 1. 検索ボタンクリック・Enterキーでテキスト入力をタグ化
+if (searchBtn) {
+  searchBtn.addEventListener('click', () => {
+    if (searchInput.value.trim()) {
+      addTag(searchInput.value);
+    } else {
+      filterVideos();
+    }
+  });
+}
+
+if (searchInput) {
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchInput.value.trim()) {
+        addTag(searchInput.value);
+      } else {
+        filterVideos();
+      }
+    }
+  });
+
+  // リアルタイム検索（入力中の文字列でも即時絞り込み）
+  searchInput.addEventListener('input', filterVideos);
+}
+
+// 2. クリア(×)ボタンの挙動（テキスト入力と全タグのクリア）
+if (searchClearBtn) {
+  searchClearBtn.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    selectedTags = [];
+    renderActiveTags();
+    filterVideos();
+  });
+}
+
+// 3. キーワードチップ / 関連タグクリック時の動作変更（直接タグ追加へ）
+document.addEventListener('click', (e) => {
+  // 候補リストや動画カード内のキーワードタグがクリックされた場合
+  if (e.target.classList.contains('keyword-chip') || e.target.classList.contains('video-keyword-item')) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    let tagText = e.target.textContent.trim();
+    // # 記号などが付いている場合は除去して整理
+    tagText = tagText.replace(/^#/, '');
+    
+    addTag(tagText);
+  }
+});
     
     layoutBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1919,21 +2098,21 @@ body.dark-mode .search-clear-btn:hover {
 
             keywordFloatingBox.innerHTML = html;
 
+            // 該当のイベントリスナー部分を修正
             keywordFloatingBox.querySelectorAll('.keyword-chip').forEach(chip => {
               chip.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const targetKw = chip.dataset.keyword;
-                searchInput.value = targetKw;
                 
-                // ★ 追加: スマホでフォーカスを外してキーボードが開くのを防ぐ
-                searchInput.blur();
+                // 入力欄上書きではなくタグ追加を実行
+                addTag(targetKw);
+                searchInput.value = '';
 
                 if (searchClearBtn) {
                   searchClearBtn.style.display = 'block';
                 }
 
                 keywordFloatingBox.classList.remove('show');
-                executeSearch();
               });
             });
           }
@@ -1962,8 +2141,10 @@ body.dark-mode .search-clear-btn:hover {
         searchClearBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           searchInput.value = '';
+          selectedTags = []; // 選択中のタグもリセット
+          renderActiveTags();
           searchClearBtn.style.display = 'none';
-          executeSearch(); // 検索リセット（全件表示）
+          executeSearch();
           searchInput.focus();
         });
 
@@ -1987,22 +2168,27 @@ body.dark-mode .search-clear-btn:hover {
         });
       }
 
-    function executeSearch() {
-      const query = searchInput.value.trim().toLowerCase();
-      keywordFloatingBox.classList.remove('show');
+      function executeSearch() {
+        const queryInput = searchInput.value.trim().toLowerCase();
+        keywordFloatingBox.classList.remove('show');
 
-      if (!query) {
-        filteredVideos = [...allVideos];
-      } else {
-        filteredVideos = allVideos.filter(video => {
-          const jsonString = JSON.stringify(video).toLowerCase();
-          return jsonString.includes(query);
-        });
+        // 入力文字列（スペース区切り）と選択済みタグをすべて結合して小文字化
+        const inputTerms = queryInput ? queryInput.split(/\s+/).filter(Boolean) : [];
+        const allSearchTerms = [...selectedTags.map(t => t.toLowerCase()), ...inputTerms];
+
+        if (allSearchTerms.length === 0) {
+          filteredVideos = [...allVideos];
+        } else {
+          // 選択タグ + 入力ワードの「すべて」を含む動画のみ抽出 (AND検索)
+          filteredVideos = allVideos.filter(video => {
+            const jsonString = JSON.stringify(video).toLowerCase();
+            return allSearchTerms.every(term => jsonString.includes(term));
+          });
+        }
+
+        sortVideos();
+        resetVideoListDisplay();
       }
-
-      sortVideos();
-      resetVideoListDisplay();
-    }
 
     function resetVideoListDisplay() {
       videoListContainer.innerHTML = '';
@@ -2066,11 +2252,11 @@ body.dark-mode .search-clear-btn:hover {
         if (!item.dataset.bound) {
           item.dataset.bound = "true";
           item.addEventListener('click', (e) => {
+            // bindVideoItemEvents 内の修正部分
             if (e.target.classList.contains('video-keyword-item')) {
               e.stopPropagation();
               const kw = e.target.dataset.keyword;
-              searchInput.value = kw;
-              executeSearch();
+              addTag(kw); // 直接タグ追加
               return;
             }
 
