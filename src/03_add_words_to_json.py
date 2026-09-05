@@ -13,7 +13,7 @@ from google.genai.errors import ServerError
 # ------------------------------------------
 # 特定の priority のみ処理したい場合は数字を指定（例: TARGET_PRIORITY = 1）
 # 全ての priority を順番に処理したい場合は None にする
-TARGET_PRIORITY = None
+TARGET_PRIORITY = 888
 
 # ==========================================
 # 1. APIキー・設定
