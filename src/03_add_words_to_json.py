@@ -197,6 +197,7 @@ for filepath in target_files:
 
     # id をキーにしたマッピング用の辞書を作成
     words_map = {}
+    parse_failed = False  # パース失敗フラグ
 
     for i in range(0, total_items, BATCH_SIZE):
         batch = transcript[i : i + BATCH_SIZE]
@@ -244,23 +245,42 @@ Markdownの枠（```json）も含めず、純粋なJSON配列のみを出力し�
 {json.dumps(input_data_for_prompt, ensure_ascii=False, indent=2)}
 """
 
-        raw_text = call_gemini_api_with_retry(prompt)
+        # パース成功まで最大10回リトライ
+        batch_success = False
+        max_parse_retries = 10
 
-        try:
-            parsed_words_batch = parse_and_fix_json(raw_text)
-            if isinstance(parsed_words_batch, list):
-                for res_item in parsed_words_batch:
-                    item_id = res_item.get("id")
-                    words_list = res_item.get("words", [])
-                    if item_id is not None:
-                        words_map[item_id] = words_list
-            else:
-                print("⚠️ 出力が配列形式ではありませんでした。")
-        except Exception as e:
-            print(f"❌ バッチ（ID {batch_ids[0]}〜{batch_ids[-1]}）の単語分解パースに失敗しました: {e}")
-            continue
+        for attempt in range(1, max_parse_retries + 1):
+            try:
+                raw_text = call_gemini_api_with_retry(prompt)
+                parsed_words_batch = parse_and_fix_json(raw_text)
+                
+                if isinstance(parsed_words_batch, list):
+                    for res_item in parsed_words_batch:
+                        item_id = res_item.get("id")
+                        words_list = res_item.get("words", [])
+                        if item_id is not None:
+                            words_map[item_id] = words_list
+                    batch_success = True
+                    break
+                else:
+                    print(f"⚠️ 試行 {attempt}/{max_parse_retries}: 出力が配列形式ではありませんでした。")
+            except Exception as e:
+                print(f"⚠️ 試行 {attempt}/{max_parse_retries}: パースに失敗しました ({e})")
+            
+            time.sleep(1)
+
+        # 10回リトライしても成功しなかった場合、失敗フラグを立ててバッチループを抜ける
+        if not batch_success:
+            print(f"❌ バッチ（ID {batch_ids[0]}〜{batch_ids[-1]}）の単語分解パースが10回連続で失敗しました。")
+            parse_failed = True
+            break
 
         time.sleep(1) # APIレートリミット対策
+
+    # 単語分解パースに失敗していた場合はファイルを更新せずにスキップ
+    if parse_failed:
+        print(f"⚠️ 『{filepath}』は単語分解パース失敗のため、ファイルを更新せずにスキップします。")
+        continue
 
     # 元の transcript データに words をマージ（挿入）
     updated_count = 0
@@ -299,7 +319,6 @@ Markdownの枠（```json）も含めず、純粋なJSON配列のみを出力し�
                     print(f"🏷️ 『videos.json』の {video_id} にキーワード `#単語辞書つき` を追加しました。")
             except Exception as e:
                 print(f"⚠️ videos.json の更新中にエラーが発生しました: {e}")
-
 
     if video_id not in status_data:
         status_data[video_id] = {}

@@ -1181,16 +1181,56 @@ body.dark-mode .search-clear-btn:hover {
           pointer-events: none; /* SVGへのマウスクリックイベント透過 */
         }
 
-        /* 動画概要エリアのスタイル */
+        /* 動画概要エリアのスタイル拡張 */
         .video-description-box {
+          position: relative; /* ボタンを右上絶対配置するための基準 */
           background-color: #f8fafc;
           border: 1px solid #e2e8f0;
           border-radius: 6px;
           padding: 10px 12px;
+          padding-right: 42px; /* ボタンと重ならないように右余白を確保 */
           margin-bottom: 12px;
           font-size: 0.82rem;
           line-height: 1.5;
           color: #475569;
+        }
+
+        /* 概要ボックス右上の学習モード(study.html)遷移ボタン */
+        .description-study-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          background-color: #ffffff;
+          color: #007bff;
+          border: 1px solid #d0e1f9;
+          border-radius: 6px;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .description-study-btn:hover {
+          background-color: #007bff;
+          color: #ffffff;
+          border-color: #007bff;
+          transform: scale(1.05);
+        }
+
+        body.dark-mode .description-study-btn {
+          background-color: #1e293b;
+          color: #60a5fa;
+          border-color: #334155;
+        }
+
+        body.dark-mode .description-study-btn:hover {
+          background-color: #2563eb;
+          color: #ffffff;
+          border-color: #2563eb;
         }
 
         .video-description-title {
@@ -2389,12 +2429,26 @@ document.addEventListener('click', (e) => {
         return;
       }
 
-      // ★ 追加: 動画概要が存在する場合は先頭に概要HTMLを作成
+      // ★ 現在選択中の動画IDを取得（study.htmlへの遷移用）
+      const currentVideo = filteredVideos[currentVideoIndex];
+      const currentVideoId = currentVideo ? currentVideo.id : '';
+
+      // ★ 追加: 動画概要が存在する場合は先頭に概要HTMLを作成（右上ボタン付き）
       let descriptionHtml = '';
       if (description && description.trim() !== '') {
+        const studyUrl = currentVideoId ? `study.html?v=${encodeURIComponent(currentVideoId)}` : 'study.html';
+        
         descriptionHtml = `
           <div class="video-description-box">
-            <!--<div class="video-description-title">動画概要</div>-->
+            <a href="${studyUrl}" class="description-study-btn" title="学習モードで開く（拡大）">
+              <!-- 画面拡大（フルスクリーン/外部起動）をイメージしたSVGアイコン -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </a>
             <div>${escapeHtml(description).replace(/\n/g, '<br>')}</div>
           </div>
         `;

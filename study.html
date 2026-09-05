@@ -3,367 +3,582 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>タイ語 文字ピッカー（ハイライト）デモ</title>
+  <title>詳細学習 - PERSES</title>
   <style>
-    /* ===================================================
-       1. 基本レイアウト・カードデザイン
-       =================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --accent-color: #0d6efd;
+      --border-color: #e0e0e0;
+      --sub-text-color: #6c757d;
+      --word-bg: rgba(0, 0, 0, 0.02);
+      --word-hover-bg: rgba(13, 110, 253, 0.1);
+      --tooltip-bg: #333333;
+      --tooltip-text: #ffffff;
+    }
+
+    /* ==========================================
+       ダークモード時のCSS変数・スタイル設定
+       ========================================== */
+    body.dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #e0e0e0;
+      --accent-color: #60a5fa;
+      --border-color: #333333;
+      --sub-text-color: #9ca3af;
+      --word-bg: rgba(255, 255, 255, 0.05);
+      --word-hover-bg: rgba(96, 165, 250, 0.2);
+      --tooltip-bg: #e0e0e0;
+      --tooltip-text: #121212;
+    }
+
     body {
-      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
-      background-color: #f0f2f5;
-      color: #333;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      font-size: 90%; /* index.htmlの基本サイズに準拠 */
+      transition: background-color 0.3s, color 0.3s;
     }
 
     .container {
-      width: 100%;
-      max-width: 700px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    .header-nav {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* SVGアイコン対応 戻るボタン */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      text-decoration: none;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      height: 34px;
+    }
+
+    .back-btn svg {
+      display: block;
+      pointer-events: none;
+    }
+
+    .back-btn:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    /* テーマ切り替えボタン */
+    .theme-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-btn:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    .theme-btn svg {
+      display: block;
+      pointer-events: none;
+    }
+
+    .video-info {
+      margin-bottom: 24px;
+    }
+
+    .video-info h1 {
+      font-size: 1.25rem; /* デスクトップ時の見出しサイズを小さく設定 */
+      font-weight: bold;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    /* トランスクリプト（カード）配置エリア */
+    #transcript-container {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      position: relative;
+    /* 各フレーズを囲むカード */
+    .transcript-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: background-color 0.3s, border-color 0.3s;
     }
 
-    .card-title {
-      font-size: 0.9rem;
-      color: #888;
-      margin-bottom: 20px;
-    }
-
-    /* ===================================================
-       2. 文字ピッカー テキスト表示エリア
-       =================================================== */
-    .sentence-box {
+    /* 1, 2, 3 の単語セットを並べるコンテナ */
+    .words-container {
       display: flex;
-      align-items: flex-end;
       flex-wrap: wrap;
-      gap: 4px;
-      font-size: 2.8rem;
-      font-weight: bold;
-      line-height: 1.5;
-      padding: 10px 0;
+      gap: 16px 12px;
+      margin-bottom: 10px;
+    }
+
+    /* 1, 2, 3の単語単体ブロック（中央揃えセット） */
+    .word-set {
+      position: relative; /* フローティング表示の位置基準 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background-color: var(--word-bg);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer; /* クリック/タップエリア化 */
+      transition: background-color 0.2s;
       user-select: none;
     }
 
-    /* 各文字（トークン）の共通スタイル */
-    .char-token {
-      position: relative;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    /* PCホバー時およびスマホタップ(active)時の背景ハイライト */
+    .word-set:hover,
+    .word-set.active {
+      background-color: var(--word-hover-bg);
     }
 
-    /* 通常のホバー / 一括ハイライト効果 */
-    .char-token:hover,
-    .char-token.is-highlighted {
-      background-color: #ffe600;
-      color: #000;
-      transform: translateY(-2px);
-    }
-
-    /* ===================================================
-       3. ルールごとの視覚的フィードバック（Visual Styles）
-       =================================================== */
-
-    /* 【ルール1】読まない文字（黙音・ガラン付き） */
-    .char-token.style-ghost-strike {
-      opacity: 0.35;
-      color: #888;
-      text-decoration: line-through;
-      text-decoration-color: #ff4d4f;
-      text-decoration-thickness: 3px;
-    }
-    .char-token.style-ghost-strike:hover,
-    .char-token.style-ghost-strike.is-highlighted {
-      opacity: 1;
-      background-color: #fff1f0;
-      color: #ff4d4f;
-      transform: scale(0.95); /* シュッと縮む視覚効果 */
-    }
-
-    /* 【ルール2】前置母音（セット枠＋矢印） */
-    .char-token.style-frame-arrow {
-      border: 2px dashed #1890ff;
-      border-radius: 8px;
-      margin: 0 2px;
-      background-color: #e6f7ff;
-    }
-    .char-token.style-frame-arrow::after {
-      content: "🔄";
-      font-size: 0.9rem;
+    /* 上部に浮かび上がるフローティング（ポップアップ） */
+    .word-set::after {
+      content: attr(data-tooltip); /* JSで設定したテキストを表示 */
       position: absolute;
-      top: -12px;
-      right: -6px;
-    }
-
-    /* 【ルール3】無形母音（隠れ母音の補完挿入） */
-    .char-token.style-dotted-insert::after {
-      content: "(o)";
-      font-size: 1.2rem;
-      color: #fa8c16;
-      font-weight: normal;
-      margin-left: 4px;
-      opacity: 0.4;
-      transition: opacity 0.2s;
-    }
-    .char-token.style-dotted-insert:hover::after,
-    .char-token.style-dotted-insert.is-highlighted::after {
-      opacity: 1;
-      font-weight: bold;
-    }
-
-    /* 【ルール4】声調サポート文字（導音等） */
-    .char-token.style-ghost-support {
-      opacity: 0.5;
-      border-bottom: 2px dotted #722ed1;
-    }
-
-    /* ===================================================
-       4. フローティング・ポップアップ（ツールチップ）
-       =================================================== */
-    .popup-tooltip {
-      position: absolute;
-      bottom: calc(100% + 12px);
+      bottom: 100%;
       left: 50%;
-      transform: translateX(-50%) translateY(6px);
-      background: #1f1f1f;
-      color: #ffffff;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: normal;
+      transform: translateX(-50%) translateY(-6px);
+      background-color: var(--tooltip-bg);
+      color: var(--tooltip-text);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
       white-space: nowrap;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      align-items: center;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    /* 吹き出しの矢印 */
-    .popup-tooltip::after {
-      content: "";
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border-width: 6px;
-      border-style: solid;
-      border-color: #1f1f1f transparent transparent transparent;
-    }
-
-    /* バッジ */
-    .popup-badge {
-      font-size: 0.75rem;
-      background: #333;
-      padding: 2px 8px;
-      border-radius: 12px;
-      color: #ffd666;
-    }
-
-    /* アクティブ時の表示 */
-    .char-token.is-active .popup-tooltip {
+    /* PCでのホバー時またはタップ(active)時にフローティングを表示 */
+    .word-set:hover::after,
+    .word-set.active::after {
       opacity: 1;
       visibility: visible;
-      transform: translateX(-50%) translateY(0);
+      transform: translateX(-50%) translateY(-10px);
     }
 
-    .translation-text {
-      margin-top: 16px;
+    /* 1. words.text (文字サイズ大) */
+    .word-text {
       font-size: 1.1rem;
-      color: #555;
-      border-top: 1px dashed #ddd;
+      font-weight: bold;
+      color: var(--accent-color);
+      border-bottom: 1px dashed var(--accent-color);
+    }
+
+    /* 2. words.meaning (文字サイズ小) */
+    .word-meaning {
+      font-size: 0.75rem;
+      color: var(--sub-text-color);
+      margin-top: 4px;
+    }
+
+    /* 3. words.kana (文字サイズ小) */
+    .word-kana {
+      font-size: 0.75rem;
+      color: var(--sub-text-color);
+      margin-top: 2px;
+    }
+
+    /* フレーズ全体の詳細エリア */
+    .phrase-details {
+      margin-top: 16px;
       padding-top: 12px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    /* 4. translation (中) */
+    .translation {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text-color);
+      margin-bottom: 6px;
+    }
+
+    /* 5. pronunciation_roman (中) */
+    .pronunciation-roman {
+      font-size: 0.85rem;
+      color: var(--sub-text-color);
+      margin-top: 4px;
+    }
+
+    /* 6. pronunciation_kana (中) */
+    .pronunciation-kana {
+      font-size: 0.85rem;
+      color: var(--sub-text-color);
+      margin-top: 2px;
+    }
+
+    /* 7. text (タイ語原文)(大) */
+    .phrase-text {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--accent-color);
+      margin-top: 4px;
+    }
+
+    /* ==========================================
+       レスポンシブ対応 (index.html の基準を適用)
+       ========================================== */
+
+    /* タブレット・小画面PC (1100px以下) */
+    @media (max-width: 1100px) {
+      body {
+        padding: 16px;
+      }
+      .transcript-card {
+        padding: 16px;
+      }
+    }
+
+    /* スマートフォン画面 (768px以下) */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .header-nav {
+        margin-bottom: 16px;
+      }
+
+      .back-btn {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+      }
+
+      .video-info h1 {
+        font-size: 1.1rem; /* スマホ全般でのサイズ */
+      }
+
+      .transcript-card {
+        padding: 14px;
+      }
+
+      .words-container {
+        gap: 10px 8px;
+      }
+
+      .word-set {
+        padding: 5px 8px;
+      }
+
+      .word-text {
+        font-size: 1.0rem;
+      }
+
+      .word-meaning,
+      .word-kana {
+        font-size: 0.7rem;
+      }
+
+      .translation {
+        font-size: 0.9rem;
+      }
+
+      .phrase-text {
+        font-size: 1.05rem;
+      }
+
+      .pronunciation-roman,
+      .pronunciation-kana {
+        font-size: 0.8rem;
+      }
+    }
+
+    /* 極小画面・スマホ縦持ち (480px以下) */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px 8px;
+      }
+
+      .video-info h1 {
+        font-size: 1.0rem; /* 極小画面用のサイズ */
+      }
+
+      .transcript-card {
+        padding: 12px 10px;
+      }
+
+      .words-container {
+        gap: 8px 6px;
+      }
+
+      .word-set {
+        padding: 4px 6px;
+      }
+
+      .word-text {
+        font-size: 0.95rem;
+      }
+
+      .word-meaning,
+      .word-kana {
+        font-size: 0.65rem;
+      }
+
+      .translation {
+        font-size: 0.85rem;
+      }
+
+      .phrase-text {
+        font-size: 1.0rem;
+      }
+
+      .pronunciation-roman,
+      .pronunciation-kana {
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- 例1: 黙音記号が含まれる単語（月曜日: วันจันทร์） -->
-    <div class="card">
-      <div class="card-title">例文 1: 黙音記号（ガラン）の例</div>
-      <div class="sentence-box" id="sentence1"></div>
-      <div class="translation-text">日本語訳: 月曜日 (wan chan)</div>
+    <div class="header-nav">
+      <!-- SVGアイコン付き 戻るボタン -->
+      <a href="index.html" id="back-btn" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+
+      <!-- ダークモード切り替えボタン -->
+      <button class="theme-btn" id="theme-toggle-btn" title="ダークモード切替">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.3 2a10 10 0 0 0 9.7 12.3 10 10 0 1 1-9.7-12.3z"/>
+        </svg>
+      </button>
     </div>
 
-    <!-- 例2: 前置母音 ＋ 無形母音の例 -->
-    <div class="card">
-      <div class="card-title">例文 2: 前置母音と隠れ母音(o)の例</div>
-      <div class="sentence-box" id="sentence2"></div>
-      <div class="translation-text">日本語訳: ゲーム (gem) / 人 (khon)</div>
+    <div class="video-info">
+      <h1 id="video-title">読み込み中...</h1>
     </div>
+
+    <!-- カード出力エリア -->
+    <div id="transcript-container"></div>
   </div>
 
   <script>
-    // ===================================================
-    // 1. サイト共通：タイ語ルールマスタ（辞書データ）
-    // ===================================================
-    const ruleMaster = {
-      "R_SILENT": {
-        "visual_style": "style-ghost-strike",
-        "popup_text": "この灰色の文字は読みません 🤫",
-        "badge": "無音（黙音記号）"
-      },
-      "R_PRE_VOWEL": {
-        "visual_style": "style-frame-arrow",
-        "popup_text": "子音の後ろに並び替えて読みます 🔄",
-        "badge": "前置母音"
-      },
-      "R_HIDDEN_O": {
-        "visual_style": "style-dotted-insert",
-        "popup_text": "隠れた「o」の音を挟んで読みます 💡",
-        "badge": "隠れ母音 [o]"
-      },
-      "R_HO_HOA": {
-        "visual_style": "style-ghost-support",
-        "popup_text": "声調を変化させるだけのサポート文字です 🎵",
-        "badge": "声調サポート"
-      }
-    };
+    // --- ナイトモード（ダークモード）切り替え制御 ---
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    
+    // 前回の設定（localStorage）の取得・初期適用
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+    }
 
-    // ===================================================
-    // 2. 字幕データ（サンプル）
-    // ===================================================
-    const sampleData1 = [
-      { "char": "วั", "roman": "wa", "char_id": "char_w" },
-      { "char": "น", "roman": "n", "char_id": "char_n" },
-      { "char": "จั", "roman": "cha", "char_id": "char_ch" },
-      { "char": "น", "roman": "n", "char_id": "char_n" },
-      // 「ทร์」は黙音ルール適用
-      { "char": "ทร์", "roman": "", "rule_id": "R_SILENT", "char_id": "char_silent1" }
-    ];
-
-    const sampleData2 = [
-      // 前置母音 「เ」 ＋ 子音 「ก」 ＋ 子音 「ม」
-      { "char": "เ", "roman": "e", "rule_id": "R_PRE_VOWEL", "char_id": "char_e" },
-      { "char": "ก", "roman": "g", "char_id": "char_g" },
-      { "char": "ม", "roman": "m", "char_id": "char_m" },
-      { "char": " ", "roman": "" }, // スペース
-      // 無形母音 「ค」 ＋ 「น」（間に o の音）
-      { "char": "ค", "roman": "kh", "rule_id": "R_HIDDEN_O", "char_id": "char_kh" },
-      { "char": "น", "roman": "n", "char_id": "char_n" }
-    ];
-
-    // ===================================================
-    // 3. レンダリング & インタラクションロジック
-    // ===================================================
-    function renderSentence(containerId, tokens) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-
-      tokens.forEach(token => {
-        // スペースの処理
-        if (token.char === " ") {
-          const space = document.createElement('span');
-          space.style.width = "16px";
-          container.appendChild(space);
-          return;
-        }
-
-        const charEl = document.createElement('div');
-        charEl.className = 'char-token';
-        charEl.dataset.char = token.char;
-        charEl.dataset.charId = token.char_id || token.char;
-
-        // マスタデータからのルール読み込み・スタイル付与
-        let ruleInfo = null;
-        if (token.rule_id && ruleMaster[token.rule_id]) {
-          ruleInfo = ruleMaster[token.rule_id];
-          charEl.classList.add(ruleInfo.visual_style);
-        }
-
-        // タイ語文字本体
-        const textNode = document.createTextNode(token.char);
-        charEl.appendChild(textNode);
-
-        // ツールチップ（ポップアップ）の生成
-        const tooltip = document.createElement('div');
-        tooltip.className = 'popup-tooltip';
-
-        if (ruleInfo) {
-          // ルールがある場合：直感的な一言解説 ＋ バッジ
-          tooltip.innerHTML = `
-            <span class="popup-badge">${ruleInfo.badge}</span>
-            <span>${ruleInfo.popup_text}</span>
-          `;
-        } else {
-          // 通常文字の場合：シンプルにアルファベット音を提示
-          tooltip.innerHTML = `<span>音: <strong>[ ${token.roman} ]</strong></span>`;
-        }
-        charEl.appendChild(tooltip);
-
-        // --- イベントハンドラ（ホバー ＆ タップ） ---
-        const handleActivate = () => {
-          // 他の要素の指定を解除
-          document.querySelectorAll('.char-token').forEach(el => {
-            el.classList.remove('is-active', 'is-highlighted');
-          });
-
-          // 1. 自分自身をアクティブ化（ポップアップ表示）
-          charEl.classList.add('is-active');
-
-          // 2. 同じ文字（または同ID）を持つ画面内の全文字を一斉ハイライト
-          const targetChar = charEl.dataset.char;
-          document.querySelectorAll(`.char-token[data-char="${targetChar}"]`).forEach(el => {
-            el.classList.add('is-highlighted');
-          });
-        };
-
-        const handleDeactivate = () => {
-          document.querySelectorAll('.char-token').forEach(el => {
-            el.classList.remove('is-active', 'is-highlighted');
-          });
-        };
-
-        // マウスイベント（PC）
-        charEl.addEventListener('mouseenter', handleActivate);
-        charEl.addEventListener('mouseleave', handleDeactivate);
-
-        // タッチイベント（スマホ・タブレット）
-        charEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (charEl.classList.contains('is-active')) {
-            handleDeactivate();
-          } else {
-            handleActivate();
-          }
-        });
-
-        container.appendChild(charEl);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
       });
     }
 
-    // 画面外をタップした時にポップアップを閉じる
+    // URLからパラメータ(?v=xxx または ?json=xxx)を取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('v');
+    const jsonPathOverride = urlParams.get('json');
+
+    // 戻るボタンの遷移先を動的に設定
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+      if (videoId) {
+        backBtn.href = `index.html?v=${encodeURIComponent(videoId)}`;
+      } else {
+        backBtn.href = 'index.html';
+      }
+    }
+
+    // index.html側でリストやインデックスJSONを保持している場合に参照するパスを構築
+    function resolveJsonPath() {
+      // 明示的に json パラメータでパスが渡されている場合 (例: ?json=...)
+      if (jsonPathOverride) {
+        return decodeURIComponent(jsonPathOverride);
+      }
+      // 動画IDのみ渡されている場合
+      if (videoId) {
+        return `./data/transcripts/video_${videoId}.json`; 
+      }
+      // デフォルトのフォールバック
+      return './data/transcripts/video_uzofjpRpu6Y.json';
+    }
+
+    // データ読み込みとレンダリング
+    async function loadStudyData() {
+      const jsonPath = resolveJsonPath();
+
+      try {
+        const response = await fetch(jsonPath);
+        if (!response.ok) {
+          throw new Error(`データの取得に失敗しました (Path: ${jsonPath})`);
+        }
+        const data = await response.json();
+
+        // タイトル表示
+        document.getElementById('video-title').textContent = data.title || '詳細学習';
+
+        // トランスクリプト描画
+        renderTranscript(data.transcript);
+      } catch (error) {
+        console.error(error);
+        document.getElementById('transcript-container').innerHTML = 
+          `<p style="color: red;">指定された学習データ (${jsonPath}) を読み込めませんでした。</p>`;
+      }
+    }
+
+    // カード描画処理
+    function renderTranscript(transcriptList) {
+      const container = document.getElementById('transcript-container');
+      container.innerHTML = '';
+
+      if (!transcriptList || transcriptList.length === 0) {
+        container.innerHTML = '<p>表示できるトランスクリプトがありません。</p>';
+        return;
+      }
+
+      transcriptList.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'transcript-card';
+
+        // 1, 2, 3 の単語セットエリア
+        const wordsContainer = document.createElement('div');
+        wordsContainer.className = 'words-container';
+
+        if (item.words && item.words.length > 0) {
+          item.words.forEach(word => {
+            const wordSet = document.createElement('div');
+            wordSet.className = 'word-set';
+            
+            // フローティング内に表示するテキスト（例: 単語名や意味など）を設定
+            wordSet.setAttribute('data-tooltip', `${word.text || ''}の読み方（マスタ連携予定）`);
+
+            // 1. words.text (大)
+            const textEl = document.createElement('div');
+            textEl.className = 'word-text';
+            textEl.textContent = word.text || '';
+
+            // 2. words.kana (小)
+            const kanaEl = document.createElement('div');
+            kanaEl.className = 'word-kana';
+            kanaEl.textContent = word.kana || '';
+
+            // 3. words.meaning (小)
+            const meaningEl = document.createElement('div');
+            meaningEl.className = 'word-meaning';
+            meaningEl.textContent = word.meaning || '';
+
+            wordSet.appendChild(textEl);
+            wordSet.appendChild(kanaEl);
+            wordSet.appendChild(meaningEl);
+
+            // クリック/タップイベントを word-set に設定
+            wordSet.addEventListener('click', (e) => {
+              e.stopPropagation();
+
+              // 他の選択中のword-setからactiveを解除（スマホのトグル表示対応）
+              document.querySelectorAll('.word-set.active').forEach(el => {
+                if (el !== wordSet) el.classList.remove('active');
+              });
+
+              wordSet.classList.toggle('active');
+            });
+
+            wordsContainer.appendChild(wordSet);
+          });
+        }
+
+        // 4, 5, 6, 7 の詳細ブロック
+        const phraseDetails = document.createElement('div');
+        phraseDetails.className = 'phrase-details';
+
+        // 4. translation (中)
+        const translationEl = document.createElement('div');
+        translationEl.className = 'translation';
+        translationEl.textContent = item.translation ? item.translation.trim() : '';
+
+        // 5. pronunciation_roman (中)
+        const romanEl = document.createElement('div');
+        romanEl.className = 'pronunciation-roman';
+        romanEl.textContent = item.pronunciation_roman ? item.pronunciation_roman.trim() : '';
+
+        // 6. pronunciation_kana (中)
+        const kanaPhraseEl = document.createElement('div');
+        kanaPhraseEl.className = 'pronunciation-kana';
+        kanaPhraseEl.textContent = item.pronunciation_kana ? item.pronunciation_kana.trim() : '';
+
+        // 7. text (タイ語原文)(大)
+        const textPhraseEl = document.createElement('div');
+        textPhraseEl.className = 'phrase-text';
+        textPhraseEl.textContent = item.text ? item.text.trim() : '';
+
+        phraseDetails.appendChild(translationEl);
+        phraseDetails.appendChild(textPhraseEl); // 7を4, 5, 6の次に追加
+        phraseDetails.appendChild(romanEl);
+        //phraseDetails.appendChild(kanaPhraseEl);
+
+        card.appendChild(wordsContainer);
+        card.appendChild(phraseDetails);
+
+        container.appendChild(card);
+      });
+    }
+
+    // 画面のどこかをタップした際にスマホのポップアップ表示(active)をクリア
     document.addEventListener('click', () => {
-      document.querySelectorAll('.char-token').forEach(el => {
-        el.classList.remove('is-active', 'is-highlighted');
+      document.querySelectorAll('.word-set.active').forEach(el => {
+        el.classList.remove('active');
       });
     });
 
-    // 初期化実行
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSentence('sentence1', sampleData1);
-      renderSentence('sentence2', sampleData2);
-    });
+    // 初期化
+    loadStudyData();
   </script>
 </body>
 </html>
