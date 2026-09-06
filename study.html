@@ -173,37 +173,27 @@
       background-color: var(--word-hover-bg);
     }
 
-    /* 上部に浮かび上がるフローティング（ポップアップ） */
-    .word-set::after {
-      content: attr(data-tooltip); /* JSで設定したテキストを表示 */
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-6px);
+    /* Dynamic Tooltip スタイル（見切れ防止・最前面表示） */
+    .dynamic-tooltip {
+      position: fixed;
       background-color: var(--tooltip-bg);
       color: var(--tooltip-text);
       padding: 6px 10px;
       border-radius: 6px;
       font-size: 0.75rem;
       line-height: 1.4;
-      white-space: pre-wrap; /* 改行を有効化 */
-      text-align: left;     /* 複数行テキストを見やすく左揃え */
-      min-width: max-content;
-      max-width: 240px;     /* 端で折り返せるように上限設定 */
+      white-space: pre-wrap;
+      text-align: left;
+      max-width: min(280px, 80vw);
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
       pointer-events: none;
       opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      z-index: 10;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: opacity 0.15s ease-in-out;
     }
 
-    /* PCでのホバー時またはタップ(active)時にフローティングを表示 */
-    .word-set:hover::after,
-    .word-set.active::after {
+    .dynamic-tooltip.show {
       opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(-10px);
     }
 
     /* 1. words.text (文字サイズ大) */
@@ -240,7 +230,6 @@
       font-size: 0.95rem;
       font-weight: bold;
       color: var(--text-color);
-      margin-bottom: 6px;
     }
 
     /* 5. pronunciation_roman (中) */
@@ -377,6 +366,88 @@
         font-size: 0.75rem;
       }
     }
+
+    /* ==========================================
+       アイデアA改: 枠線付き声調（Tone）アイコン
+       ========================================== */
+    .word-set[data-tone] {
+      position: relative;
+    }
+
+    /* アイデアA: 右上アイコンのベース（薄いグレーの□枠） */
+    .word-set[data-tone]::before {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      width: 10px;
+      height: 10px;
+      border: 1px solid #d1d5db96; /* 薄いグレーの枠線 */
+      border-radius: 3px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900; /* 太めの線にするための太字設定 */
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* 1. 高声 (high): 枠線＋上の太線 ─ */
+    .word-set[data-tone="high"]::before {
+      content: "";
+      border-top: 3px solid #9333ea; /* 上に太線 */
+      color: #9333ea;
+    }
+
+    /* 2. 平声 (mid): 枠線＋真ん中の太線 ─ */
+    .word-set[data-tone="mid"]::before {
+      content: "─";
+      color: #d97706; /* 中間の太線 */
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* 3. 低声 (low): 枠線＋下の太線 ─ */
+    .word-set[data-tone="low"]::before {
+      content: "";
+      border-bottom: 3px solid #16a34a; /* 下に太線 */
+      color: #16a34a;
+    }
+
+    /* 4. 昇声 (rising): 枠線＋太めの ↗ */
+    .word-set[data-tone="rising"]::before {
+      content: "↗";
+      color: #ec4899;
+    }
+
+    /* 5. 落声 (falling): 枠線＋太めの ↘ */
+    .word-set[data-tone="falling"]::before {
+      content: "↘";
+      color: #2563eb;
+    }
+
+    /* 声調ごとに単語ブロック全体の背景色を変更 */
+    .word-set[data-tone="high"] {
+      background-color: #ebd0ff; /* 高声: ほんのり紫 */
+    }
+
+    .word-set[data-tone="mid"] {
+      background-color: #fef3c7; /* 平声: ほんのり黄 */
+    }
+
+    .word-set[data-tone="low"] {
+      background-color: #dcfce7; /* 低声: ほんのり緑 */
+    }
+
+    .word-set[data-tone="rising"] {
+      background-color: #feedee; /* 昇声: ほんのりピンク */
+    }
+
+    .word-set[data-tone="falling"] {
+      background-color: #dbeafe; /* 落声: ほんのり青 */
+    }
+
   </style>
 </head>
 <body>
@@ -412,7 +483,7 @@
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
     // マスタデータの保持用変数
-    let characterMasterData = null;
+    let characterMaster = {};
     
     // 前回の設定（localStorage）の取得・初期適用
     const savedTheme = localStorage.getItem('theme');
@@ -443,18 +514,23 @@
       }
     }
 
-    // index.html側でリストやインデックスJSONを保持している場合に参照するパスを構築
-    function resolveJsonPath() {
-      // 明示的に json パラメータでパスが渡されている場合 (例: ?json=...)
+    // 2つの JSON パスを解決する関数
+    function resolveJsonPaths() {
       if (jsonPathOverride) {
-        return decodeURIComponent(jsonPathOverride);
+        return {
+          videoPath: decodeURIComponent(jsonPathOverride),
+          wordPath: videoId ? `./data/words/word_${videoId}.json` : null
+        };
       }
-      // 動画IDのみ渡されている場合
-      if (videoId) {
-        return `./data/transcripts/video_${videoId}.json`; 
+
+      if (!videoId) {
+        return { videoPath: null, wordPath: null };
       }
-      // デフォルトのフォールバック
-      return './data/transcripts/video_uzofjpRpu6Y.json';
+
+      return {
+        videoPath: `./data/transcripts/video_${videoId}.json`,
+        wordPath: `./data/words/word_${videoId}.json`
+      };
     }
 
     // マスタデータの読み込み関数
@@ -462,133 +538,349 @@
       try {
         const res = await fetch('./data/character_master.json');
         if (res.ok) {
-          characterMasterData = await res.json();
+          characterMaster = await res.json(); 
         }
       } catch (err) {
         console.warn('character_master.json の読み込みに失敗しました:', err);
       }
     }
 
-    // 単語文字列からマスタ情報を検索し、改行区切りのツールチップテキストを生成する関数
-    function generateTooltipText(wordText) {
-      if (!wordText || !characterMasterData) {
-        return wordText || '';
+    // ネストされた characterMaster から該当文字のデータとカテゴリーを検索するヘルパー関数
+    function getCharInfo(char, isFinal = false) {
+      if (!characterMaster) return null;
+
+      // 1: 子音, 2: 母音, 3: 末子音, 4: その他
+      const categories = [];
+
+      // 末子音判定がある場合は、先に final_consonants を検索対象にセット
+      if (isFinal) {
+        categories.push({ key: 'final_consonants', catName: '末子音', priority: 3 });
       }
 
-      const results = [];
-      let currentText = wordText;
+      // その他のカテゴリーを順に追加
+      categories.push(
+        { key: 'consonants', catName: '子音', priority: 1 },
+        { key: 'vowels', catName: '母音', priority: 2 },
+        { key: 'tone_marks', catName: '声調記号', priority: 4 },
+        { key: 'symbols', catName: '記号', priority: 4 },
+        { key: 'numbers', catName: '数字', priority: 4 }
+      );
 
-      // 1. 母音の判定（เ-า などの前後・囲み型母音に対応）
-      if (characterMasterData.vowels) {
-        // キーの長さが長い順（文字数の多い複合母音優先）にソート
-        const sortedVowelKeys = Object.keys(characterMasterData.vowels).sort((a, b) => b.length - a.length);
+      for (const cat of categories) {
+        const group = characterMaster[cat.key];
+        if (!group) continue;
 
-        for (const vKey of sortedVowelKeys) {
-          // 「เ-า」 -> 「เ.?.?า」 のようにハイフン部分を任意の子音（1〜2文字）に置き換える正規表現を作成
-          // 例: เ-า なら เ と า の間に子音があるか判定
-          const patternString = vKey.replace(/-/g, '[\u0E01-\u0E2E\u0E47-\u0E4C]*?');
-          
-          // 単一の母音記号（例: -ะ, -ิ）はハイフンを除去した1文字で判定
-          const cleanKey = vKey.replace(/-/g, '');
+        // 1. 完全一致チェック
+        if (group[char]) {
+          return {
+            ...group[char],
+            categoryName: cat.catName,
+            priority: cat.priority,
+            isFinalGroup: cat.key === 'final_consonants'
+          };
+        }
 
-          let matched = false;
+        // 2. プレースホルダー ( - ) を含むキーとの部分一致チェック
+        for (const [key, val] of Object.entries(group)) {
+          const cleanKey = key.replace(/-/g, '');
+          if (cleanKey !== '' && cleanKey === char) {
+            return {
+              ...val,
+              categoryName: cat.catName,
+              priority: cat.priority,
+              isFinalGroup: false
+            };
+          }
+        }
+      }
 
-          if (vKey.includes('-') && vKey.length > 2) {
-            // เ-า や เ-ีย などの複数パーツで構成される母音
-            const parts = vKey.split('-').filter(p => p.length > 0);
-            // 単語の中に母音のすべてのパーツが含まれているかチェック
-            const hasAllParts = parts.every(part => currentText.includes(part));
+      return null;
+    }
 
-            if (hasAllParts) {
-              const vData = characterMasterData.vowels[vKey];
-              results.push(`${vKey}：[${vData.type || '母音'}] ${vData.desc || vData.name}`);
+    // 文字を「子音」「母音」「その他」に分類するヘルパー関数
+    function categorizeChar(charMasterInfo) {
+      // characterMaster の type や category に基づいて判定
+      const type = charMasterInfo.type || charMasterInfo.category || '';
+      if (type.includes('子音')) return 1; // 子音
+      if (type.includes('母音')) return 2; // 母音
+      return 3;                           // 声調記号、記号、その他
+    }
+
+    // 1つの単語（文字列）に対するツールチップテキスト生成
+    function buildSingleWordTooltip(wordText) {
+      if (!wordText) return [];
+
+      const charInfos = [];
+      let processedText = wordText;
+
+      // 1. 複合母音（เ-อ など）の検出と保護処理
+      // vowels マスタから「-」を含む複合母音パターンを抽出してチェック
+      if (characterMaster && characterMaster.vowels) {
+        for (const [key, val] of Object.entries(characterMaster.vowels)) {
+          if (key.includes('-') && key !== 'เ-') {
+            // 例: "เ-อ" から regex パターン "เ(.*?)อ" を作成
+            const parts = key.split('-');
+            if (parts.length === 2 && parts[0] && parts[1]) {
+              const pattern = new RegExp(`${parts[0]}[^${parts[1]}]*${parts[1]}`, 'g');
               
-              // 母音パーツ（เ や า）をテキストから消去して重複判定を防止
-              parts.forEach(part => {
-                currentText = currentText.replace(part, '');
-              });
-              matched = true;
+              if (pattern.test(wordText)) {
+                const descText = val.desc || val.name || '';
+                const typeText = val.type || val.class || '長母音';
+                
+                // 複合母音として登録（表示順 priority: 2）
+                charInfos.push({
+                  char: key,
+                  originalIndex: wordText.indexOf(parts[0]),
+                  categoryPriority: 2,
+                  text: `${key}：[${typeText}] ${descText}`
+                });
+
+                // 判定済み文字をマスクして個別判定から除外
+                processedText = processedText.replace(parts[0], ' ').replace(parts[1], ' ');
+              }
             }
-          } else if (cleanKey && currentText.includes(cleanKey)) {
-            // -ะ や -ิ などの単一パーツ母音
-            const vData = characterMasterData.vowels[vKey];
-            results.push(`${vKey}：[${vData.type || '母音'}] ${vData.desc || vData.name}`);
-            currentText = currentText.replace(cleanKey, '');
-            matched = true;
           }
         }
       }
 
-      // 2. 残った文字（子音、声調記号、数字、記号）を1文字ずつ判定
-      const chars = Array.from(currentText);
+      // 2. 残りの単一文字を判定
+      const chars = Array.from(wordText);
+      const processedChars = Array.from(processedText);
 
-      chars.forEach((ch, index) => {
-        let found = null;
-        let category = '';
+      chars.forEach((char, index) => {
+        // 複合母音として処理済みの文字（スペースに置換された部分）はスキップ
+        if (processedChars[index] === ' ') return;
 
-        // 声調記号（-่, -้ など）
-        if (characterMasterData.tone_marks) {
-          found = characterMasterData.tone_marks[`-${ch}`] || characterMasterData.tone_marks[ch];
-          if (found) category = '声調記号';
-        }
+        const isLastChar = (index === chars.length - 1);
+        const info = getCharInfo(char, isLastChar);
 
-        // 子音
-        if (!found && characterMasterData.consonants && characterMasterData.consonants[ch]) {
-          found = characterMasterData.consonants[ch];
+        if (info) {
+          const typeOrClass = info.type || info.class || info.categoryName || '';
+          const descText = info.desc || info.name || '';
           
-          // 単語の末尾で末子音マスタにある場合は補足表示
-          if (index === chars.length - 1 && characterMasterData.final_consonants && characterMasterData.final_consonants[ch]) {
-            const finalData = characterMasterData.final_consonants[ch];
-            category = `${found.class || '子音'} (末子音: ${finalData.group})`;
-          } else {
-            category = found.class || '子音';
-          }
-        }
-
-        // 記号・数字
-        if (!found && characterMasterData.symbols && characterMasterData.symbols[ch]) {
-          found = characterMasterData.symbols[ch];
-          category = '記号';
-        } else if (!found && characterMasterData.numbers && characterMasterData.numbers[ch]) {
-          found = characterMasterData.numbers[ch];
-          category = '数字';
-        }
-
-        if (found) {
-          const descText = found.desc || found.name || '';
-          results.push(`${ch}：[${category}] ${descText}`);
+          charInfos.push({
+            char: char,
+            originalIndex: index,
+            categoryPriority: info.priority,
+            text: `${char}：[${typeOrClass}] ${descText}`
+          });
         }
       });
 
-      if (results.length === 0) {
-        return wordText;
-      }
+      // 3. 表示順（子音 -> 母音 -> 末子音 -> その他）かつ出現順でソート
+      charInfos.sort((a, b) => {
+        if (a.categoryPriority !== b.categoryPriority) {
+          return a.categoryPriority - b.categoryPriority;
+        }
+        return a.originalIndex - b.originalIndex;
+      });
 
-      return results.join('\n');
+      return charInfos.map(item => item.text);
     }
 
-    // データ読み込みとレンダリング（マスタ読み込みを追加）
+    // 特殊ルールの自動検出ヘルパー関数
+    function detectSpecialRules(wordText) {
+      if (!wordText || !characterMaster) return [];
+      const matchedRules = [];
+
+      // special_rules と special_rules_extension を1つの配列にフラット化
+      const rawRules = [];
+      ['special_rules', 'special_rules_extension'].forEach(key => {
+        const section = characterMaster[key];
+        if (!section) return;
+        if (Array.isArray(section)) {
+          rawRules.push(...section);
+        } else if (typeof section === 'object') {
+          Object.entries(section).forEach(([k, v]) => {
+            rawRules.push({ _key: k, ...v });
+          });
+        }
+      });
+
+      // ルール情報を整形して文字列にする内部関数
+      const formatRule = (rule, fallbackName) => {
+        if (!rule) return null;
+        const name = rule.name || rule.pattern || rule.title || fallbackName;
+        const desc = rule.desc || rule.explanation || rule.detail || '';
+        return `[特殊ルール] ${name}${desc ? `: ${desc}` : ''}`;
+      };
+
+      // ID(_key) や pattern/name からルールをピンポイント検索するヘルパー
+      const findRuleByKeyOrPattern = (keys, fallbackKeywords) => {
+        // 1. まずは _key (ID) で完全一致検索
+        let found = rawRules.find(r => keys.includes(r._key));
+        if (found) return found;
+
+        // 2. なければ pattern や name からキーワード検索
+        return rawRules.find(r => {
+          const targetStr = `${r.pattern || ''} ${r.name || ''}`;
+          return fallbackKeywords.some(kw => targetStr.includes(kw));
+        });
+      };
+
+      // 1. 前置子音 อย- (必ず単語の「先頭」が อย で始まる場合のみ)
+      if (/^อย/.test(wordText)) {
+        const rule = findRuleByKeyOrPattern(['o_lead', 'o_nam'], ['อย-']);
+        const text = formatRule(rule, '前置子音オー・アン (อย-)');
+        if (text) matchedRules.push(text);
+      }
+
+      // 2. ロー・ハン รร
+      if (wordText.includes('รร')) {
+        const rule = findRuleByKeyOrPattern(['rr', 'ro_han'], ['รร']);
+        const text = formatRule(rule, 'ロー・ハン (-รร-)');
+        if (text) matchedRules.push(text);
+      }
+
+      // 3. 変形二重子音 ทร-
+      if (wordText.includes('ทร')) {
+        const rule = findRuleByKeyOrPattern(['thr', 'to_roo'], ['ทร']);
+        const text = formatRule(rule, '変形二重子音 (ทร-)');
+        if (text) matchedRules.push(text);
+      }
+
+      // 4. 前置子音 ห- (先頭または音節頭の ห + 低子音)
+      if (/(^|[^ก-ฮ])ห[งญนมยรลว]/.test(wordText)) {
+        const rule = findRuleByKeyOrPattern(['ho_nam_cluster', 'h_lead'], ['前置子音ホー']);
+        const text = formatRule(rule, '前置子音ホー・ヒープ (ห-)');
+        if (text) matchedRules.push(text);
+      }
+
+      // 5. 前置子音（高・中子音誘導 / 例: ขย-, ขน-, สบ- など）
+      // 高子音/中子音 + 低子音 の並び（ただし二重子音を作る ปร, กร, ตร, กล, กว 等は除外）
+      if (!/^อย/.test(wordText)) {
+        // 真正二重子音（クラスタ）のパターンを除外する正規表現
+        const isTrueCluster = /^(กร|กล|กว|ขร|ขล|ขว|คร|คล|คว|ตร|ปร|ปล|พร|พล|พว)/.test(wordText);
+        const hasPseudoPattern = /[ขฉถผฝศษสกจตปบ][งญนมยรลว]/.test(wordText);
+
+        if (hasPseudoPattern && !isTrueCluster) {
+          const rule = findRuleByKeyOrPattern(['pseudo_cluster', 'leading_consonant'], ['前置子音（高・中子音誘導）', '前置子音']);
+          const text = formatRule(rule, '前置子音（高・中子音誘導）');
+          if (text) matchedRules.push(text);
+        }
+      }
+
+      // 6. 無音記号 (ガーラン)
+      if (wordText.includes('์')) {
+        const rule = findRuleByKeyOrPattern(['silent', 'garant'], ['無音記号']);
+        const text = formatRule(rule, '無音記号 (-์)');
+        if (text) matchedRules.push(text);
+      }
+
+      // 7. 短母音化記号 (マイタイクー)
+      if (wordText.includes('็')) {
+        const rule = findRuleByKeyOrPattern(['mai_tai', 'short_e_shortening'], ['短音記号']);
+        const text = formatRule(rule, '短音記号 (-็)');
+        if (text) matchedRules.push(text);
+      }
+
+      return matchedRules;
+    }
+
+    // ツールチップ生成メイン関数
+        function generateTooltipText(wordData) {
+          if (!wordData) return '';
+
+          const rawText = typeof wordData === 'string' ? wordData : (wordData.text || wordData.word || '');
+
+          if (typeof wordData === 'string') {
+            const lines = buildSingleWordTooltip(rawText);
+            const rules = detectSpecialRules(rawText);
+            if (rules.length > 0) {
+              lines.push('--------------------', ...rules);
+            }
+            return lines.join('\n');
+          }
+
+          const tooltipLines = [];
+
+          // 1. 複合語（components が存在する場合）
+          if (wordData.components && wordData.components.length > 0) {
+            wordData.components.forEach((comp, idx) => {
+              const compText = comp.text || comp.word || '';
+              const compLines = buildSingleWordTooltip(compText);
+              const compRules = detectSpecialRules(compText);
+
+              if (compLines.length > 0) {
+                if (idx > 0) tooltipLines.push('--------------------');
+                tooltipLines.push(...compLines);
+                if (compRules.length > 0) {
+                  tooltipLines.push(...compRules);
+                }
+              }
+            });
+          } else {
+            // 2. 通常の単語
+            const singleLines = buildSingleWordTooltip(rawText);
+            tooltipLines.push(...singleLines);
+
+            const rules = detectSpecialRules(rawText);
+            if (rules.length > 0) {
+              tooltipLines.push('--------------------', ...rules);
+            }
+          }
+
+          // 3. breakdown_explanation の追加
+          if (wordData.breakdown_explanation && wordData.breakdown_explanation.trim() !== '') {
+            if (tooltipLines.length > 0) {
+              tooltipLines.push('--------------------');
+            }
+            tooltipLines.push(`解説: ${wordData.breakdown_explanation.trim()}`);
+          }
+
+          return tooltipLines.join('\n');
+        }
+
+    // データ読み込みとレンダリング
     async function loadStudyData() {
-      // マスタデータと学習データを並行して取得
       await loadCharacterMaster();
-      const jsonPath = resolveJsonPath();
+      const { videoPath, wordPath } = resolveJsonPaths();
+
+      if (!videoPath) {
+        document.getElementById('transcript-container').innerHTML = 
+          `<p style="color: red;">動画IDが指定されていません。</p>`;
+        return;
+      }
 
       try {
-        const response = await fetch(jsonPath);
-        if (!response.ok) {
-          throw new Error(`データの取得に失敗しました (Path: ${jsonPath})`);
+        // 2つの JSON ファイルを並行して同時に取得
+        const [videoRes, wordRes] = await Promise.all([
+          fetch(videoPath).catch(() => null),
+          wordPath ? fetch(wordPath).catch(() => null) : Promise.resolve(null)
+        ]);
+
+        if (!videoRes || !videoRes.ok) {
+          throw new Error(`video データの取得に失敗しました (Path: ${videoPath})`);
         }
-        const data = await response.json();
+
+        const videoData = await videoRes.json();
+        const wordData = (wordRes && wordRes.ok) ? await wordRes.json() : null;
 
         // タイトル表示
-        document.getElementById('video-title').textContent = data.title || '詳細学習';
+        document.getElementById('video-title').textContent = videoData.title || '詳細学習';
 
-        // トランスクリプト描画
-        renderTranscript(data.transcript);
+        // videoData の transcript と wordData の transcript_words を ID やインデックスで結合
+        const mergedTranscript = (videoData.transcript || []).map((item, index) => {
+          let matchedWords = [];
+          if (wordData && wordData.transcript_words) {
+            const matchedItem = wordData.transcript_words.find(w => w.id === item.id) || wordData.transcript_words[index];
+            if (matchedItem && matchedItem.words) {
+              matchedWords = matchedItem.words;
+            }
+          }
+
+          return {
+            ...item,
+            words: matchedWords.length > 0 ? matchedWords : (item.words || [])
+          };
+        });
+
+        // 合成したデータを描画関数へ渡す
+        renderTranscript(mergedTranscript);
       } catch (error) {
         console.error(error);
         document.getElementById('transcript-container').innerHTML = 
-          `<p style="color: red;">指定された学習データ (${jsonPath}) を読み込めませんでした。</p>`;
+          `<p style="color: red;">学習データ (${videoPath}) を読み込めませんでした。</p>`;
       }
     }
 
@@ -611,25 +903,29 @@
         wordsContainer.className = 'words-container';
 
         if (item.words && item.words.length > 0) {
+          // --- renderTranscript 内の単語ループ処理部分 ---
           item.words.forEach(word => {
             const wordSet = document.createElement('div');
             wordSet.className = 'word-set';
+
+            if (word.tone) {
+              wordSet.setAttribute('data-tone', word.tone.toLowerCase());
+            }
             
-            // 動的に生成したツールチップテキストをセット
-            const tooltipText = generateTooltipText(word.text);
+            const tooltipText = generateTooltipText(word);
             wordSet.setAttribute('data-tooltip', tooltipText);
 
-            // 1. words.text (大)
+            // 1. word.text (タイ語)
             const textEl = document.createElement('div');
             textEl.className = 'word-text';
             textEl.textContent = word.text || '';
 
-            // 2. words.kana (小)
+            // 2. word.pronunciation_kana (カナ発音)
             const kanaEl = document.createElement('div');
             kanaEl.className = 'word-kana';
-            kanaEl.textContent = word.kana || '';
+            kanaEl.textContent = word.pronunciation_kana || word.kana || '';
 
-            // 3. words.meaning (小)
+            // 3. word.meaning (意味)
             const meaningEl = document.createElement('div');
             meaningEl.className = 'word-meaning';
             meaningEl.textContent = word.meaning || '';
@@ -638,63 +934,134 @@
             wordSet.appendChild(kanaEl);
             wordSet.appendChild(meaningEl);
 
-            // クリック/タップイベントを word-set に設定
+            // --- ホバー & タップイベント設定 ---
+            
+            // PC: マウスが乗った時
+            wordSet.addEventListener('mouseenter', () => {
+              showDynamicTooltip(wordSet, tooltipText);
+            });
+
+            // PC: マウスが離れた時
+            wordSet.addEventListener('mouseleave', () => {
+              hideDynamicTooltip();
+            });
+
+            // スマホ: タップ時（トグル動作）
             wordSet.addEventListener('click', (e) => {
               e.stopPropagation();
+              const isActive = wordSet.classList.contains('active');
+              
+              clearAllTooltips();
 
-              // 他の選択中のword-setからactiveを解除（スマホのトグル表示対応）
-              document.querySelectorAll('.word-set.active').forEach(el => {
-                if (el !== wordSet) el.classList.remove('active');
-              });
-
-              wordSet.classList.toggle('active');
+              if (!isActive) {
+                wordSet.classList.add('active');
+                showDynamicTooltip(wordSet, tooltipText);
+              }
             });
 
             wordsContainer.appendChild(wordSet);
           });
         }
 
-        // 4, 5, 6, 7 の詳細ブロック
+        // 4, 5, 6, 7 の詳細ブロック（video_${videoId}.json 側のデータ）
         const phraseDetails = document.createElement('div');
         phraseDetails.className = 'phrase-details';
 
-        // 4. translation (中)
-        const translationEl = document.createElement('div');
-        translationEl.className = 'translation';
-        translationEl.textContent = item.translation ? item.translation.trim() : '';
+        if (item.translation) {
+          const translationEl = document.createElement('div');
+          translationEl.className = 'translation';
+          translationEl.textContent = item.translation.trim();
+          phraseDetails.appendChild(translationEl);
+        }
 
-        // 5. pronunciation_roman (中)
-        const romanEl = document.createElement('div');
-        romanEl.className = 'pronunciation-roman';
-        romanEl.textContent = item.pronunciation_roman ? item.pronunciation_roman.trim() : '';
+        if (item.text) {
+          const textPhraseEl = document.createElement('div');
+          textPhraseEl.className = 'phrase-text';
+          textPhraseEl.textContent = item.text.trim();
+          phraseDetails.appendChild(textPhraseEl);
+        }
 
-        // 6. pronunciation_kana (中)
-        const kanaPhraseEl = document.createElement('div');
-        kanaPhraseEl.className = 'pronunciation-kana';
-        kanaPhraseEl.textContent = item.pronunciation_kana ? item.pronunciation_kana.trim() : '';
-
-        // 7. text (タイ語原文)(大)
-        const textPhraseEl = document.createElement('div');
-        textPhraseEl.className = 'phrase-text';
-        textPhraseEl.textContent = item.text ? item.text.trim() : '';
-
-        phraseDetails.appendChild(translationEl);
-        phraseDetails.appendChild(textPhraseEl); // 7を4, 5, 6の次に追加
-        phraseDetails.appendChild(romanEl);
-        //phraseDetails.appendChild(kanaPhraseEl);
+        if (item.pronunciation_roman) {
+          const romanEl = document.createElement('div');
+          romanEl.className = 'pronunciation-roman';
+          romanEl.textContent = item.pronunciation_roman.trim();
+          phraseDetails.appendChild(romanEl);
+        }
 
         card.appendChild(wordsContainer);
-        card.appendChild(phraseDetails);
+        if (phraseDetails.children.length > 0) {
+          card.appendChild(phraseDetails);
+        }
 
         container.appendChild(card);
       });
     }
 
-    // 画面のどこかをタップした際にスマホのポップアップ表示(active)をクリア
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.word-set.active').forEach(el => {
-        el.classList.remove('active');
+    // --- ツールチップ動的制御ロジック ---
+    let activeTooltipEl = null;
+
+    function showDynamicTooltip(targetEl, text) {
+      if (!text) return;
+
+      // 既存のツールチップがあれば即座に削除
+      hideDynamicTooltip();
+
+      const tooltip = document.createElement('div');
+      tooltip.className = 'dynamic-tooltip';
+      tooltip.textContent = text;
+      document.body.appendChild(tooltip);
+      activeTooltipEl = tooltip;
+
+      const rect = targetEl.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      
+      const padding = 10;
+      const viewportWidth = window.innerWidth;
+
+      // 基本位置: 単語の上側・中央
+      let top = rect.top - tooltipRect.height - 8;
+      let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+      // 上にはみ出る場合は「下」に表示
+      if (top < padding) {
+        top = rect.bottom + 8;
+      }
+
+      // 左にはみ出る場合
+      if (left < padding) {
+        left = padding;
+      }
+
+      // 右にはみ出る場合
+      if (left + tooltipRect.width > viewportWidth - padding) {
+        left = viewportWidth - tooltipRect.width - padding;
+      }
+
+      tooltip.style.top = `${top}px`;
+      tooltip.style.left = `${left}px`;
+      
+      requestAnimationFrame(() => {
+        tooltip.classList.add('show');
       });
+    }
+
+    // ツールチップ非表示化
+    function hideDynamicTooltip() {
+      if (activeTooltipEl) {
+        activeTooltipEl.remove();
+        activeTooltipEl = null;
+      }
+    }
+
+    // アクティブ状態のリセット（スマホタップ用）
+    function clearAllTooltips() {
+      document.querySelectorAll('.word-set.active').forEach(el => el.classList.remove('active'));
+      hideDynamicTooltip();
+    }
+
+    // 画面のどこかをタップした際に表示をクリア
+    document.addEventListener('click', () => {
+      clearAllTooltips();
     });
 
     // 初期化
