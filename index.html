@@ -2069,7 +2069,7 @@ document.addEventListener('click', (e) => {
           return {
             ...video,
             mode: status.mode || video.mode,
-            add_words: status.add_words || video.add_words
+            words_built: status.words_built || video.words_built
           };
         });
 
@@ -2269,7 +2269,7 @@ document.addEventListener('click', (e) => {
         let prefix = '';
         if (video.mode === 'lite') {
           prefix = '<small class="title-prefix">(仮)</small>';
-        } else if (video.add_words === 'completed') {
+        } else if (video.words_built === 'completed') {
           prefix = '<small class="title-prefix">[単語]</small>';
         }
 

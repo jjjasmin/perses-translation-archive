@@ -111,8 +111,8 @@ def update_all_video_keywords():
             elif mode == "standard":
                 new_keywords.append("#完成データ")
 
-            # add_words の判定 (#単語辞書つき)
-            if status_info.get("add_words") == "completed":
+            # words_built の判定 (#単語辞書つき)
+            if status_info.get("words_built") == "completed":
                 new_keywords.append("#単語辞書つき")
 
         if has_need_fix and "#NEED_FIX" not in new_keywords:

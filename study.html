@@ -182,16 +182,20 @@
       transform: translateX(-50%) translateY(-6px);
       background-color: var(--tooltip-bg);
       color: var(--tooltip-text);
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
       font-size: 0.75rem;
-      white-space: nowrap;
+      line-height: 1.4;
+      white-space: pre-wrap; /* 改行を有効化 */
+      text-align: left;     /* 複数行テキストを見やすく左揃え */
+      min-width: max-content;
+      max-width: 240px;     /* 端で折り返せるように上限設定 */
       pointer-events: none;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 10;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     /* PCでのホバー時またはタップ(active)時にフローティングを表示 */
@@ -406,6 +410,9 @@
   <script>
     // --- ナイトモード（ダークモード）切り替え制御 ---
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
+    // マスタデータの保持用変数
+    let characterMasterData = null;
     
     // 前回の設定（localStorage）の取得・初期適用
     const savedTheme = localStorage.getItem('theme');
@@ -450,8 +457,120 @@
       return './data/transcripts/video_uzofjpRpu6Y.json';
     }
 
-    // データ読み込みとレンダリング
+    // マスタデータの読み込み関数
+    async function loadCharacterMaster() {
+      try {
+        const res = await fetch('./data/character_master.json');
+        if (res.ok) {
+          characterMasterData = await res.json();
+        }
+      } catch (err) {
+        console.warn('character_master.json の読み込みに失敗しました:', err);
+      }
+    }
+
+    // 単語文字列からマスタ情報を検索し、改行区切りのツールチップテキストを生成する関数
+    function generateTooltipText(wordText) {
+      if (!wordText || !characterMasterData) {
+        return wordText || '';
+      }
+
+      const results = [];
+      let currentText = wordText;
+
+      // 1. 母音の判定（เ-า などの前後・囲み型母音に対応）
+      if (characterMasterData.vowels) {
+        // キーの長さが長い順（文字数の多い複合母音優先）にソート
+        const sortedVowelKeys = Object.keys(characterMasterData.vowels).sort((a, b) => b.length - a.length);
+
+        for (const vKey of sortedVowelKeys) {
+          // 「เ-า」 -> 「เ.?.?า」 のようにハイフン部分を任意の子音（1〜2文字）に置き換える正規表現を作成
+          // 例: เ-า なら เ と า の間に子音があるか判定
+          const patternString = vKey.replace(/-/g, '[\u0E01-\u0E2E\u0E47-\u0E4C]*?');
+          
+          // 単一の母音記号（例: -ะ, -ิ）はハイフンを除去した1文字で判定
+          const cleanKey = vKey.replace(/-/g, '');
+
+          let matched = false;
+
+          if (vKey.includes('-') && vKey.length > 2) {
+            // เ-า や เ-ีย などの複数パーツで構成される母音
+            const parts = vKey.split('-').filter(p => p.length > 0);
+            // 単語の中に母音のすべてのパーツが含まれているかチェック
+            const hasAllParts = parts.every(part => currentText.includes(part));
+
+            if (hasAllParts) {
+              const vData = characterMasterData.vowels[vKey];
+              results.push(`${vKey}：[${vData.type || '母音'}] ${vData.desc || vData.name}`);
+              
+              // 母音パーツ（เ や า）をテキストから消去して重複判定を防止
+              parts.forEach(part => {
+                currentText = currentText.replace(part, '');
+              });
+              matched = true;
+            }
+          } else if (cleanKey && currentText.includes(cleanKey)) {
+            // -ะ や -ิ などの単一パーツ母音
+            const vData = characterMasterData.vowels[vKey];
+            results.push(`${vKey}：[${vData.type || '母音'}] ${vData.desc || vData.name}`);
+            currentText = currentText.replace(cleanKey, '');
+            matched = true;
+          }
+        }
+      }
+
+      // 2. 残った文字（子音、声調記号、数字、記号）を1文字ずつ判定
+      const chars = Array.from(currentText);
+
+      chars.forEach((ch, index) => {
+        let found = null;
+        let category = '';
+
+        // 声調記号（-่, -้ など）
+        if (characterMasterData.tone_marks) {
+          found = characterMasterData.tone_marks[`-${ch}`] || characterMasterData.tone_marks[ch];
+          if (found) category = '声調記号';
+        }
+
+        // 子音
+        if (!found && characterMasterData.consonants && characterMasterData.consonants[ch]) {
+          found = characterMasterData.consonants[ch];
+          
+          // 単語の末尾で末子音マスタにある場合は補足表示
+          if (index === chars.length - 1 && characterMasterData.final_consonants && characterMasterData.final_consonants[ch]) {
+            const finalData = characterMasterData.final_consonants[ch];
+            category = `${found.class || '子音'} (末子音: ${finalData.group})`;
+          } else {
+            category = found.class || '子音';
+          }
+        }
+
+        // 記号・数字
+        if (!found && characterMasterData.symbols && characterMasterData.symbols[ch]) {
+          found = characterMasterData.symbols[ch];
+          category = '記号';
+        } else if (!found && characterMasterData.numbers && characterMasterData.numbers[ch]) {
+          found = characterMasterData.numbers[ch];
+          category = '数字';
+        }
+
+        if (found) {
+          const descText = found.desc || found.name || '';
+          results.push(`${ch}：[${category}] ${descText}`);
+        }
+      });
+
+      if (results.length === 0) {
+        return wordText;
+      }
+
+      return results.join('\n');
+    }
+
+    // データ読み込みとレンダリング（マスタ読み込みを追加）
     async function loadStudyData() {
+      // マスタデータと学習データを並行して取得
+      await loadCharacterMaster();
       const jsonPath = resolveJsonPath();
 
       try {
@@ -496,8 +615,9 @@
             const wordSet = document.createElement('div');
             wordSet.className = 'word-set';
             
-            // フローティング内に表示するテキスト（例: 単語名や意味など）を設定
-            wordSet.setAttribute('data-tooltip', `${word.text || ''}の読み方（マスタ連携予定）`);
+            // 動的に生成したツールチップテキストをセット
+            const tooltipText = generateTooltipText(word.text);
+            wordSet.setAttribute('data-tooltip', tooltipText);
 
             // 1. words.text (大)
             const textEl = document.createElement('div');
