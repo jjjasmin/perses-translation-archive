@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>詳細学習 - PERSES</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&family=Mali:wght@400;700&family=Noto+Sans+Thai+Looped:wght@400;700&family=Pattaya&family=Prompt:wght@400;700&family=Sriracha&display=swap" rel="stylesheet">
+  <title>PERSES翻訳pocket - 翻訳詳細</title>
   <style>
     * {
       box-sizing: border-box;
@@ -59,7 +62,7 @@
     .header-nav {
       margin-bottom: 20px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
     }
 
@@ -626,6 +629,7 @@ body.dark-mode,
 
 /* 付箋（チップ）単体のスタイル */
 .sidebar-tab-btn {
+  font-family: 'Noto Sans Thai', sans-serif;
   background-color: var(--card-bg);
   color: var(--text-color);
   border: 1px solid var(--border-color);
@@ -642,6 +646,8 @@ body.dark-mode,
   display: flex;
   align-items: center;
   gap: 6px;
+  text-rendering: optimizeLegibility; 
+  font-feature-settings: "liga" 1, "mset" 1; 
 }
 
 .sidebar-tab-btn:hover {
@@ -750,11 +756,14 @@ body.dark-mode,
 }
 
 .master-item-char {
+  font-family: 'Noto Sans Thai', sans-serif;
   font-size: 1.4rem;
   font-weight: bold;
   color: var(--accent-color);
   min-width: 45px;
   text-align: center;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "mset" 1; 
 }
 
 .master-item-info {
@@ -799,7 +808,7 @@ body.dark-mode,
 .modal-content {
   background: #fff;
   border-radius: 12px;
-  max-width: 700px;
+  max-width: 840px;
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
@@ -926,6 +935,59 @@ body.dark-mode .master-item-badge {
 
 
 
+
+/* ==========================================
+   タイ語Webフォント＆結合文字描画最適化
+   ========================================== */
+
+/* デフォルトフォント：Noto Sans Thai Looped（丸あり） */
+:root {
+  --thai-font: 'Noto Sans Thai Looped', -apple-system, sans-serif;
+}
+
+/* 各フォント切替用クラス */
+body.font-prompt {
+  --thai-font: 'Prompt', sans-serif;
+}
+body.font-kanit {
+  --thai-font: 'Kanit', sans-serif;
+}
+body.font-mali {
+  --thai-font: 'Mali', cursive;
+}
+body.font-sriracha {
+  --thai-font: 'Sriracha', cursive;
+}
+body.font-pattaya {
+  --thai-font: 'Pattaya', sans-serif; 
+}
+
+/* タイ語を表示する要素へCSS変数を適用 */
+.master-item-char,
+.sidebar-tab-btn,
+.word-text,
+.phrase-text,
+.drawer-content,
+.master-item-title,
+.master-item-desc {
+  font-family: var(--thai-font);
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "mset" 1;
+}
+
+/* セレクトボックスの見た目調整（デザインに合わせて調整してください） */
+.font-select-dropdown {
+  font-size: 0.8rem;
+  padding: 8px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #ccc);
+  background: var(--card-bg, #fff);
+  color: var(--text-color, #333);
+  cursor: pointer;
+  outline: none;
+}
+
+
   </style>
 </head>
 <body>
@@ -946,6 +1008,15 @@ body.dark-mode .master-item-badge {
           <path d="M12.3 2a10 10 0 0 0 9.7 12.3 10 10 0 1 1-9.7-12.3z"/>
         </svg>
       </button>
+
+      <select id="font-select" class="font-select-dropdown" aria-label="フォント切替">
+        <option value="noto">Noto Sans Thai (標準・丸あり)</option>
+        <option value="prompt">Prompt (定番・丸なし)</option>
+        <option value="kanit">Kanit (モダン・丸なし)</option>
+        <option value="mali">Mali (手書き風・丸あり)</option>
+        <option value="sriracha">Sriracha (手書き風・丸なし)</option>
+        <option value="pattaya">Pattaya (激ムズ・筆記体・丸なし)</option>
+      </select>
     </div>
 
     <div class="video-info">
@@ -1722,35 +1793,7 @@ body.dark-mode .master-item-badge {
       composite_vowels: "💡 **複合母音・変形母音のヒント**<br>タイ語では複数の母音パーツが組み合わさったり、末子音が付くことで形が変わる母音（例: เดิน の เ-ิ-）があります。単体で分解せず、セットで覚えましょう！",
       consonants: "💡 **子音のヒント**<br>子音は「中子音」「高子音」「低子音」の3グループに分かれます。このグループの違いが、単語の発音（声調）を決める最も重要な要素です。",
       final_consonants: "💡 **末子音のヒント**<br>タイ語の末子音（メー〜）は8つのグループに集約されます。息を止める「促音（k, t, p）」で終わる音節は「死音節」となり、声調が低く変化しやすくなります。",
-      tone_marks: `💡 <b>声調記号のヒント</b><br>
-      声調記号（-่ -้ -๊ -๋）は、音の高低（上がり下がり）を変える「チェンジボタン」のような役割です。<br>
-      <b>「土台となる子音グループ」×「声調記号」</b> の組み合わせで実際の音が決まります。<br><br>
-      <table style="width:100%; border-collapse:collapse; font-size:0.85em; margin-top:4px; border:1px solid #ddd;">
-        <thead>
-          <tr style="background-color:#f3f4f6; text-align:left;">
-            <th style="padding:4px 6px; border:1px solid #ddd;">土台（子音）</th>
-            <th style="padding:4px 6px; border:1px solid #ddd;">主な文字</th>
-            <th style="padding:4px 6px; border:1px solid #ddd;">声調のクセ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>中子音</b></td>
-            <td style="padding:4px 6px; border:1px solid #ddd;">ก, ต, บ, ป, อ</td>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>素直</b>（記号のイメージ通り）</td>
-          </tr>
-          <tr>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>高子音</b></td>
-            <td style="padding:4px 6px; border:1px solid #ddd;">ข, ฉ, ส, ห</td>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>高め</b>（無記号でも上がり声）</td>
-          </tr>
-          <tr>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>低子音</b></td>
-            <td style="padding:4px 6px; border:1px solid #ddd;">ค, ง, ช, น, ม</td>
-            <td style="padding:4px 6px; border:1px solid #ddd;"><b>変化系</b>（記号と音がズレる）</td>
-          </tr>
-        </tbody>
-      </table>`
+      tone_marks: ``
     };
 
 
@@ -1811,7 +1854,39 @@ body.dark-mode .master-item-badge {
       }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+      const fontSelect = document.getElementById('font-select');
+      // 管理対象クラスのリストに font-pattaya を追加
+      const fontClasses = ['font-prompt', 'font-kanit', 'font-mali', 'font-sriracha', 'font-pattaya'];
 
+      // 保存されたフォント設定を取得
+      const savedFont = localStorage.getItem('thai-font-choice');
+
+      if (savedFont && fontSelect) {
+        fontSelect.value = savedFont;
+        applyFont(savedFont);
+      }
+
+      // ドロップダウン変更イベント
+      if (fontSelect) {
+        fontSelect.addEventListener('change', (e) => {
+          const selectedValue = e.target.value;
+          applyFont(selectedValue);
+          localStorage.setItem('thai-font-choice', selectedValue);
+        });
+      }
+
+      // フォント適用関数
+      function applyFont(fontValue) {
+        // 既存のフォントクラスを一度すべて削除
+        document.body.classList.remove(...fontClasses);
+
+        // 選択されたフォントに応じたクラスを付与
+        if (fontValue !== 'noto') {
+          document.body.classList.add(`font-${fontValue}`);
+        }
+      }
+    });
 
 
     const categoryTitles = {
