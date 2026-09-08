@@ -2054,63 +2054,67 @@ document.addEventListener('click', (e) => {
     }
 
     function init() {
-      // tags.json, videos.json, pipeline_status.json を並行取得
-      Promise.all([
-        fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
-        fetch('data/videos.json').then(res => res.ok ? res.json() : []),
-        fetch('pipeline_status.json').then(res => res.ok ? res.json() : {})
-      ])
-      .then(([tagsData, videoList, statusData]) => {
-        if (!videoList || videoList.length === 0) return;
+          // tags.json, videos.json, pipeline_status.json を並行取得
+          Promise.all([
+            fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+            fetch('data/videos.json').then(res => res.ok ? res.json() : []),
+            fetch('pipeline_status.json').then(res => res.ok ? res.json() : {})
+          ])
+          .then(([tagsData, videoList, statusData]) => {
+            if (!videoList || videoList.length === 0) return;
 
-        // ★ pipeline_status.json の情報を videos.json のデータに結合
-        videoList = videoList.map(video => {
-          const status = statusData[video.id] || {};
-          return {
-            ...video,
-            mode: status.mode || video.mode,
-            words_built: status.words_built || video.words_built
-          };
-        });
+            // ★ pipeline_status.json の情報を videos.json のデータに結合
+            videoList = videoList.map(video => {
+              const status = statusData[video.id] || {};
+              return {
+                ...video,
+                mode: status.mode || video.mode,
+                words_built: status.words_built || video.words_built
+              };
+            });
 
-        // ★ 追加: published_at の降順（新しい順）にソート
-        videoList.sort((a, b) => {
-          const dateA = a.published_at || '';
-          const dateB = b.published_at || '';
-          return dateB.localeCompare(dateA); // 降順比較
-        });
+            // ★ 追加: published_at の降順（新しい順）にソート
+            videoList.sort((a, b) => {
+              const dateA = a.published_at || '';
+              const dateB = b.published_at || '';
+              return dateB.localeCompare(dateA); // 降順比較
+            });
 
-        allVideos = videoList;
-        filteredVideos = [...allVideos];
+            allVideos = videoList;
+            // ★ 変更: 初期検索・表示時に #HIDDEN タグを持つ動画を除外する
+            filteredVideos = allVideos.filter(video => {
+              if (!Array.isArray(video.keywords)) return true;
+              return !video.keywords.some(kw => kw.toUpperCase() === '#HIDDEN');
+            });
 
-        sortVideos();
+            sortVideos();
 
-        // tags.json を元にキーワードチップを構築（データ順を保持）
-        setupKeywordsFloatingBox(tagsData);
-        setupSearchEvents();
-        setupSortEvent();
+            // tags.json を元にキーワードチップを構築（データ順を保持）
+            setupKeywordsFloatingBox(tagsData);
+            setupSearchEvents();
+            setupSortEvent();
 
-        resetVideoListDisplay();
+            resetVideoListDisplay();
 
-        // URLパラメータ (?v=...) から動画IDを取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialVideoId = urlParams.get('v');
+            // URLパラメータ (?v=...) から動画IDを取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialVideoId = urlParams.get('v');
 
-        let targetIndex = 0;
-        if (initialVideoId) {
-          const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
-          if (foundIndex !== -1) {
-            targetIndex = foundIndex;
-          }
+            let targetIndex = 0;
+            if (initialVideoId) {
+              const foundIndex = filteredVideos.findIndex(v => v.id === initialVideoId || v.file === initialVideoId);
+              if (foundIndex !== -1) {
+                targetIndex = foundIndex;
+              }
+            }
+
+            selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
+            setupScrollListener();
+          })
+          .catch(error => {
+            console.error('初期化エラー:', error);
+          });
         }
-
-        selectVideoByIndex(targetIndex, filteredVideos[targetIndex].file, filteredVideos[targetIndex].id, false, false);
-        setupScrollListener();
-      })
-      .catch(error => {
-        console.error('初期化エラー:', error);
-      });
-    }
 
       function setupSortEvent() {
             if (!sortOrderBtn) return;
@@ -2223,7 +2227,11 @@ document.addEventListener('click', (e) => {
         const allSearchTerms = [...selectedTags.map(t => t.toLowerCase()), ...inputTerms];
 
         if (allSearchTerms.length === 0) {
-          filteredVideos = [...allVideos];
+          // ★ 変更: 検索条件がない場合は #HIDDEN タグが付いていない動画のみを表示
+          filteredVideos = allVideos.filter(video => {
+            if (!Array.isArray(video.keywords)) return true;
+            return !video.keywords.some(kw => kw.toUpperCase() === '#HIDDEN');
+          });
         } else {
           // 選択タグ + 入力ワードの「すべて」を含む動画のみ抽出 (AND検索)
           filteredVideos = allVideos.filter(video => {
