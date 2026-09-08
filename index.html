@@ -481,8 +481,7 @@
     /* ★ インライン単語辞書用追加CSS */
     .dict-word {
       cursor: pointer;
-      padding: 1px 3px;
-      margin: 0 1px;
+      margin: 0 2px;
       border-bottom: 1.5px dotted #007bff;
       border-radius: 3px;
       transition: all 0.15s ease;
@@ -2381,54 +2380,93 @@ document.addEventListener('click', (e) => {
     }
 
     function loadVideo(fileName, videoId) {
-      if (!fileName || !videoId) return;
+  if (!fileName || !videoId) return;
 
-      activeIndex = -1;
+  activeIndex = -1;
 
-      // ★ 追加: 直前に表示されていたオーバーレイ字幕をクリア
-      if (overlaySpeaker) overlaySpeaker.textContent = '';
-      if (overlayText) overlayText.textContent = '';
+  // ★ 追加: 直前に表示されていたオーバーレイ字幕をクリア
+  if (overlaySpeaker) overlaySpeaker.textContent = '';
+  if (overlayText) overlayText.textContent = '';
 
-      // ★ 追加: 字幕エリアを一番上までスクロールアップ
-      if (transcriptSection) {
-        transcriptSection.scrollTop = 0;
+  // ★ 追加: 字幕エリアを一番上までスクロールアップ
+  if (transcriptSection) {
+    transcriptSection.scrollTop = 0;
+  }
+
+  initPlayer(videoId);
+
+  // ★ 追加: 現在の動画情報を取得（概要表示用）
+  const currentVideo = allVideos.find(v => v.id === videoId || v.file === fileName);
+  // keywordsの配列を半角スペース区切りに変換
+  const formattedKeywords = Array.isArray(currentVideo?.keywords)
+    ? currentVideo.keywords.join(' ')
+    : (currentVideo?.keywords || '');
+  
+  // 各プロパティを改行区切りで表示する文字列を作成
+  const videoDescription = currentVideo ? [
+    `${currentVideo.published_at || ''}`,
+    `${currentVideo.title || ''}`,
+    `${currentVideo.original_title || ''}`,
+    `${formattedKeywords}`
+  ].join('\n') : '';
+
+  const transcriptPath = `data/transcripts/${fileName}`;
+  const wordsPath = `data/words/word_${videoId}.json`;
+
+  // 字幕データと単語データを並行して取得
+  Promise.all([
+    fetch(transcriptPath).then(res => {
+      if (!res.ok) throw new Error(`${transcriptPath} の取得に失敗しました`);
+      return res.json();
+    }),
+    fetch(wordsPath).then(res => {
+      if (!res.ok) {
+        console.warn(`${wordsPath} の取得に失敗したため、wordsなしで処理します`);
+        return null;
       }
+      return res.json();
+    }).catch(err => {
+      console.warn(`単語データ取得エラー (${wordsPath}):`, err);
+      return null;
+    })
+  ])
+  .then(([transcriptJson, wordsJson]) => {
+    const rawTranscript = transcriptJson.transcript || [];
+    const transcriptWordsList = wordsJson?.transcript_words || [];
 
-      initPlayer(videoId);
+    // id をキーにした単語マップを作成 (id:1 => words配列)
+    const wordsMap = new Map();
+    transcriptWordsList.forEach(item => {
+      if (item && item.id !== undefined) {
+        // データフォーマットに応じて property を正規化
+        const words = (item.words || []).map(w => ({
+          text: w.text,
+          kana: w.pronunciation_kana || w.kana || '',
+          meaning: w.meaning || ''
+        }));
+        wordsMap.set(item.id, words);
+      }
+    });
 
-      // ★ 追加: 現在の動画情報を取得（概要表示用）
-      const currentVideo = allVideos.find(v => v.id === videoId || v.file === fileName);
-      // keywordsの配列を半角スペース区切りに変換
-      const formattedKeywords = Array.isArray(currentVideo?.keywords)
-        ? currentVideo.keywords.join(' ')
-        : (currentVideo?.keywords || '');
-      
-      // 各プロパティを改行区切りで表示する文字列を作成
-      const videoDescription = currentVideo ? [
-        `${currentVideo.published_at || ''}`,
-        `${currentVideo.title || ''}`,
-        `${currentVideo.original_title || ''}`,
-        `${formattedKeywords}`
-      ].join('\n') : '';
+    // 字幕データに words 配列をマージ（idが一致するもの、またはインデックス順にフォールバック）
+    transcriptData = rawTranscript.map((item, index) => {
+      const itemId = item.id !== undefined ? item.id : (index + 1);
+      const matchedWords = wordsMap.get(itemId) || [];
+      return {
+        ...item,
+        words: matchedWords
+      };
+    });
 
-      const filePath = `data/transcripts/${fileName}`;
-
-      fetch(filePath)
-        .then(response => {
-          if (!response.ok) throw new Error(`${filePath} の取得に失敗しました`);
-          return response.json();
-        })
-        .then(data => {
-          transcriptData = data.transcript || [];
-          // 概要文（videoDescription）を第2引数として渡す
-          renderTranscript(transcriptData, videoDescription);
-        })
-        .catch(error => {
-          console.error('字幕取得エラー:', error);
-          transcriptData = [];
-          transcriptContainer.innerHTML = `<p style="color: red; text-align: center;">字幕データの読み込みに失敗しました。(${filePath})</p>`;
-        });
-    }
+    // 概要文（videoDescription）を第2引数として渡す
+    renderTranscript(transcriptData, videoDescription);
+  })
+  .catch(error => {
+    console.error('字幕データ取得エラー:', error);
+    transcriptData = [];
+    transcriptContainer.innerHTML = `<p style="color: red; text-align: center;">字幕データの読み込みに失敗しました。(${transcriptPath})</p>`;
+  });
+}
 
     /* ★ 修正・拡張：字幕と単語インライン辞書の描画関数 */
     function renderTranscript(transcriptList, description = '') {
