@@ -450,8 +450,10 @@
     let tagsDataGlobal = {};
     let currentVideoDetail = null;
     let selectedTag = '#ALL';
+    let lastSelectedTagElement = null;
     let ytPlayer = null;
     let subtitleTimer = null;
+
     
     let currentDisplayPreset = 'ja-kana';
     let currentStyleClass = 'style-standard';
@@ -517,8 +519,12 @@
         const allBtn = document.createElement('button');
         allBtn.className = `tag-btn focusable ${selectedTag === '#ALL' ? 'active' : ''}`;
         allBtn.innerText = '#ALL';
-        allBtn.onclick = () => filterByTag('#ALL');
+        allBtn.onclick = (e) => filterByTag('#ALL', e.currentTarget);
         tagContainer.appendChild(allBtn);
+
+        if (selectedTag === '#ALL') {
+          lastSelectedTagElement = allBtn;
+        }
 
         // カテゴリごとに見出しとボタンを出力
         for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
@@ -532,8 +538,12 @@
             const btn = document.createElement('button');
             btn.className = `tag-btn focusable ${tagKey === selectedTag ? 'active' : ''}`;
             btn.innerText = tagKey;
-            btn.onclick = () => filterByTag(tagKey);
+            btn.onclick = (e) => filterByTag(tagKey, e.currentTarget);
             tagContainer.appendChild(btn);
+
+            if (tagKey === selectedTag) {
+              lastSelectedTagElement = btn;
+            }
           }
         }
       }
@@ -544,7 +554,17 @@
 
       grid.innerHTML = '';
 
+      // ★ 検索条件（キーワード入力 または #ALL 以外のタグ選択）があるか判定
+      const hasSearchCondition = searchText !== '' || selectedTag !== '#ALL';
+
       const filtered = videoIndexData.filter(item => {
+        const hasHiddenTag = Array.isArray(item.keywords) && item.keywords.some(k => k.toUpperCase() === '#HIDDEN');
+
+        // ★ 検索条件が一切ない（初期状態）かつ #HIDDEN タグがある場合は除外
+        if (!hasSearchCondition && hasHiddenTag) {
+          return false;
+        }
+
         const matchTag = (selectedTag === '#ALL') || (item.keywords && item.keywords.includes(selectedTag));
         const matchText = !searchText || item.title.toLowerCase().includes(searchText) || 
                           (item.keywords && item.keywords.some(k => k.toLowerCase().includes(searchText)));
@@ -590,11 +610,18 @@
       };
     }
 
-    function filterByTag(tag) {
+    function filterByTag(tag, element = null) {
       selectedTag = tag;
       document.getElementById('searchInput').value = '';
+      
+      // タグボタンと動画一覧を再描画
       renderTags();
       renderVideos();
+
+      // ★ 再描画後、記憶された新しいタグボタンにフォーカスを当てる
+      if (lastSelectedTagElement && typeof lastSelectedTagElement.focus === 'function') {
+        lastSelectedTagElement.focus();
+      }
     }
 
     function onYouTubeIframeAPIReady() {
@@ -837,6 +864,15 @@
       if (!focusables.includes(current)) {
         if (focusables.length > 0) focusables[0].focus();
         return;
+      }
+
+      // ★ 追加: メインエリア（右側）から左（ArrowLeft）へ戻る際、選択済みタグへ復帰させる
+      if (direction === 'ArrowLeft' && !customPanelVisible) {
+        const isCurrentInMainContent = current.closest('.main-content');
+        if (isCurrentInMainContent && lastSelectedTagElement && document.body.contains(lastSelectedTagElement)) {
+          lastSelectedTagElement.focus();
+          return;
+        }
       }
 
       const currentRect = current.getBoundingClientRect();
