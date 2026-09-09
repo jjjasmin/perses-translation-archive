@@ -652,10 +652,10 @@ body.dark-mode,
 
 .sidebar-tab-btn:hover {
   transform: translateX(-4px);
-  background-color: var(--word-hover-bg);
 }
 
 /* 各カテゴリのアクセントカラー */
+.sidebar-tab-btn[data-target="grammar"] {border-left: 2px solid #eab308; }
 .sidebar-tab-btn[data-target="vowels"] { border-left: 2px solid #ec4899; }
 .sidebar-tab-btn[data-target="composite_vowels"] { border-left: 2px solid #f97316; }
 .sidebar-tab-btn[data-target="consonants"] { border-left: 2px solid #0d6efd; }
@@ -731,6 +731,7 @@ body.dark-mode,
   padding: 16px;
   overflow-y: auto;
   flex: 1;
+  padding-bottom: 85vh !important;
 }
 
 /* 初学者向けヒントメッセージカード */
@@ -784,7 +785,6 @@ body.dark-mode,
 /* スマホ表示用の微調整 */
 @media (max-width: 480px) {
   .sidebar-tab-btn {
-    padding: 8px 5px;
     font-size: 0.75rem;
   }
 }
@@ -825,7 +825,7 @@ body.dark-mode,
   align-items: center;
 }
 
-.modal-header h3 { margin: 0; font-size: 1.1rem; color: #1e293b; }
+.modal-header h3 { margin: 0; font-size: 1.1rem;}
 
 .modal-close-btn {
   background: none; border: none; font-size: 1.5rem;
@@ -842,18 +842,18 @@ body.dark-mode,
 .tone-matrix-table th, .tone-matrix-table td {
   border: 1px solid #cbd5e1; padding: 8px 6px;
 }
-.tone-matrix-table th { background: #f1f5f9; font-weight: 600; }
+.tone-matrix-table th { background: #3333330a; font-weight: 600; }
 
-.bg-mid { background: #eff6ff; }
-.bg-high { background: #fef2f2; }
-.bg-low { background: #f0fdf4; }
+.bg-mid { background: #faff3245; }
+.bg-high { background: #a158ff57; }
+.bg-low { background: #18973f57; }
 
 .highlight-tone { color: #dc2626; font-weight: bold; }
 .danger-text { color: #dc2626; font-weight: bold; }
 .text-muted { color: #94a3b8; }
 
 .tone-notes {
-  background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-top: 12px;
+  background: #3333330a; padding: 12px 16px; border-radius: 8px; margin-top: 12px;
 }
 .tone-notes h4 { margin: 0 0 6px 0; font-size: 0.9rem; }
 .tone-notes ul { margin: 0; padding-left: 18px; }
@@ -988,11 +988,94 @@ body.font-pattaya {
 }
 
 
+
+
+/* --- 文字サイズ切替ボタンのスタイル --- */
+.font-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.font-size-buttons {
+  display: flex;
+  gap: 4px;
+  background: #f0f0f0;
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.font-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.font-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+/* 選択中のボタンハイライト */
+.font-btn.active {
+  background: #ffffff;
+  color: var(--primary-color, #2b5876);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* --- 全体の文字サイズ設定 (クラスによる制御) --- */
+/* デフォルト (M): 16px基準 */
+html {
+  font-size: 16px;
+  transition: font-size 0.2s ease;
+}
+
+/* SS: 13px相当 (81.25%) */
+html.font-size-ss {
+  font-size: 13px;
+}
+
+/* S: 14.5px相当 (90.625%) */
+html.font-size-s {
+  font-size: 14.5px;
+}
+
+/* M: 16px (100%) */
+html.font-size-m {
+  font-size: 16px;
+}
+
+/* L: 18px相当 (112.5%) */
+html.font-size-l {
+  font-size: 18px;
+}
+
+
+
+
+.dark-mode .modal-content {
+  background-color: #1e1e24; /* 深めのダークグレー背景 */
+  color: #e2e8f0;            /* 明るく読みやすい文字色 */
+  border-color: #2d3748;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+
+
   </style>
 </head>
 <body>
 
   <div class="container">
+
     <div class="header-nav">
       <!-- SVGアイコン付き 戻るボタン -->
       <a href="index.html" id="back-btn" class="back-btn">
@@ -1017,7 +1100,20 @@ body.font-pattaya {
         <option value="sriracha">Sriracha (手書き風・丸なし)</option>
         <option value="pattaya">Pattaya (激ムズ・筆記体・丸なし)</option>
       </select>
+
+      <!-- フォントサイズ切替コントローラー -->
+      <div class="font-size-selector">
+        <span class="font-size-label">  FontSize:</span>
+        <div class="font-size-buttons">
+          <button type="button" class="font-btn" data-size="ss">SS</button>
+          <button type="button" class="font-btn" data-size="s">S</button>
+          <button type="button" class="font-btn active" data-size="m">M</button>
+          <button type="button" class="font-btn" data-size="l">L</button>
+        </div>
+      </div>
+
     </div>
+
 
     <div class="video-info">
       <h1 id="video-title">読み込み中...</h1>
@@ -1029,6 +1125,7 @@ body.font-pattaya {
 
   <!-- 右端のブックマーク付箋（チップ） -->
   <div class="sidebar-tabs">
+    <button class="sidebar-tab-btn" data-target="grammar">文法</button>
     <button class="sidebar-tab-btn" data-target="vowels">母音</button>
     <button class="sidebar-tab-btn" data-target="composite_vowels">複合母音</button>
     <button class="sidebar-tab-btn" data-target="consonants">子音</button>
@@ -1061,7 +1158,7 @@ body.font-pattaya {
         <p class="modal-intro">タイ語の声調は、<b>「子音の種類（中・高・低）」</b>と<b>「声調記号」</b>、および<b>「音節の種類（平音節・死音節）」</b>の組み合わせで決まります。</p>
         
         <!-- 平音節・死音節の補足解説 -->
-        <div class="syllable-help-box" style="background:#f0f9ff; border-left:4px solid #0284c7; padding:10px 12px; margin-bottom:14px; border-radius:4px; font-size:0.85em; line-height:1.6;">
+        <div class="syllable-help-box" style="background:#0099ff1c; border-left:4px solid #0284c7; padding:10px 12px; margin-bottom:14px; border-radius:4px; font-size:0.85em; line-height:1.6;">
           💡 <b>平音節と死音節の違い</b><br>
           ・<b>平音節</b>：息を長く伸ばせる音（〜n, 〜m 終わりや長母音）<br>
           ・<b>死音節</b>：息をピタッと止める音（〜k, 〜t, 〜p 終わりや短母音）
@@ -1789,6 +1886,7 @@ body.font-pattaya {
 
     // 初学者向けの疑問解決メッセージ定義
     const categoryGuides = {
+      grammar: ``,
       vowels: "💡 **母音のヒント**<br>タイ語の母音は、子音の前・後・上・下に配置されます。末子音（後ろに付く子音）が付くことで形が変わる「変形母音（例: -ะ → -ั-）」に注意しましょう！",
       composite_vowels: "💡 **複合母音・変形母音のヒント**<br>タイ語では複数の母音パーツが組み合わさったり、末子音が付くことで形が変わる母音（例: เดิน の เ-ิ-）があります。単体で分解せず、セットで覚えましょう！",
       consonants: "💡 **子音のヒント**<br>子音は「中子音」「高子音」「低子音」の3グループに分かれます。このグループの違いが、単語の発音（声調）を決める最も重要な要素です。",
@@ -1796,6 +1894,63 @@ body.font-pattaya {
       tone_marks: ``
     };
 
+    // 変更箇所 2: categoryGuides オブジェクト
+    categoryGuides.grammar = `
+      <div style="font-size: 0.88rem; line-height: 1.6;">
+        <!-- 1. 基本語順 -->
+        <div style="margin-bottom: 16px; background: var(--card-bg, #ffffff); padding: 10px; border-radius: 8px; border: 2px solid #3b82f6;">
+          <h4 style="margin: 0 0 4px 0; color: var(--text-color, #1e293b); font-size: 0.92rem;">1. 基本語順は S + V + O</h4>
+          <p style="margin: 0; color: var(--sub-text-color, #64748b); font-size: 0.82rem;">英語と同じ「主語 ＋ 動詞 ＋ 目的語」の順です。</p>
+          <div style="margin-top: 6px; font-weight: bold; font-size: 0.85rem; color: #3b82f6;">
+            ผม กิน ข้าว <span style="font-size:0.75rem; font-weight:normal; color:var(--sub-text-color);">(ポム / キン / カーオ = 私 / 食べる / ご飯)</span>
+          </div>
+        </div>
+
+        <!-- 2. 修飾語の後置 -->
+        <div style="margin-bottom: 16px; background: var(--card-bg, #ffffff); padding: 10px; border-radius: 8px; border: 2px solid #10b981;">
+          <h4 style="margin: 0 0 4px 0; color: var(--text-color, #1e293b); font-size: 0.92rem;">2. 詳しい説明（修飾語）は「後ろ」から</h4>
+          <p style="margin: 0; color: var(--sub-text-color, #64748b); font-size: 0.82rem;">名詞や動詞の後ろに形容詞などを置きます。</p>
+          <div style="margin-top: 6px; font-size: 0.83rem;">
+            <div>• <b>ご飯 + 美味しい:</b> ข้าว อร่อย <span style="font-size:0.75rem; color:var(--sub-text-color);">(カーオ / アロイ)</span></div>
+            <div>• <b>友達 + 私の:</b> เพื่อน ของผม <span style="font-size:0.75rem; color:var(--sub-text-color);">(プアン / コーン・ポム)</span></div>
+          </div>
+        </div>
+
+        <!-- 3. 時制と否定 -->
+        <div style="margin-bottom: 16px; background: var(--card-bg, #ffffff); padding: 10px; border-radius: 8px; border: 2px solid #eab308;">
+          <h4 style="margin: 0 0 6px 0; color: var(--text-color, #1e293b); font-size: 0.92rem;">3. 時制・否定は添え字を置くだけ</h4>
+          <p style="margin: 0 0 6px 0; color: var(--sub-text-color, #64748b); font-size: 0.82rem;">動詞の形は変化せず、前後に単語を添えます。</p>
+          <ul style="margin: 0; padding-left: 18px; color: var(--text-color, #334155); font-size: 0.82rem;">
+            <li style="margin-bottom: 4px;"><b>未来 (〜するつもり):</b> 動詞の前に <code style="color:#fd4e74; background:rgba(0,0,0,0.05); padding:1px 4px; border-radius:3px;">จะ</code> (ジャ)
+              <div style="font-size:0.78rem; color:var(--sub-text-color);">จะกิน (ジャ・キン = 食べるつもり)</div>
+            </li>
+            <li style="margin-bottom: 4px;"><b>過去・完了 (〜した):</b> 文末に <code style="color:#fd4e74; background:rgba(0,0,0,0.05); padding:1px 4px; border-radius:3px;">แล้ว</code> (レーオ)
+              <div style="font-size:0.78rem; color:var(--sub-text-color);">กินแล้ว (キン・レーオ = 食べた)</div>
+            </li>
+            <li><b>否定 (〜しない):</b> 動詞の前に <code style="color:#fd4e74; background:rgba(0,0,0,0.05); padding:1px 4px; border-radius:3px;">ไม่</code> (マイ)
+              <div style="font-size:0.78rem; color:var(--sub-text-color);">ไม่กิน (マイ・キン = 食べない)</div>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>まとめ：基本文法の組み立てイメージ</h4>
+          <p>例えば「私は明日、美味しいご飯を食べない」と言いたい場合は、ルール通りに並べるだけです。</p>
+
+          <div style="background: rgba(0, 0, 0, 0.03); padding: 12px; border-radius: 8px; margin: 12px 0;">
+            <div style="font-weight: bold; margin-bottom: 6px; color: var(--primary-color, #fd4e74);">
+              私 ＋ 時間 ＋ 否定 ＋ 未来 ＋ 動詞 ＋ 名詞 ＋ 形容詞
+            </div>
+            <div style="font-size: 0.82em; line-height: 1.6; color: #3b82f6;">
+              チャン（私）＋ プロンニー（明日）＋ マイ（〜ない）＋ ジャ（〜するつもり）＋ ギン（食べる）＋ カーオ（ご飯）＋ アロイ（美味しい）
+            </div>
+          </div>
+
+          <p>単語の順番さえ覚えてしまえば、パズルのように組み合わせるだけで色々な文章を作ることができます。</p>
+        </div>
+
+      </div>
+    `;
 
     // categoryGuides の tone_marks 部分を以下に差し替え
     categoryGuides.tone_marks = `💡 <b>声調記号のヒント</b><br>
@@ -1803,7 +1958,7 @@ body.font-pattaya {
 <b>「土台となる子音グループ」×「声調記号」</b> の組み合わせで実際の音が決まります。<br><br>
 <table style="width:100%; border-collapse:collapse; font-size:0.85em; margin-top:4px; border:1px solid #ddd;">
   <thead>
-    <tr style="background-color:#f3f4f6; text-align:left;">
+    <tr style="background-color:#d1d5db5c; text-align:left;">
       <th style="padding:4px 6px; border:1px solid #ddd;">土台（子音）</th>
       <th style="padding:4px 6px; border:1px solid #ddd;">主な文字</th>
       <th style="padding:4px 6px; border:1px solid #ddd;">声調のクセ</th>
@@ -1889,7 +2044,46 @@ body.font-pattaya {
     });
 
 
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const fontButtons = document.querySelectorAll('.font-btn');
+      const htmlEl = document.documentElement; // <html>要素
+
+      // 保存されたサイズを取得（なければデフォルトは 'm'）
+      const savedSize = localStorage.getItem('app_font_size') || 'm';
+      applyFontSize(savedSize);
+
+      // ボタンクリックイベントの設定
+      fontButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const size = btn.dataset.size;
+          applyFontSize(size);
+          localStorage.setItem('app_font_size', size); // 設定を保存
+        });
+      });
+
+      // フォントサイズ反映関数
+      function applyFontSize(size) {
+        // 全ての font-size-* クラスを削除
+        htmlEl.classList.remove('font-size-ss', 'font-size-s', 'font-size-m', 'font-size-l');
+        
+        // 該当するクラスを付与
+        htmlEl.classList.add(`font-size-${size}`);
+
+        // ボタンの active 表示を切替
+        fontButtons.forEach(btn => {
+          if (btn.dataset.size === size) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+    });
+
+
     const categoryTitles = {
+      grammar: "基本文法ルール",
       composite_vowels: "複合・変形母音一覧",
       vowels: "単母音一覧",
       consonants: "子音一覧（中・高・低）",
@@ -1899,58 +2093,60 @@ body.font-pattaya {
 
     // openDrawer 関数の内部（ループ処理の前後に適用）
     function openDrawer(categoryKey) {
-      if (!characterMaster || !characterMaster[categoryKey]) return;
-
+      // タイトルとガイド（説明文）を取得
       drawerTitle.textContent = categoryTitles[categoryKey] || 'ヒント';
-      let html = `<div class="beginner-guide-card">${categoryGuides[categoryKey] || ''}</div>`;
+      const guideText = categoryGuides[categoryKey] || '';
 
-      // クラス名用にカッコをアンダースコアへ変換する処理
-      const sanitize = (str) => str.replace(/[\(\)（）]/g, '_');
+      // ガイドメッセージカードのHTML作成
+      let html = guideText ? `<div class="beginner-guide-card">${guideText}</div>` : '';
 
-      const items = characterMaster[categoryKey];
-      Object.entries(items).forEach(([char, data]) => {
-        const desc = data.desc || '';
-        let titleText = '';
-        let badgeHtml = '';
+      // マスタデータ内に該当カテゴリのリストが存在する場合のみ、カード一覧を生成
+      if (characterMaster && characterMaster[categoryKey]) {
+        const sanitize = (str) => str.replace(/[\(\)（）]/g, '_');
+        const items = characterMaster[categoryKey];
 
-        if (categoryKey === 'final_consonants') {
-          titleText = data.group || data.name || '';
-          
-          // syllable_type（平音節 / 死音節）からバッジを作成
-          const syllableType = data.syllable_type || '';
-          if (syllableType) {
-            const badgeClass = `badge-type-${sanitize(syllableType)}`;
-            badgeHtml = `<span class="master-item-badge ${badgeClass}">${syllableType}</span>`;
+        Object.entries(items).forEach(([char, data]) => {
+          const desc = data.desc || '';
+          let titleText = '';
+          let badgeHtml = '';
+
+          if (categoryKey === 'final_consonants') {
+            titleText = data.group || data.name || '';
+            const syllableType = data.syllable_type || '';
+            if (syllableType) {
+              const badgeClass = `badge-type-${sanitize(syllableType)}`;
+              badgeHtml = `<span class="master-item-badge ${badgeClass}">${syllableType}</span>`;
+            }
+          } else {
+            titleText = data.name || '';
+            const rawClass = data.class || '';
+            const rawType = data.type || '';
+            const rawGroup = data.group || '';
+            const attrValue = rawClass || rawType || rawGroup;
+
+            let badgeClass = '';
+            if (rawClass) badgeClass = `badge-class-${sanitize(rawClass)}`;
+            else if (rawType) badgeClass = `badge-type-${sanitize(rawType)}`;
+            else if (rawGroup) badgeClass = `badge-group-${sanitize(rawGroup)}`;
+
+            if (attrValue) {
+              badgeHtml = `<span class="master-item-badge ${badgeClass}">${attrValue}</span>`;
+            }
           }
-        } else {
-          titleText = data.name || '';
 
-          const rawClass = data.class || '';
-          const rawType = data.type || '';
-          const rawGroup = data.group || '';
-          const attrValue = rawClass || rawType || rawGroup;
-
-          let badgeClass = '';
-          if (rawClass) badgeClass = `badge-class-${sanitize(rawClass)}`;
-          else if (rawType) badgeClass = `badge-type-${sanitize(rawType)}`;
-          else if (rawGroup) badgeClass = `badge-group-${sanitize(rawGroup)}`;
-
-          if (attrValue) {
-            badgeHtml = `<span class="master-item-badge ${badgeClass}">${attrValue}</span>`;
-          }
-        }
-
-        html += `
-          <div class="master-item-card">
-            <div class="master-item-char">${char}</div>
-            <div class="master-item-info">
-              <div class="master-item-title">${titleText} ${badgeHtml}</div>
-              <div class="master-item-desc">${desc}</div>
+          html += `
+            <div class="master-item-card">
+              <div class="master-item-char">${char}</div>
+              <div class="master-item-info">
+                <div class="master-item-title">${titleText} ${badgeHtml}</div>
+                <div class="master-item-desc">${desc}</div>
+              </div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
+      }
 
+      // ドロワーにHTMLをセットして開く
       drawerContent.innerHTML = html;
       drawerPanel.classList.add('open');
       drawerOverlay.classList.add('open');
