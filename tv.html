@@ -566,7 +566,8 @@
         }
 
         const matchTag = (selectedTag === '#ALL') || (item.keywords && item.keywords.includes(selectedTag));
-        const matchText = !searchText || item.title.toLowerCase().includes(searchText) || 
+        const videoTitle = (item.title && typeof item.title === 'object') ? (item.title.ja || '') : (item.title || '');
+        const matchText = !searchText || videoTitle.toLowerCase().includes(searchText) || 
                           (item.keywords && item.keywords.some(k => k.toLowerCase().includes(searchText)));
         return matchTag && matchText;
       });
@@ -580,12 +581,13 @@
         const thumbUrl = `https://img.youtube.com/vi/${item.id}/mqdefault.jpg`;
         const tagsHtml = (item.keywords || []).map(k => `<span class="card-tag">${k}</span>`).join('');
 
+        const displayTitle = item.title?.ja || item.title || '';
         card.innerHTML = `
           <div class="thumbnail-wrapper">
-            <img class="thumbnail-img" src="${thumbUrl}" alt="${item.title}">
+            <img class="thumbnail-img" src="${thumbUrl}" alt="${displayTitle}">
           </div>
           <div class="card-info">
-            <h3 class="card-title">${item.title}</h3>
+            <h3 class="card-title">${displayTitle}</h3>
             <!--<div class="card-tags">${tagsHtml}</div>-->
           </div>
         `;
@@ -681,8 +683,10 @@
       const subKana = document.getElementById('subKana');
       const subText = document.getElementById('subText');
 
-      if (currentSub && (currentSub.translation || currentSub.pronunciation_kana || currentSub.text)) {
-        subJa.innerText = currentSub.translation || '';
+      const jaTranslation = currentSub?.translations?.ja || currentSub?.translation || '';
+
+      if (currentSub && (jaTranslation || currentSub.pronunciation_kana || currentSub.text)) {
+        subJa.innerText = jaTranslation;
         subKana.innerText = currentSub.pronunciation_kana || '';
         subText.innerText = currentSub.text || '';
         applyPresetVisibility();

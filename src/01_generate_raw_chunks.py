@@ -591,9 +591,10 @@ def main(video_ids_or_urls=None):
             continue
     
         v_status = status_data.get(video_id, {})
-        existing_mode = v_status.get("mode", "none")
+        ja_status = v_status.get("status", {}).get("ja", {})
+        existing_mode = ja_status.get("mode") or v_status.get("mode", "none")
         existing_rank = MODE_RANK.get(existing_mode, 0)
-        is_completed = v_status.get("generate") == "completed"
+        is_completed = (ja_status.get("generate") or v_status.get("generate")) == "completed"
         
         # 自動判定（--force 指定時はすべてスルーして実行）
         if not args.force:
@@ -646,8 +647,13 @@ def main(video_ids_or_urls=None):
             if not has_thai:
                 print(f"ℹ️ タイ語なし（完全英語）字幕を検知: VIDEO_ID [{video_id}] に english_sub を設定して通常処理を続行します。")
                 if video_id not in status_data:
-                    status_data[video_id] = {}
-                status_data[video_id]["english_sub"] = True
+                    status_data[video_id] = {"status": {"ja": {}}}
+                elif "status" not in status_data[video_id]:
+                    status_data[video_id]["status"] = {"ja": {}}
+                elif "ja" not in status_data[video_id]["status"]:
+                    status_data[video_id]["status"]["ja"] = {}
+
+                status_data[video_id]["status"]["ja"]["english_sub"] = True
                 save_pipeline_status(status_data)
             # ---------------------------------------------------------
 
@@ -710,13 +716,18 @@ def main(video_ids_or_urls=None):
                     json.dump(parsed_chunks_data, f, ensure_ascii=False, indent=2)
 
                 status_data[video_id] = {
-                    "title": original_title,
-                    "generate": "in_progress",
-                    "mode": current_mode,
-                    "last_processed_chunk": chunk_idx + 1,
-                    "total_chunks": total_chunks,
-                    # ★ 既に priority が設定されていればそれを維持し、無ければ初期値　2:中（1:高 / 2:中 / 3:低 / 99:未設定）を設定
-                    "priority": v_status.get("priority", 2)
+                    "title": {
+                        "ja": original_title
+                    },
+                    "priority": v_status.get("priority", 2),
+                    "status": {
+                        "ja": {
+                            "generate": "in_progress",
+                            "mode": current_mode,
+                            "last_processed_chunk": chunk_idx + 1,
+                            "total_chunks": total_chunks
+                        }
+                    }
                 }
                 save_pipeline_status(status_data)
                 time.sleep(1)
@@ -751,8 +762,13 @@ def main(video_ids_or_urls=None):
             if build_final_json(
                 video_id, original_title, upload_date, raw_tags, transcript_list
             ):
-                status_data[video_id]["generate"] = "completed"
-                status_data[video_id]["mode"] = current_mode
+                if "status" not in status_data[video_id]:
+                    status_data[video_id]["status"] = {}
+                if "ja" not in status_data[video_id]["status"]:
+                    status_data[video_id]["status"]["ja"] = {}
+
+                status_data[video_id]["status"]["ja"]["generate"] = "completed"
+                status_data[video_id]["status"]["ja"]["mode"] = current_mode
                 save_pipeline_status(status_data)
                 completed_count += 1
         else:

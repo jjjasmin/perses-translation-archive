@@ -88,7 +88,8 @@ def update_all_video_keywords():
     for item in videos_list:
         video_id = item.get("id") or item.get("video_id")
         original_title = item.get("original_title", "")
-        translated_title = item.get("title", "")
+        title_obj = item.get("title", {})
+        translated_title = title_obj.get("ja", "") if isinstance(title_obj, dict) else title_obj
         published_at = item.get("published_at", "")
 
         # #NEED_FIX フラグが既存キーワードにあれば保持する
@@ -105,7 +106,8 @@ def update_all_video_keywords():
             status_info = pipeline_status[video_id]
 
             # mode の判定 (#仮データ / #完成データ)
-            mode = status_info.get("mode")
+            ja_status = status_info.get("status", {}).get("ja", {})
+            mode = ja_status.get("mode")
             if mode == "lite":
                 new_keywords.append("#仮データ")
             elif mode == "standard":

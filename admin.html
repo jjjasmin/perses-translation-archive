@@ -823,7 +823,8 @@ function init() {
       sortedVideos.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v.file;
-        opt.textContent = `${v.title} (${v.id})`;
+        const titleText = (typeof v.title === 'object') ? (v.title.ja || '') : (v.title || '');
+        opt.textContent = `${titleText} (${v.id})`;
         select.appendChild(opt);
       });
 
@@ -904,7 +905,8 @@ function init() {
       // メタデータ表示更新 (videos.json のタイトルを優先的に取得)
         const titleInput = document.getElementById('meta-title-input');
         if (titleInput) {
-          const videoTitle = (currentVideoMeta && currentVideoMeta.title) ? currentVideoMeta.title : (data.title || "");
+          const rawTitle = (currentVideoMeta && currentVideoMeta.title) ? currentVideoMeta.title : (data.title || "");
+          const videoTitle = (typeof rawTitle === 'object') ? (rawTitle.ja || "") : rawTitle;
           titleInput.value = videoTitle;
           autoResizeTextarea(titleInput);
         }
@@ -972,6 +974,7 @@ function init() {
             ).join('');
 
             const isLastItem = index === totalItems - 1;
+            const jaTranslation = item.translations?.ja || item.translation || '';
 
             return `
               <div class="transcript-card" id="card-${index}">
@@ -1017,8 +1020,8 @@ function init() {
                 <div class="field-input-group">
                   <textarea class="card-input input-translation" 
                             rows="1"
-                            placeholder="日本語訳 (translation)"
-                            oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.translation || '')}</textarea>
+                            placeholder="日本語訳 (translations.ja)"
+                            oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(jaTranslation)}</textarea>
 
                   <textarea class="card-input input-thai" 
                             rows="1"
@@ -1114,7 +1117,13 @@ function init() {
 
     function updateTranslationText(index, value) {
       if (!currentData || !currentData.transcript[index]) return;
-      currentData.transcript[index].translation = value;
+      const item = currentData.transcript[index];
+      if (!item.translations) {
+        item.translations = {};
+      }
+      item.translations.ja = value;
+      // 後方互換性のために古いプロパティも残す場合は以下を維持（不要であれば削除可）
+      delete item.translation; 
     }
 
     function updateThaiText(index, value) {
@@ -1181,6 +1190,9 @@ function init() {
       }
 
       // 統合オブジェクト作成（start, speaker は上、end は下）
+      const topJa = top.translations?.ja || top.translation || '';
+      const bottomJa = bottom.translations?.ja || bottom.translation || '';
+
       const mergedItem = {
         id: top.id,
         start: top.start,
@@ -1189,7 +1201,9 @@ function init() {
         text: (top.text || '') + (bottom.text || ''),
         pronunciation_kana: kanaCombined,
         pronunciation_roman: romanCombined,
-        translation: (top.translation || '') + (bottom.translation || '')
+        translations: {
+          ja: topJa + bottomJa
+        }
       };
 
       if (mergedWords) {
@@ -1223,6 +1237,7 @@ function init() {
 
       currentItem.end = splitTime;
 
+      const currentJa = currentItem.translations?.ja || currentItem.translation || "";
       const newCard = {
         id: currentItem.id + 1,
         start: splitTime,
@@ -1231,7 +1246,9 @@ function init() {
         text: currentItem.text || "",
         pronunciation_kana: currentItem.pronunciation_kana || "",
         pronunciation_roman: currentItem.pronunciation_roman || "",
-        translation: currentItem.translation || ""
+        translations: {
+          ja: currentJa
+        }
       };
 
       currentData.transcript.splice(index + 1, 0, newCard);
@@ -1262,14 +1279,22 @@ function init() {
     }
 
     // 動画タイトルの変更を currentData (video_XX.json) と currentVideoMeta (videos.json) の両方に反映
-function updateVideoTitle(value) {
-  if (currentData) {
-    currentData.title = value;
-  }
-  if (currentVideoMeta) {
-    currentVideoMeta.title = value;
-  }
-}
+    function updateVideoTitle(value) {
+      if (currentData) {
+        if (typeof currentData.title === 'object' && currentData.title !== null) {
+          currentData.title.ja = value;
+        } else {
+          currentData.title = { ja: value };
+        }
+      }
+      if (currentVideoMeta) {
+        if (typeof currentVideoMeta.title === 'object' && currentVideoMeta.title !== null) {
+          currentVideoMeta.title.ja = value;
+        } else {
+          currentVideoMeta.title = { ja: value };
+        }
+      }
+    }
 
 // tags.json のキー順通りに選択用ボタンを描画する関数
 function renderCommonKeywords() {

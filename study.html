@@ -842,11 +842,11 @@ body.dark-mode,
 .tone-matrix-table th, .tone-matrix-table td {
   border: 1px solid #cbd5e1; padding: 8px 6px;
 }
-.tone-matrix-table th { background: #3333330a; font-weight: 600; }
+.tone-matrix-table th { background: #d1d5db5c; font-weight: 600; }
 
-.bg-mid { background: #faff3245; }
-.bg-high { background: #a158ff57; }
-.bg-low { background: #18973f57; }
+.bg-mid { background: #d1d5db5c; }
+.bg-high { background: #d1d5db5c; }
+.bg-low { background: #d1d5db5c; }
 
 .highlight-tone { color: #dc2626; font-weight: bold; }
 .danger-text { color: #dc2626; font-weight: bold; }
@@ -1180,28 +1180,34 @@ html.font-size-l {
             <tbody>
               <tr>
                 <td class="bg-mid"><b>中子音</b><br><small>ก ต บ ป อ 等</small></td>
-                <td>平声（平ら）</td>
-                <td>低声（低く）</td>
-                <td><b>低声</b>（低く）</td>
-                <td><b>降声</b>（落ちる）</td>
-                <td><b>高声</b>（高い）</td>
-                <td><b>昇声</b>（上がる）</td>
+                <td style="background:#ffd40073;">平声（平ら）</td>
+                <td style="background:#008d1a69;">低声（低く）</td>
+                <td style="background:#008d1a69;"><b>低声</b>（低く）</td>
+                <td style="background:#006dff69;"><b>降声</b>（落ちる）</td>
+                <td style="background:#6f00ff82;"><b>高声</b>（高い）</td>
+                <td style="background:#ff00bc57;"><b>昇声</b>（上がる）</td>
               </tr>
               <tr>
                 <td class="bg-high"><b>高子音</b><br><small>ข ฉ ส ห 等</small></td>
-                <td>昇声（上がる）</td>
-                <td>低声（低く）</td>
-                <td><b>低声</b>（低く）</td>
-                <td><b>降声</b>（落ちる）</td>
+                <td style="background:#ff00bc57;">昇声（上がる）</td>
+                <td style="background:#008d1a69;">低声（低く）</td>
+                <td style="background:#008d1a69;"><b>低声</b>（低く）</td>
+                <td style="background:#006dff69;"><b>降声</b>（落ちる）</td>
                 <td class="text-muted">-</td>
                 <td class="text-muted">-</td>
               </tr>
               <tr>
                 <td class="bg-low"><b>低子音</b><br><small>ค ง ช น 等</small></td>
-                <td>平声（平ら）</td>
-                <td>高声 / 降声<br><small>(短母音/長母音)</small></td>
-                <td><b class="highlight-tone">降声</b>（落ちる）</td>
-                <td><b class="highlight-tone">高声</b>（高い）</td>
+                <td style="background:#ffd40073;">平声（平ら）</td>
+                <td>
+                  <div style="background:#6f00ff82;">
+                  <b class="highlight-tone">高声</b><br><small>(短母音)</small>
+                  <br></div>
+                  <div style="background:#006dff69;">
+                  <b class="highlight-tone">降声</b><br><small>(長母音)</small>
+                </td></div>
+                <td style="background:#006dff69;"><b class="highlight-tone">降声</b>（落ちる）</td>
+                <td style="background:#6f00ff82;"><b class="highlight-tone">高声</b>（高い）</td>
                 <td class="text-muted">-</td>
                 <td class="text-muted">-</td>
               </tr>
@@ -1215,7 +1221,58 @@ html.font-size-l {
             <li><b>中子音</b>：5つの声調すべてを表現でき、記号の通り素直に変化します。</li>
             <li><b>高子音</b>：記号なしの基本（平音節）が最初から「上がり声（昇声）」になります。</li>
             <li><b>低子音</b>：<span class="danger-text">記号と実際の音が1つズレます！</span>（マイエーク `-่` で降声、マイトー `-้` で高声）。</li>
-            <li><b>-๊ と -๋</b>：この2つの記号は原則として<b>中子音専用</b>です。</li>
+            <li>
+              <b>低子音 ＋ 死音節</b>：母音の長さで声調が分岐します。
+              <div style="border:1px solid #ddd; padding:8px 10px; margin:6px 0; border-radius:4px; font-size:0.9em; line-height:1.5;">
+                ・<b>低子音 ＋ 短母音＋ 末子音死音節</b> ＝ <b>高声</b>（高いまま止め）（例：<b>รัก</b> / rak / ラック：愛する）<br>
+                ・<b>低子音 ＋ 長母音＋ 末子音死音節</b> ＝ <b>降声</b>（高いところから落ちる）（例：<b>มาก</b> / māk / マーク：とても）
+              </div>
+            </li>
+            <!-- アコーディオン（クリックで開閉） -->
+            <li style="list-style:none; margin-left:6px; margin-top:8px; margin-bottom:8px;">
+              <details style="border:1px solid #0284c7; border-radius:6px; padding:8px 12px; font-size:0.9em; line-height:1.6;">
+                <summary style="font-weight:bold; color:#0284c7; cursor:pointer;">
+                  🔍 低子音 ＋ 死音節（記号なし）の詳しい解説を開く
+                </summary>
+                
+                <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                  <p style="margin:0 0 10px 0; font-weight:bold; color:#6689db;">
+                    なぜ「母音の長さ」で声調が変わるのか？
+                  </p>
+                  <p style="margin:0 0 10px 0; font-size:0.95em;">
+                    タイ語の発音の仕組みとして、「短母音で詰まる音」と「長母音で詰まる音」では、息の止め方と声の出しやすさが異なるため、自然と声調が分岐します。
+                  </p>
+
+                  <!-- 1. 短母音 -->
+                  <div style="border-left:3px solid #ab47bc; padding:8px 10px; margin-bottom:10px; border-radius:0 4px 4px 0;">
+                    <b>1. 低子音 ＋ 短母音 ＋ 死音節 ＝ 【高声】</b><br>
+                    <span style="font-size:0.9em; color:#6689db;">短く「ッ」や「ッ（K/P/T）」と息を止めるパターン。高い位置でキュッと音を止めます。</span>
+                    <ul style="margin:4px 0 0 0; padding-left:18px; font-size:0.9em;">
+                      <li><b>รัก</b>（rak / ラック）：愛する</li>
+                      <li><b>นก</b>（nok / ノック）：鳥</li>
+                      <li><b>คะ</b>（kha / カ）：〜です（女性語・短母音終わりで死音節扱い）</li>
+                    </ul>
+                  </div>
+
+                  <!-- 2. 長母音 -->
+                  <div style="border-left:3px solid #0284c7; padding:8px 10px; margin-bottom:10px; border-radius:0 4px 4px 0;">
+                    <b>2. 低子音 ＋ 長母音 ＋ 死音節 ＝ 【降声】</b><br>
+                    <span style="font-size:0.9em; color:#6689db;">母音を長く伸ばしてから最後に息を止めるパターン。高いところからぐっと音を下げて終わらせます。</span>
+                    <ul style="margin:4px 0 0 0; padding-left:18px; font-size:0.9em;">
+                      <li><b>มาก</b>（māk / マーク）：とても・たくさん</li>
+                      <li><b>พูด</b>（phūt / プート）：話す</li>
+                      <li><b>ชอบ</b>（chōp / チョープ）：好き</li>
+                    </ul>
+                  </div>
+
+                  <!-- 覚え方メモ -->
+                  <div style="background:#f0f9ff61; border:1px solid #bae6fd; padding:8px 10px; border-radius:4px; font-size:0.95em; text-align:center;">
+                    👉 <b>「ラック（高声）で愛して、マーク（降声）はとても好き」</b> でセット暗記するのが一番早くて確実です！
+                  </div>
+                </div>
+              </details>
+            </li>
+            <li><b>マイチッカー-๊ と マイチャッタワー-๋</b>：この2つの記号は原則として<b>中子音専用</b>です。</li>
           </ul>
         </div>
       </div>
@@ -1663,7 +1720,7 @@ html.font-size-l {
         const wordData = (wordRes && wordRes.ok) ? await wordRes.json() : null;
 
         // タイトル表示
-        document.getElementById('video-title').textContent = videoData.title || '詳細学習';
+        document.getElementById('video-title').textContent = videoData.title?.ja || '詳細学習';
 
         // videoData の transcript と wordData の transcript_words を ID やインデックスで結合
         const mergedTranscript = (videoData.transcript || []).map((item, index) => {
@@ -1780,10 +1837,11 @@ html.font-size-l {
         const phraseDetails = document.createElement('div');
         phraseDetails.className = 'phrase-details';
 
-        if (item.translation) {
+        const translationText = item.translations?.ja || item.translation; 
+        if (translationText) {
           const translationEl = document.createElement('div');
           translationEl.className = 'translation';
-          translationEl.textContent = item.translation.trim();
+          translationEl.textContent = translationText.trim();
           phraseDetails.appendChild(translationEl);
         }
 
@@ -2000,7 +2058,7 @@ html.font-size-l {
     </tr>
   </tbody>
 </table>
-<button type="button" class="btn-show-tone-detail" onclick="openToneModal()">🔍 声調ルールの詳細（マトリックス）を見る</button>`;
+<button type="button" class="btn-show-tone-detail" onclick="openToneModal()">🔍 声調ルールの詳細を見る</button>`;
 
     // モーダル制御関数
     window.openToneModal = function() {

@@ -302,7 +302,8 @@ for filepath in target_files:
 
     if TARGET_PRIORITY is not None and status_info.get("priority") != TARGET_PRIORITY:
         continue
-    if status_info.get("mode") != "standard":
+    ja_status = status_info.get("status", {}).get("ja", {})
+    if ja_status.get("mode") != "standard":
         continue
     if status_info.get("words_extracted") == "completed":
         print(f"⏩ Video {video_id}: 単語抽出済みのためスキップします。")
@@ -342,8 +343,14 @@ for filepath in target_files:
 
     for i in range(0, total_items, BATCH_SIZE):
         batch = transcript[i : i + BATCH_SIZE]
-        input_data = [{"id": item["id"], "text": item["text"], "translation": item.get("translation", "")} for item in batch]
-
+        input_data = [
+            {
+                "id": item["id"],
+                "text": item["text"],
+                "translation": item.get("translations", {}).get("ja", ""),
+            }
+            for item in batch
+        ]
         prompt = f"""あなたはタイ語の形態素解析および言語学習用辞書作成の専門家です。
 提供されたタイ語テキスト（text）と日本語訳（translation）から、以下の2点を行ってください。
 

@@ -1,7 +1,5 @@
 {
-    "動画種類": {
-    "#SHORT": ["short", "shorts"],
-    "#★": ["administrator","ลิเก","おすすめ"],
+    "DATA/YEARS": {
     "#単語辞書つき": ["words_add_completed","administrator"],
     "#完成データ": ["standard_mode_data","administrator"],
     "#仮データ": ["lite_mode_data","administrator"],
@@ -13,7 +11,7 @@
     "#2021": ["2021"],
     "#before2020": ["2020","2019","2018","2017","2016","2015","2014","2013","2012","2011","2010"]
   },
-    "公式コンテンツ": {
+    "OFFICIAL CONTENTS": {
     "#MUSIC VIDEO": ["OFFICIAL MV", "music video","Official Lyrics Video",
                      "lyric video","Official Visualizer","PERSES Rock Medley",
                      "HEART at TRACK","Official Sped Up Version","MV Sync Ver",
@@ -47,7 +45,7 @@
     "#CarOke(JUNG)": ["CarOke"],
     "#GMM KARAOKE": ["คาราโอเกะ","Karaoke","คาราโอเกกะ"]
   },
-    "動画ジャンル": {
+    "MOVIE CATEGORY": {
     "#STAGE SHOW": ["show", "stage", "Event","Concert","MV Premiere","live at","ลิเก","TikTok Shop"],
     "#VARIETY SHOW": ["tv", "PLAYROOM","[PERSES MISSION]"],
     "#ENTERTAINMENT": ["PLAYROOM"],
@@ -62,7 +60,7 @@
     "#FANCON": ["fancon","HELLO BOYSSS", "OUR PIECES"],
     "#SPOT TEASER": ["spot","Teaser"]
   },
-    "グループ・メンバー": {
+    "MEMBERS/GROUPS": {
     "#JUNG": ["jung","Wikorn", "Buranapinyo", "วิกร", "บูรณภิญโญ", "จั๋ง","CarOke"],
     "#NAY": ["nay","Naran", "Vikairungroj", "ณรัณ", "วิกัยรุ่งโรจน์", "เน"],
     "#KRITTIN": ["krittin", "Krittin", "Sosungnern", "กฤติน", "สอสูงเนิน"],
@@ -89,7 +87,7 @@
     "#FAVIQ": ["FAVIQ","Names","Blink","Peem","Jeffrey","Joey","Cheva","Zen","Than"],
     "#CHERIS": ["CHERIS","Mayom","Grace","Tiny","Jessica","Monet","Guitar","Pelin"],
     "#J.DA": ["J.DA"],
-    "#GUEST": ["เจเจ กฤษณภูมิ", "แอลลี่", "อชิรญา", "เอเอ อชิรกรณ์", "ไมค์ พิรัชต์", "PAVEL PHOOM", "ภูวินทร์",
+    "#OTHERS/GUESTS": ["เจเจ กฤษณภูมิ", "แอลลี่", "อชิรญา", "เอเอ อชิรกรณ์", "ไมค์ พิรัชต์", "PAVEL PHOOM", "ภูวินทร์",
               "โทมัส ธีร์ทัศน์", "พีพี กฤษฏ์", "นนท์ ธนนท์", "เส้นจัง", "ล้วงเรื่องลับ ที่น่ารักของ", "DAOU","ต้าห์อู๋","พิทยา",
               "กอล์ฟ พิชญะ","GOLF","กอล์ฟ","พิชญะ","SLAPKISS", "OHANA", "MANG", "Pao", "Arty", "มาง", "BAMM",
               "Baozi", "OFFROAD","ออฟโรด","กันตภณ", "จั๊มพ์ พิสิฐพล", "แจ๊คกี้", "จักริน", "PROXIE", "PiXXiE",
@@ -97,18 +95,19 @@
               "", "", "", "", "", "", "", "", "",
               "", "", "", "", "", "",  "", ""]
   },
-    "会社・スポンサーなど": {
+    "COMPANY/SPONSOR": {
     "#GNEST": ["GNEST","VIIS","TIGGER","FAVIQ","CHERIS"],
-    "#HarlemShake": ["Harlem Shake","HarlemShake"],
     "#LEAYDOODEE": ["LEAYDOODEE","HELLO BOYSSS", "fancon", "OUR PIECES"],
     "#ATIME": ["Fandomlive", "ATIME", "fandom live","EFM DJ PLAYLIST","Fandom Deep Talk"],
     "#PEPSI": ["PEPSI","T-POP Stage"],
-    "#MELLOLICA": ["MELLOLICA"],
     "#MINT": ["MINT"],
-    "#Anessa": ["Anessa"],
-    "#BLKGEM": ["BLKGEM","แบล็คเจ็ม"],
     "#one31": ["one31"],
-    "#JOOX": ["JOOX"]
+    "#JOOX": ["JOOX"],
+    "#BLKGEM": ["BLKGEM","แบล็คเจ็ม"],
+    "#HarlemShake": ["Harlem Shake","HarlemShake"],
+    "#MELLOLICA": ["MELLOLICA"],
+    "#OTHERS/SPONSOR": ["Anessa","mio","", "", "", "", "", "", "", "", "",
+              "", "", "", "", "", "",  "", ""]
   },
     "SONG LIST": {
     "#Free Wifi": ["Free Wifi"],
@@ -130,10 +129,10 @@
     "#Catch the Night": ["Catch the Night"],
     "#TOUCHDOWN": ["TOUCHDOWN" ,"ใกล้ดาว"],
     "#MY TIME": ["MY TIME"],
-    "#OTHERS": ["Spoil!","คืนข้ามปี","หัว ไหล่ ตูด","ยกมือขึ้น","ตามใจ"
+    "#OTHERS/SONGS": ["Spoil!","คืนข้ามปี","หัว ไหล่ ตูด","ยกมือขึ้น","ตามใจ"
                 ,"YES ME, BABY","FLY","","","","","","","","","","","","","",""]
   },
-    "企画・番組・関連会社・コンサート": {
+    "PROJECT/EVENTS CATEGORY": {
     "#RADIO": ["Fandomlive", "ATIME", "fandom live","EFM DJ PLAYLIST"],
     "#TV": ["TMC","Thailand Music Countdown","T-POP Stage","Mellow POP",
             "MellowPOP","The Wall Song","ร้องข้ามกำแพง","3FIGHT3"],
@@ -150,7 +149,8 @@
                     "Ultrasonic Water Festival","FWD Music Live Fest","Songkran","สงกรานต์",
                     "TikTok Shop","Free to Shine Music Festival"]
   },
-    "管理用": {
+    "ADMIN": {
+    "#SHORT": ["short", "shorts"],
     "#NEED_FIX": ["need_fix", "administrator"],
     "#2029": ["2029"],
     "#2028": ["2028"],

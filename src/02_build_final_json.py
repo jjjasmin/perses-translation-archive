@@ -262,7 +262,9 @@ def build_final_json(
                 "text": th_text,
                 "pronunciation_kana": kana_val,
                 "pronunciation_roman": roman_val,
-                "translation": trans_val,
+                "translations": {
+                    "ja": trans_val
+                }
             }
         )
 
@@ -276,7 +278,9 @@ def build_final_json(
 
     final_json_data = {
         "video_id": video_id,
-        "title": translated_title,
+        "title": {
+            "ja": translated_title
+        },
         "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg",
         "members": [],
         "transcript": final_transcript,
@@ -342,12 +346,11 @@ def build_final_json(
     is_updated = False
     for item in videos_list:
         if item.get("id") == video_id:
-            item["title"] = translated_title
+            item["title"] = {"ja": translated_title}
             item["original_title"] = original_title
             item["published_at"] = formatted_date
             item["file"] = file_relative_path
             
-            # 既存のタグと今回抽出されたタグを結合して重複除去
             merged = item.get("keywords", []) + final_keywords
             item["keywords"] = list(dict.fromkeys(merged))
             is_updated = True
@@ -356,7 +359,7 @@ def build_final_json(
     if not is_updated:
         videos_list.append({
             "id": video_id,
-            "title": translated_title,
+            "title": {"ja": translated_title},
             "original_title": original_title,
             "published_at": formatted_date,
             "file": file_relative_path,
@@ -377,9 +380,19 @@ def build_final_json(
             pass
 
     if video_id in status_data:
-        status_data[video_id]["title"] = translated_title
-        status_data[video_id]["generate"] = "completed"
+        status_data[video_id]["title"] = {"ja": translated_title}
         status_data[video_id]["file"] = file_relative_path
+
+        status_data[video_id].setdefault("status", {}).setdefault("ja", {})
+
+        # status -> ja の構造を安全に確保して格納
+        if "status" not in status_data[video_id]:
+            status_data[video_id]["status"] = {}
+        if "ja" not in status_data[video_id]["status"]:
+            status_data[video_id]["status"]["ja"] = {}
+
+        status_data[video_id]["status"]["ja"]["generate"] = "completed"
+
         with open(status_file, "w", encoding="utf-8") as f:
             json.dump(status_data, f, ensure_ascii=False, indent=2)
 

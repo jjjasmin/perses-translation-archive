@@ -25,6 +25,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PERSES翻訳">
+
   <style>
     * {
       box-sizing: border-box;
@@ -1304,6 +1305,7 @@ body.dark-mode .search-clear-btn:hover {
 
 
   </style>
+
 </head>
 <body class="mode-2col-a">
 
@@ -1315,6 +1317,16 @@ body.dark-mode .search-clear-btn:hover {
           <span>PERSES 日本語翻訳ファンサイト（非公式）</span>
           <span>Managed by <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer">ming@2chicken4you</a></span>
         </div>
+      </div>
+      <!-- 言語選択ドロップダウン -->
+      <div class="lang-selector-container">
+        <label for="langSelect">Language: </label>
+        <select id="langSelect" onchange="changeLanguage(this.value)">
+          <option value="ja" selected>日本語 (JA)</option>
+          <option value="en">English (EN)</option>
+          <option value="kr">한국어 (KR)</option>
+          <!-- 今後 th や zh などが増えた場合も option を追加するだけで対応可能 -->
+        </select>
       </div>
       <div class="layout-buttons">
 
@@ -1588,7 +1600,91 @@ body.dark-mode .search-clear-btn:hover {
     let currentLayoutMode = '2col-a';
     let userSelectedMode = '2col-a';
 
+    let currentLang = 'ja';
+
     const layoutBtns = document.querySelectorAll('.layout-btn');
+
+/**
+ * 多言語オブジェクトまたは文字列から指定言語のテキストを取得する関数
+ * @param {Object|string} target - title や translation 等のプロパティ
+ * @param {string} lang - 取得したい言語コード (デフォルト: currentLang)
+ * @returns {string}
+ */
+function getI18nText(target, lang = currentLang) {
+  if (!target) return '';
+  // targetが単なる文字列の場合（古いデータ構造などの互換性維持）
+  if (typeof target === 'string') return target;
+  // オブジェクトの場合：指定言語 -> 日本語 -> オブジェクト内の最初の値 -> 空文字 の順でフォールバック
+  return target[lang] || target['ja'] || Object.values(target)[0] || '';
+}
+
+/**
+ * 言語変更時のイベントハンドラ
+ */
+function changeLanguage(newLang) {
+  currentLang = newLang;
+
+  // 1. 変更前の選択中インデックスを保持
+  const savedIndex = currentVideoIndex;
+
+  // 2. 動画リストの描画（HTML）だけを再構築
+  if (typeof videoListContainer !== 'undefined' && videoListContainer) {
+    videoListContainer.innerHTML = '';
+    loadedCount = 0;
+    if (typeof loadMoreVideos === 'function') {
+      loadMoreVideos();
+    }
+  }
+
+  // 3. インデックスを復元し、現在選択中の動画カードに active クラスを再付与
+  currentVideoIndex = savedIndex;
+  const items = videoListContainer ? videoListContainer.querySelectorAll('.video-item') : [];
+  items.forEach(item => {
+    if (parseInt(item.dataset.index, 10) === currentVideoIndex) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // 4. 現在の動画データを安全に取得
+  const currentVideo = (filteredVideos && currentVideoIndex >= 0 && currentVideoIndex < filteredVideos.length)
+    ? filteredVideos[currentVideoIndex]
+    : null;
+
+  // 5. 字幕リストおよび動画概要欄（video-description-box）の再描画
+  if (typeof renderTranscript === 'function' && transcriptData && transcriptData.length > 0) {
+    let videoDescription = '';
+
+    if (currentVideo) {
+      const formattedKeywords = Array.isArray(currentVideo.keywords)
+        ? currentVideo.keywords.join(' ')
+        : (currentVideo.keywords || '');
+
+      videoDescription = [
+        `${currentVideo.published_at || ''}`,
+        `${getI18nText(currentVideo.title)}`,
+        `${currentVideo.original_title || ''}`,
+        `${formattedKeywords}`
+      ].join('\n');
+    }
+
+    renderTranscript(transcriptData, videoDescription);
+  }
+
+  // 6. オーバーレイ字幕の更新
+  if (typeof updateActiveTranscript === 'function') {
+    updateActiveTranscript();
+  }
+
+  // 7. タイトル要素等がある場合の更新
+  if (currentVideo) {
+    const titleEl = document.querySelector('.current-video-title');
+    if (titleEl) {
+      titleEl.textContent = getI18nText(currentVideo.title);
+    }
+  }
+}
 
 
 // タグの追加
@@ -2028,7 +2124,8 @@ document.addEventListener('click', (e) => {
         // ★ 変更点2: 有効な字幕（範囲内）がある場合のみオーバーレイ字幕を表示し、無音区間（-1）では消す
         if (activeIndex !== -1) {
           const currentData = transcriptData[activeIndex];
-          if (currentData && currentData.translation) {
+          const translationText = currentData?.translations ? getI18nText(currentData.translations) : currentData?.translation;
+          if (currentData && translationText) {
             if (currentData.speaker) {
               overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
               overlaySpeaker.style.display = 'inline';
@@ -2036,7 +2133,7 @@ document.addEventListener('click', (e) => {
               overlaySpeaker.textContent = '';
               overlaySpeaker.style.display = 'none';
             }
-            overlayText.textContent = currentData.translation;
+            overlayText.textContent = translationText;
             overlaySubtitleBox.style.display = 'block';
           } else {
             overlayText.textContent = '';
@@ -2064,13 +2161,14 @@ document.addEventListener('click', (e) => {
 
             // ★ pipeline_status.json の情報を videos.json のデータに結合
             videoList = videoList.map(video => {
-              const status = statusData[video.id] || {};
+              const statusObj = statusData[video.id] || {};
+              const langStatus = statusObj.status ? getI18nText(statusObj.status) : {};
               return {
-                ...video,
-                mode: status.mode || video.mode,
-                words_built: status.words_built || video.words_built
-              };
-            });
+                  ...video,
+                  mode: langStatus.mode || statusObj.mode || video.mode,
+                  words_built: statusObj.words_built || video.words_built
+                };
+              });
 
             // ★ 追加: published_at の降順（新しい順）にソート
             videoList.sort((a, b) => {
@@ -2285,7 +2383,7 @@ document.addEventListener('click', (e) => {
             <img src="${thumbnailUrl}" alt="${video.title}" class="video-thumbnail" />
             <div class="video-info">
               <span class="playing-badge">▶ 再生中</span>
-              <div class="video-title">${prefix}${video.title}</div>
+              <div class="video-title">${prefix}${getI18nText(video.title)}</div>
               ${keywordsHtml}
             </div>
           </div>
@@ -2405,7 +2503,7 @@ document.addEventListener('click', (e) => {
   // 各プロパティを改行区切りで表示する文字列を作成
   const videoDescription = currentVideo ? [
     `${currentVideo.published_at || ''}`,
-    `${currentVideo.title || ''}`,
+    `${getI18nText(currentVideo.title)}`,
     `${currentVideo.original_title || ''}`,
     `${formattedKeywords}`
   ].join('\n') : '';
@@ -2515,10 +2613,11 @@ document.addEventListener('click', (e) => {
           }).join('');
         }
 
+        const translationText = item.translations ? getI18nText(item.translations) : (item.translation || '');
         return `
           <div class="transcript-card" data-index="${index}" data-start="${startTime}">
             <div class="text-translation" style="border-top: none; padding-top: 0; font-weight: bold; margin-bottom: 3px;">
-              ${speakerText}${item.translation || ''}
+              ${speakerText}${translationText}
             </div>
             <div class="text-thai">${thaiHtml}</div>
             <div class="text-kana" style="margin-top: 2px;">${item.pronunciation_kana || ''}</div>
@@ -2702,7 +2801,7 @@ document.addEventListener('click', (e) => {
       xShareBtn.addEventListener('click', () => {
         // currentVideoIndex に基づき、videos.json 由来の配列データからタイトルを取得
         const currentVideo = filteredVideos[currentVideoIndex];
-        const videoTitle = (currentVideo && currentVideo.title) ? currentVideo.title : 'PERSES動画';
+        const videoTitle = (currentVideo && currentVideo.title) ? getI18nText(currentVideo.title) : 'PERSES動画';
         const currentUrl = window.location.href;
 
         // 4パターンの例文テンプレート

@@ -395,9 +395,11 @@
           sortedVideos.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.file;
-            // id（例: video_001 等）を option のデータ属性に持たせる
             opt.dataset.id = v.id || '';
-            opt.textContent = `${v.title} (${v.id})`;
+
+            // titleがオブジェクトの場合は ja を取得し、それ以外（旧文字列）にも対応
+            const displayTitle = (typeof v.title === 'object' && v.title !== null) ? (v.title.ja || '') : (v.title || '');
+            opt.textContent = `${displayTitle} (${v.id})`;
             select.appendChild(opt);
           });
 
@@ -479,7 +481,7 @@
       const texts = sortedList.map(item => item.text ?? '').join('\n');
       const kanas = sortedList.map(item => item.pronunciation_kana ?? '').join('\n');
       const romans = sortedList.map(item => item.pronunciation_roman ?? '').join('\n');
-      const translations = sortedList.map(item => item.translation ?? '').join('\n');
+      const translations = sortedList.map(item => item.translations?.ja ?? item.translation ?? '').join('\n');
       
       // ▼ 追加: start と end の抽出
       const starts = sortedList.map(item => item.start ?? '').join('\n');
