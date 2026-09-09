@@ -1289,6 +1289,24 @@ html.font-size-l {
       }
     }
 
+    // タイ語の結合文字・前置母音・複合母音表記（-ิ, ไ-, เ-ือะ など）を綺麗に表示する関数
+    function formatThaiCharForDisplay(char) {
+      if (!char) return '';
+
+      // 1. ハイフン (-) が含まれている場合はすべて土台の丸 '◌' に置き換える
+      // 例: "เ-ือะ" -> "เ◌ือะ" / "ไ-" -> "ไ◌" / "-ิ" -> "◌ิ"
+      let formatted = char.replace(/-/g, '◌');
+
+      // 2. ハイフンがなく、先頭が単体の結合記号（\u0E31, \u0E34-\u0E3A, \u0E47-\u0E4E など）で始まっている場合
+      // 例: "ิ" だけが渡された場合に "◌ิ" にする
+      const isCombining = /^[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(formatted);
+      if (isCombining) {
+        formatted = '◌' + formatted;
+      }
+
+      return formatted;
+    }
+
     // ネストされた characterMaster から該当文字のデータとカテゴリーを検索するヘルパー関数
     function getCharInfo(char, isFinal = false) {
       if (!characterMaster) return null;
@@ -2105,10 +2123,14 @@ html.font-size-l {
         const sanitize = (str) => str.replace(/[\(\)（）]/g, '_');
         const items = characterMaster[categoryKey];
 
+        // openDrawer 内の要素生成ルーチン
         Object.entries(items).forEach(([char, data]) => {
           const desc = data.desc || '';
           let titleText = '';
           let badgeHtml = '';
+
+          // 表示用に文字化け防止フォーマットを通す
+          const displayChar = formatThaiCharForDisplay(char);
 
           if (categoryKey === 'final_consonants') {
             titleText = data.group || data.name || '';
@@ -2135,15 +2157,15 @@ html.font-size-l {
           }
 
           html += `
-            <div class="master-item-card">
-              <div class="master-item-char">${char}</div>
-              <div class="master-item-info">
-                <div class="master-item-title">${titleText} ${badgeHtml}</div>
-                <div class="master-item-desc">${desc}</div>
+              <div class="master-item-card">
+                <div class="master-item-char">${displayChar}</div>
+                <div class="master-item-info">
+                  <div class="master-item-title">${titleText} ${badgeHtml}</div>
+                  <div class="master-item-desc">${desc}</div>
+                </div>
               </div>
-            </div>
-          `;
-        });
+            `;
+          });
       }
 
       // ドロワーにHTMLをセットして開く
