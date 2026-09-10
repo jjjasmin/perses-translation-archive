@@ -8,6 +8,16 @@ videos_file = os.path.join(DATA_DIR, "videos.json")
 tags_file = os.path.join(DATA_DIR, "tags.json")
 
 
+# pipeline_status.jsonのstatusキーに対応する推奨言語タグ定義（）
+LANG_TAG_MAP = {
+    "en": "#EN_English",
+    "ko": "#KR_한국어",
+    "zh-TW": "#TW_繁體中文",
+    "id": "#ID_BahasaIndonesia",
+    "pt": "#PT_Português",
+}
+
+
 def load_allowed_tag_map():
     if os.path.exists(tags_file):
         try:
@@ -104,9 +114,10 @@ def update_all_video_keywords():
         # pipeline_status.json に基づく管理用キーワードの付与
         if video_id and video_id in pipeline_status:
             status_info = pipeline_status[video_id]
+            status_dict = status_info.get("status", {})
 
             # mode の判定 (#仮データ / #完成データ)
-            ja_status = status_info.get("status", {}).get("ja", {})
+            ja_status = status_dict.get("ja", {})
             mode = ja_status.get("mode")
             if mode == "lite":
                 new_keywords.append("#仮データ")
@@ -116,6 +127,15 @@ def update_all_video_keywords():
             # words_built の判定 (#単語辞書つき)
             if status_info.get("words_built") == "completed":
                 new_keywords.append("#単語辞書つき")
+
+            # generate が completed の言語に対応する推奨タグを付与
+            for lang_code, lang_info in status_dict.items():
+                if (
+                    isinstance(lang_info, dict)
+                    and lang_info.get("generate") == "completed"
+                ):
+                    tag = LANG_TAG_MAP.get(lang_code, f"#{lang_code.upper()}")
+                    new_keywords.append(tag)
 
         if has_need_fix and "#NEED_FIX" not in new_keywords:
             new_keywords.append("#NEED_FIX")

@@ -35,12 +35,13 @@ def build_multi_lang_json(
     for idx, c_data in enumerate(parsed_chunks_data):
         if not isinstance(c_data, dict):
             continue
-        if idx == 0:
-            translated_title = c_data.get("title") or original_title
-        items = c_data.get("items", [])
-        for row in items:
-            if isinstance(row, list) and len(row) >= 2:
-                res_map[str(row[0])] = str(row[1]).strip()
+        if idx == 0 and c_data.get("title"):
+            translated_title = c_data.get("title")
+        
+        items = c_data.get("items", {})
+        if isinstance(items, dict):
+            for k, v in items.items():
+                res_map[str(k)] = str(v).strip()
 
     # 2. 既存の video_XX.json の読み込み（存在しなければ新規生成）
     if os.path.exists(target_video_file):
