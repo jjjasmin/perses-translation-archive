@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PERSES翻訳pocket</title>
+  <title>PERSES translation pocket</title>
 
   <!-- OGPデフォルト設定（HTMLRewriterがこれを読み取って書き換えます） -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="PERSES　翻訳pocket">
-  <meta property="og:description" content="PERSESのタイ語動画・楽曲の日本語字幕翻訳ファンサイト。">
+  <meta property="og:title" content="PERSES translation pocket">
+  <meta property="og:description" content="PERSES Thai Video & Song Multilingual Subtitle Fan Site (Unofficial)">
   <meta property="og:image" content="https://perses-translation-pocket.pages.dev/assets/ogp-main.jpg">
   <meta property="og:url" content="https://perses-translation-pocket.pages.dev/">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PERSES　翻訳pocket">
-  <meta name="twitter:description" content="PERSESのタイ語動画・楽曲の日本語字幕翻訳ファンサイト。">
+  <meta name="twitter:title" content="PERSES翻訳pocket">
+  <meta name="twitter:description" content="PERSESのタイ語動画・楽曲の字幕翻訳 unofficial fan site">
   <meta name="twitter:image" content="https://perses-translation-pocket.pages.dev/assets/ogp-main.jpg">
 
 <!-- index.html の <head> 内 -->
@@ -24,7 +24,7 @@
 <!-- iOS (Safari) 用のネイティブアプリ化設定 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PERSES翻訳">
+<meta name="apple-mobile-web-app-title" content="PERSES POCKET">
 
   <style>
     * {
@@ -420,7 +420,7 @@
 
     .transcript-section {
       width: 100%;
-      max-height: 60vh;
+      max-height: 70vh;
       overflow-y: auto;
       border: 1px solid #eee;
       border-radius: 8px;
@@ -520,7 +520,7 @@
 
     .video-list-section {
       width: 100%;
-      max-height: 90vh;
+      max-height: 100vh;
       min-height: 400px;
       overflow-y: auto;
       border: 1px solid #f0f0f0;
@@ -576,8 +576,8 @@ body.dark-mode .video-list-title {
 .search-clear-btn {
   display: block !important; /* 常時表示 */
   position: absolute;
-  right: 115px; /* 検索ボタンの左側に配置 */
-  top: 50%;
+  right: 125px; /* 検索ボタンの左側に配置 */
+  top: 45%;
   transform: translateY(-50%);
   font-size: 1rem;
   color: #888;
@@ -662,6 +662,7 @@ body.dark-mode .search-clear-btn:hover {
       display: flex;
       flex-direction: column;
       gap: 10px;
+      padding-bottom: 50vh;
     }
 
     .video-item {
@@ -1314,10 +1315,12 @@ body.dark-mode .search-clear-btn:hover {
       <div class="header-title-container">
         <h1><a href="index.html">PERSES翻訳pocket</a></h1>
         <div class="site-info">
-          <span>PERSES 日本語翻訳ファンサイト（非公式）</span>
+          <span data-i18n="header_sub">PERSES 日本語翻訳ファンサイト（非公式）</span>
           <span>Managed by <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer">ming@2chicken4you</a></span>
         </div>
       </div>
+
+
       <!-- 言語選択ドロップダウン -->
       <div class="lang-selector-container">
         <label for="langSelect">Language: </label>
@@ -1332,21 +1335,22 @@ body.dark-mode .search-clear-btn:hover {
         </select>
       </div>
       <div class="layout-buttons">
+        <button type="button" class="layout-btn" id="jump-to-search-btn" onclick="scrollToSearch()">🔍</button>
 
-        <button class="layout-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替">
+        <button class="layout-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替" data-i18n-title="title_theme">
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12.3 2a10 10 0 0 0 9.7 12.3 10 10 0 1 1-9.7-12.3z"/>
           </svg>
         </button>
         <!-- ★ X（旧Twitter）シェアボタン -->
-        <button class="layout-btn" id="x-share-btn" title="X(Twitter)でこの動画をシェア">
+        <button class="layout-btn" id="x-share-btn" title="X(Twitter)でこの動画をシェア" data-i18n-title="title_share">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
         </button>
 
         <!-- ★ URLコピーボタン -->
-        <button class="layout-btn" id="copy-url-btn" title="動画のURLをコピー">
+        <button class="layout-btn" id="copy-url-btn" title="動画のURLをコピー" data-i18n-title="title_copy">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
             <path d="M4 1.5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1H4a1 1 0 0 1-1-1V1.5z"/>
@@ -1510,7 +1514,7 @@ body.dark-mode .search-clear-btn:hover {
 
         <div id="transcript-section" class="transcript-section">
           <div id="transcript-container" class="transcript-list">
-            <p style="text-align: center; color: #888;">動画を選択すると字幕が表示されます。</p>
+            <p style="text-align: center; color: #888;" data-i18n="select_video_msg">動画を選択すると字幕が表示されます。</p>
           </div>
         </div>
       </div>
@@ -1521,10 +1525,11 @@ body.dark-mode .search-clear-btn:hover {
             <div class="search-wrapper" id="search-wrapper">
               
 
-              <button type="button" id="tag-toggle-btn" class="search-btn" style="background-color: #eef2f5; color: #007bff; border: 1px solid #d0e1f9; font-weight: bold;">🏷️ タグ</button>
-              <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." autocomplete="off">
+              <!-- 検索窓とボタン -->
+              <button type="button" id="tag-toggle-btn" class="search-btn" style="background-color: #eef2f5; color: #007bff; border: 1px solid #d0e1f9; font-weight: bold;"><span data-i18n="tag_btn">🏷️ タグ</span></button>
+              <input type="text" id="search-input" class="search-input" placeholder="検索ワード・タグ..." data-i18n-placeholder="search_ph" autocomplete="off">
               <span id="search-clear-btn" class="search-clear-btn" title="クリア">×</span>
-              <button type="button" id="search-btn" class="search-btn">検索</button>
+              <button type="button" id="search-btn" class="search-btn" data-i18n="search_btn">検索</button>
               <button type="button" id="sort-order-btn" class="search-btn" style="background-color: #6c757d; margin-left: 2px;" title="投稿日で並べ替え">
                   <span id="sort-order-label">new⬇</span>
               </button>
@@ -1538,10 +1543,9 @@ body.dark-mode .search-clear-btn:hover {
     </div>
 
     <footer class="site-footer" style="margin-top: 40px; padding: 20px 16px; text-align: center; font-size: 0.6rem; color: #8a7a80; line-height: 1.6; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;">
-      <p style="margin: 0 0 6px 0;">当サイトは個人が運営するファンによる非公式の翻訳アーカイブです。公式および関係企業様とは一切関係ありません。</p>
-      <p style="margin: 0; font-size: 0.7rem;">
-        問い合わせ・誤訳のご指摘等: 
-        <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer" class="footer-link" style="color: #ff7597; text-decoration: none; font-weight: 600; transition: opacity 0.2s;">みん@2chicken4you</a>
+      <p style="margin: 0 0 6px 0;"data-i18n="footer_disclaimer">当サイトは個人が運営するファンによる非公式の翻訳アーカイブです。公式および関係企業様とは一切関係ありません。</p>
+      <p style="margin: 0; font-size: 0.7rem;"data-i18n="footer_contact">問い合わせ・誤訳のご指摘等: 
+        <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer" class="footer-link" style="color: #ff7597; text-decoration: none; font-weight: 600; transition: opacity 0.2s;">みんMING@2chicken4you</a>
       </p>
       <a href="admin.html">🛠️</a>
       <a href="admin_viewer.html">🛠️</a>
@@ -1607,6 +1611,62 @@ body.dark-mode .search-clear-btn:hover {
 
     const layoutBtns = document.querySelectorAll('.layout-btn');
 
+    // UI固定テキスト用の多言語辞書
+    const uiDict = {
+      header_sub: {
+        ja: "PERSES 日本語翻訳ファンサイト（非公式）",
+        en: "PERSES Fan Translation Site (Unofficial)",
+        ko: "PERSES 번역 팬사이트 (비공식)",
+        "zh-TW": "PERSES 翻譯歌迷網（非官方）"
+      },
+      tag_btn: { ja: "🏷️ タグ", en: "🏷️ Tags" },
+      search_ph: { ja: "検索ワード・タグ...", en: "Search keywords, tags..." },
+      search_btn: { ja: "検索", en: "Search" },
+      select_video_msg: {
+        ja: "動画を選択すると字幕が表示されます。",
+        en: "Select a video to display subtitles."
+      },
+      footer_disclaimer: {
+        ja: "当サイトは個人が運営するファンによる非公式の翻訳アーカイブです。公式および関係企業様とは一切関係ありません。",
+        en: "This site is an unofficial fan archive. It is not affiliated with the artist or official companies."
+      },
+      footer_contact: { ja: "問い合わせ・誤訳のご指摘等:", en: "Contact / Report mistakes:" },
+      
+      // ボタンのツールチップ(title)用
+      title_theme: { ja: "ダークモード切替", en: "Toggle Dark Mode" },
+      title_share: { ja: "X(Twitter)でこの動画をシェア", en: "Share on X (Twitter)" },
+      title_copy: { ja: "動画のURLをコピー", en: "Copy Video URL" }
+    };
+
+    /**
+     * 固定UI要素の言語表示を一括更新する関数
+     */
+    function updateStaticUI(lang = currentLang) {
+      // テキストの更新 [data-i18n]
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (uiDict[key]) {
+          el.textContent = uiDict[key][lang] || uiDict[key]['en'] || uiDict[key]['ja'];
+        }
+      });
+
+      // プレースホルダーの更新 [data-i18n-placeholder]
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (uiDict[key]) {
+          el.placeholder = uiDict[key][lang] || uiDict[key]['en'] || uiDict[key]['ja'];
+        }
+      });
+
+      // ツールチップ(title)の更新 [data-i18n-title]
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.dataset.i18nTitle;
+        if (uiDict[key]) {
+          el.title = uiDict[key][lang] || uiDict[key]['en'] || uiDict[key]['ja'];
+        }
+      });
+    }
+
 /**
  * 多言語オブジェクトまたは文字列から指定言語のテキストを取得する関数
  * @param {Object|string} target - title や translation 等のプロパティ
@@ -1626,6 +1686,9 @@ function getI18nText(target, lang = currentLang) {
  */
 function changeLanguage(newLang) {
   currentLang = newLang;
+
+  // ★ 追加：固定UIの文字列を変更後の言語に更新
+  updateStaticUI(currentLang);
 
   // 1. 変更前の選択中インデックスを保持
   const savedIndex = currentVideoIndex;
@@ -2617,13 +2680,19 @@ document.addEventListener('click', (e) => {
         }
 
         const translationText = item.translations ? getI18nText(item.translations) : (item.translation || '');
+
+        // ★ 言語選択（currentLang）に応じて発音表記をカナ/ローマ字に切り替え
+        const pronunciationText = (currentLang === 'ja') 
+          ? (item.pronunciation_kana || '') 
+          : (item.pronunciation_roman || '');
+
         return `
           <div class="transcript-card" data-index="${index}" data-start="${startTime}">
             <div class="text-translation" style="border-top: none; padding-top: 0; font-weight: bold; margin-bottom: 3px;">
               ${speakerText}${translationText}
             </div>
             <div class="text-thai">${thaiHtml}</div>
-            <div class="text-kana" style="margin-top: 2px;">${item.pronunciation_kana || ''}</div>
+            <div class="text-kana" style="margin-top: 2px;">${pronunciationText}</div>
             
             <!-- 単語詳細のインライン表示エリア -->
             <div class="word-detail-box"></div>
@@ -2935,6 +3004,18 @@ document.addEventListener('click', (e) => {
         localStorage.setItem('sub_style_index', currentStyleIndex);
         applySubtitleSettings();
       });
+    }
+
+    /**
+     * 検索エリアへスムーズにジャンプ
+     */
+    function scrollToSearch() {
+      const searchArea = document.getElementById('search-wrapper');
+
+      if (searchArea) {
+        // 検索エリアの位置へスムーズスクロール
+        searchArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
 
