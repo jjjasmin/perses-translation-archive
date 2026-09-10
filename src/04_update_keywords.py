@@ -56,6 +56,10 @@ def extract_keywords_from_titles(
 
     extract_matching_tags(allowed_tag_map)
 
+    # #HIDDEN が含まれている場合は #HIDDEN のみを返して処理を終了
+    if "#HIDDEN" in extracted_tags:
+        return ["#HIDDEN"]
+
     # published_at の年判定処理を追加
     if published_at and len(published_at) >= 4:
         year_str = published_at[:4]
@@ -111,6 +115,12 @@ def update_all_video_keywords():
             original_title, translated_title, allowed_tag_map, published_at
         )
 
+        # #HIDDEN がある場合はステータスタグ等も含めて何も追加せず #HIDDEN のみに確定する
+        if "#HIDDEN" in new_keywords:
+            item["keywords"] = ["#HIDDEN","#NexT1de"]
+            updated_count += 1
+            continue
+
         # pipeline_status.json に基づく管理用キーワードの付与
         if video_id and video_id in pipeline_status:
             status_info = pipeline_status[video_id]
@@ -130,6 +140,10 @@ def update_all_video_keywords():
 
             # generate が completed の言語に対応する推奨タグを付与
             for lang_code, lang_info in status_dict.items():
+                # 日本語(ja)は #仮データ/#完成データ で判定するためスキップ
+                if lang_code == "ja":
+                    continue
+                
                 if (
                     isinstance(lang_info, dict)
                     and lang_info.get("generate") == "completed"
