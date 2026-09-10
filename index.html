@@ -1312,7 +1312,54 @@ body.dark-mode .search-clear-btn:hover {
         }
 
 
+        /* 言語選択エリア全体のコンテナ */
+        .lang-selector-container {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          font-family: 'Hiragino Maru Gothic ProN', 'Quicksand', 'Yu Gothic', sans-serif; /* 丸みのあるフォント */
+        }
 
+        /* 「Language:」ラベルのスタイリング */
+        .lang-selector-container label {
+          font-size: 0.75rem;
+          font-weight: bold;
+          color: #8a7a80;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        /* セレクトボックス本体 */
+        .lang-selector-container select {
+          appearance: none; /* デフォルトの矢印を非表示 */
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-color: #ffffff;
+          color: #555555;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 4px 28px 4px 12px; /* 右側にカスタム矢印の余白を確保 */
+          border: 1px solid #ccc;
+          border-radius: 15px; /* ドロップダウン部分も丸く */
+          outline: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          
+          /* 丸い矢印アイコン（SVG）をカスタム配置 */
+          background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23ff7597" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 10px;
+        }
+
+        /* ドロップダウンの選択肢（option） */
+        .lang-selector-container select option {
+          background-color: #ffffff;
+          color: #444444;
+          padding: 8px;
+          border-radius: 8px;
+        }
 
 
   </style>
