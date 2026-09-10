@@ -1522,7 +1522,15 @@ body.dark-mode .search-clear-btn:hover {
                 <span id="overlay-text" class="overlay-text"></span>
               </div>
             </div>
+          </div>
 
+          <div id="no-permission-container" style="display: none; padding: 35px 20px; text-align: center; background-color: var(--bg-card, #f8f9fa); border-radius: 12px; border: 1px dashed #ccc; margin-bottom: 15px;">
+            <p data-i18n="noPermissionNotice" style="margin-bottom: 14px; font-weight: bold; color: var(--text-secondary, #666); line-height: 1.5;">
+              ※ 埋め込み許可の確認中のため、YouTubeでご覧ください。
+            </p>
+            <a id="external-video-link" href="#" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 22px; background-color: #ff7597; color: #fff; text-decoration: none; border-radius: 20px; font-weight: bold; transition: opacity 0.2s;">
+              <span data-i18n="watchOnYoutube">🎬 YouTubeで見る</span>
+            </a>
           </div>
         </div>
 
@@ -1660,7 +1668,20 @@ body.dark-mode .search-clear-btn:hover {
           en: "Start/Stop Screen Recording",
           ko: "화면 녹화 시작/중지",
           "zh-TW": "開始/停止 螢幕錄影"
-        }
+        },
+
+      noPermissionNotice: {
+        ja: "※ 埋め込み許可の確認中のため、YouTubeでご覧ください。",
+        en: "※ Embed permission is currently being confirmed. Please watch on YouTube.",
+        ko: "※ 퍼가기 허가를 확인 중이므로 YouTube에서 시청해 주세요.",
+        "zh-TW": "※ 正在確認嵌入許可，請至 YouTube 觀看。"
+      },
+      watchOnYoutube: {
+        ja: "🎬 YouTubeで見る",
+        en: "🎬 Watch on YouTube",
+        ko: "🎬 YouTube에서 보기",
+        "zh-TW": "🎬 在 YouTube 上觀看"
+      }
     };
 
     /**
@@ -2569,30 +2590,51 @@ document.addEventListener('click', (e) => {
       });
     }
 
-    function loadVideo(fileName, videoId) {
+  function loadVideo(fileName, videoId) {
   if (!fileName || !videoId) return;
 
   activeIndex = -1;
 
-  // ★ 追加: 直前に表示されていたオーバーレイ字幕をクリア
   if (overlaySpeaker) overlaySpeaker.textContent = '';
   if (overlayText) overlayText.textContent = '';
 
-  // ★ 追加: 字幕エリアを一番上までスクロールアップ
   if (transcriptSection) {
     transcriptSection.scrollTop = 0;
   }
 
-  initPlayer(videoId);
-
-  // ★ 追加: 現在の動画情報を取得（概要表示用）
+  // ★ 追加：#NO PERMISSION タグの判定ロジック
   const currentVideo = allVideos.find(v => v.id === videoId || v.file === fileName);
-  // keywordsの配列を半角スペース区切りに変換
+  const isNoPermission = currentVideo && Array.isArray(currentVideo.keywords) &&
+    currentVideo.keywords.some(kw => kw.toUpperCase() === '#NO PERMISSION');
+
+  const iframeWrapperEl = document.getElementById('iframe-wrapper');
+  const noPermissionContainer = document.getElementById('no-permission-container');
+  const externalVideoLink = document.getElementById('external-video-link');
+
+  if (isNoPermission) {
+    // 動画プレイヤーを一時停止・隠して、外部リンク案内を表示
+    if (player && typeof player.pauseVideo === 'function') {
+      player.pauseVideo();
+    }
+    if (iframeWrapperEl) iframeWrapperEl.style.display = 'none';
+    if (noPermissionContainer) {
+      noPermissionContainer.style.display = 'block';
+      if (externalVideoLink) {
+        externalVideoLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+      }
+    }
+  } else {
+    // 通常の動画表示
+    if (iframeWrapperEl) iframeWrapperEl.style.display = 'block';
+    if (noPermissionContainer) noPermissionContainer.style.display = 'none';
+    initPlayer(videoId);
+  }
+
+  // ★ 以下の字幕（transcript）読み込み処理はそのまま実行されるため、字幕データ・スクロール同期・単語辞書は通常どおり動作します
   const formattedKeywords = Array.isArray(currentVideo?.keywords)
     ? currentVideo.keywords.join(' ')
     : (currentVideo?.keywords || '');
-  
-  // 各プロパティを改行区切りで表示する文字列を作成
+
   const videoDescription = currentVideo ? [
     `${currentVideo.published_at || ''}`,
     `${getI18nText(currentVideo.title)}`,
