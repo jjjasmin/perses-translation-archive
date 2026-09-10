@@ -65,17 +65,20 @@
       color: #ffffff;
     }
 
-    body.dark-mode .layout-btn {
+    body.dark-mode .layout-btn,
+    body.dark-mode .pink-btn {
       background: #333333;
       border-color: #444444;
       color: #cccccc;
     }
 
-    body.dark-mode .layout-btn:hover {
+    body.dark-mode .layout-btn:hover,
+    body.dark-mode .pink-btn:hover {
       background: #444444;
     }
 
-    body.dark-mode .layout-btn.active {
+    body.dark-mode .layout-btn.active,
+    body.dark-mode .pink-btn.active {
       background: #007bff;
       color: #ffffff;
       border-color: #0056b3;
@@ -225,7 +228,8 @@
       flex-wrap: wrap; /* 追加: 子要素の折り返しを許可 */
     }
 
-    .layout-btn {
+    .layout-btn,
+    .pink-btn {
       background-color: #ffffff;
       color: #8a7a80;
       border: 1.5px solid #f8c8d8;
@@ -241,14 +245,16 @@
       box-shadow: 0 2px 4px rgba(255, 117, 151, 0.08);
     }
 
-    .layout-btn:hover {
+    .layout-btn:hover,
+    .pink-btn:hover {
       background-color: #fff0f5;
       color: #ff7597;
       border-color: #ff7597;
       transform: translateY(-1px);
     }
 
-    .layout-btn.active {
+    .layout-btn.active,
+    .pink-btn.active {
       background-color: #ff7597;
       color: #ffffff;
       border-color: #ff7597;
@@ -256,23 +262,27 @@
     }
 
     /* SVG内の白い線の色を、ボタンがアクティブになった時だけ白く保持するための設定 */
-    .layout-btn.active svg line {
+    .layout-btn.active svg line,
+    .pink-btn.active svg line {
       stroke: #ffffff;
     }
-    .layout-btn:not(.active) svg line {
+    .layout-btn:not(.active) svg line,
+    .pink-btn:not(.active) svg line {
       stroke: #f8c8d8; /* 非アクティブ時は枠線と同じ色にする */
     }
 
     .theme-btn {
       font-size: 0.85rem;
     }
-      a.layout-btn {
+      a.layout-btn,
+      a.pink-btn {
       text-decoration: none;
       box-sizing: border-box;
     }
 
     /* 文字が入るボタン用の調整 */
-    .layout-btn-text {
+    .layout-btn-text,
+    .pink-btn-text {
       width: auto !important;
       padding: 0 8px !important;
     }
@@ -1027,13 +1037,13 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     /* シェア・コピーボタン用のスタイル追加 */
-        .layout-btn.share-btn:hover {
+        .pink-btn.share-btn:hover {
           background-color: #f0f4f8;
           color: #1da1f2;
           border-color: #1da1f2;
         }
 
-        body.dark-mode .layout-btn.share-btn:hover {
+        body.dark-mode .pink-btn.share-btn:hover {
           background-color: #1a2734;
           color: #1da1f2;
           border-color: #1da1f2;
@@ -1335,22 +1345,22 @@ body.dark-mode .search-clear-btn:hover {
         </select>
       </div>
       <div class="layout-buttons">
-        <button type="button" class="layout-btn" id="jump-to-search-btn" onclick="scrollToSearch()">🔍</button>
+        <button type="button" class="pink-btn" id="jump-to-search-btn" onclick="scrollToSearch()">🔍</button>
 
-        <button class="layout-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替" data-i18n-title="title_theme">
+        <button class="pink-btn theme-btn" id="theme-toggle-btn" title="ダークモード切替" data-i18n-title="title_theme">
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12.3 2a10 10 0 0 0 9.7 12.3 10 10 0 1 1-9.7-12.3z"/>
           </svg>
         </button>
         <!-- ★ X（旧Twitter）シェアボタン -->
-        <button class="layout-btn" id="x-share-btn" title="X(Twitter)でこの動画をシェア" data-i18n-title="title_share">
+        <button class="pink-btn" id="x-share-btn" title="X(Twitter)でこの動画をシェア" data-i18n-title="title_share">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
         </button>
 
         <!-- ★ URLコピーボタン -->
-        <button class="layout-btn" id="copy-url-btn" title="動画のURLをコピー" data-i18n-title="title_copy">
+        <button class="pink-btn" id="copy-url-btn" title="動画のURLをコピー" data-i18n-title="title_copy">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
             <path d="M4 1.5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1H4a1 1 0 0 1-1-1V1.5z"/>
@@ -1405,7 +1415,7 @@ body.dark-mode .search-clear-btn:hover {
         <!-- ★ コマ送り・微調整フローティングボタン群 -->
         <div class="frame-seek-controls">
             <!-- シアターモード -->
-          <button class="layout-btn" data-mode="fullscreen" title="シアターモード（動画最大化）">
+          <button class="pink-btn" data-mode="fullscreen" title="シアターモード（動画最大化）">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
               <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-9zM1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
               <path d="M6.5 5.5l4 2.5-4 2.5v-5z"/>
@@ -1482,6 +1492,10 @@ body.dark-mode .search-clear-btn:hover {
               <path d="M21 3v5h-5"/>
               <text x="12" y="15" font-size="8" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none">10</text>
             </svg>
+          </button>
+
+          <button type="button" class="pink-btn" id="screen-record-btn" onclick="toggleScreenRecord(event)" title="画面録画を開始/停止" data-i18n-title="title_record">
+            🎥
           </button>
         </div>
       </div>
@@ -1584,6 +1598,7 @@ body.dark-mode .search-clear-btn:hover {
     const searchWrapper = document.getElementById('search-wrapper');
     const keywordFloatingBox = document.getElementById('keyword-floating-box');
     const activeTagsContainer = document.getElementById('active-tags-container');
+    const savedLang = localStorage.getItem('user_lang');
 
     let player = null;
     let transcriptData = [];
@@ -1606,8 +1621,11 @@ body.dark-mode .search-clear-btn:hover {
     let previousLayoutMode = '2col-a';
     let currentLayoutMode = '2col-a';
     let userSelectedMode = '2col-a';
-
-    let currentLang = 'ja';
+    
+    let currentLang = savedLang ? savedLang : 'ja';
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
 
     const layoutBtns = document.querySelectorAll('.layout-btn');
 
@@ -1635,7 +1653,14 @@ body.dark-mode .search-clear-btn:hover {
       // ボタンのツールチップ(title)用
       title_theme: { ja: "ダークモード切替", en: "Toggle Dark Mode" },
       title_share: { ja: "X(Twitter)でこの動画をシェア", en: "Share on X (Twitter)" },
-      title_copy: { ja: "動画のURLをコピー", en: "Copy Video URL" }
+      title_copy: { ja: "動画のURLをコピー", en: "Copy Video URL" },
+
+      title_record: { 
+          ja: "画面録画を開始/停止", 
+          en: "Start/Stop Screen Recording",
+          ko: "화면 녹화 시작/중지",
+          "zh-TW": "開始/停止 螢幕錄影"
+        }
     };
 
     /**
@@ -1686,6 +1711,7 @@ function getI18nText(target, lang = currentLang) {
  */
 function changeLanguage(newLang) {
   currentLang = newLang;
+  localStorage.setItem('user_lang', newLang);
 
   // ★ 追加：固定UIの文字列を変更後の言語に更新
   updateStaticUI(currentLang);
@@ -3046,6 +3072,105 @@ document.addEventListener('click', (e) => {
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
       });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const langSelect = document.getElementById('langSelect');
+      if (langSelect) {
+        langSelect.value = currentLang; // プルダウンの見た目を保存された言語に合わせる
+      }
+      updateStaticUI(currentLang); // 固定UIを保存された言語で更新
+    });
+
+
+
+    /**
+     * 画面録画の開始・停止を切り替える関数
+     */
+    async function toggleScreenRecord(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const recordBtn = document.getElementById('screen-record-btn');
+
+      // すでに録画中の場合は停止処理
+      if (isRecording) {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        return;
+      }
+
+      // 録画開始処理
+      try {
+        // 画面（画面全体・ウィンドウ・タブ）の映像および音声を取得
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { mediaSource: "screen" },
+          audio: true // 音声も同時にキャプチャ（ユーザーがタブ共有時に「音声も共有」をチェックした場合）
+        });
+
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+        // 録画データが小分けに届くたびに配列に保持
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+
+        // 録画停止時の自動ダウンロード処理
+        mediaRecorder.onstop = () => {
+          isRecording = false;
+          if (recordBtn) {
+            recordBtn.style.color = '';
+            recordBtn.classList.remove('recording');
+          }
+
+          // 録画ストリームのトラックを停止（共有中バーを消す）
+          stream.getTracks().forEach(track => track.stop());
+
+          // 録画データが存在すれば WebM ファイルとして保存
+          if (recordedChunks.length > 0) {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PERSES_record_${new Date().toISOString().slice(0,10)}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        };
+
+        // ユーザーがブラウザ標準の「共有を停止」ボタンを押した場合のハンドリング
+        stream.getVideoTracks()[0].onended = () => {
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+        };
+
+        // 録画スタート
+        mediaRecorder.start();
+        isRecording = true;
+
+        // ボタンの見た目を録画中状態にする（アイコンの色を赤に変更など）
+        if (recordBtn) {
+          recordBtn.style.color = '#ff4d4f';
+          recordBtn.classList.add('recording');
+        }
+
+      } catch (err) {
+        console.error('画面録画の開始に失敗しました:', err);
+        // ユーザーが画面共有をキャンセルした場合などはエラーメッセージを出さない
+      }
+    }
+
+
+
+
 
     document.addEventListener('click', () => {
       window.focus();
