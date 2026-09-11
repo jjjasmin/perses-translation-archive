@@ -250,6 +250,8 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
     max_retries = 5
     base_backoff = 5
 
+    time.sleep(5)
+
     for attempt in range(1, max_retries + 1):
         # 1. 直接 model_name が指定されている場合はそれを優先（リペア時など）
         # 2. default_model_idx が指定されている場合はそのインデックスのモデルを使用
@@ -350,8 +352,8 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                 # sleep_time = base_backoff * (2 ** (attempt - 1))
                 # print(f"⚠️ [503 サーバー混雑] {sleep_time}秒待機して再試行します (試行 {attempt}/{max_retries})...")
                 # time.sleep(sleep_time)
-                print(f"⚠️ [503 サーバー混雑] 5秒待機して再試行します (試行 {attempt}/{max_retries})...")
-                time.sleep(5)
+                print(f"⚠️ [503 サーバー混雑] 7秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                time.sleep(7)
             else:
                 print(f"❌ 予期せぬAPIエラー: {e}")
                 time.sleep(5)

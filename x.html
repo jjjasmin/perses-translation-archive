@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <!-- html2canvasライブラリの読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>X Post Viewer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&display=swap');
+
+    :root {
+      --bg-color: #f7f9fa;
+      --card-bg: #ffffff;
+      --text-main: #0f1419;
+      --text-sub: #536471;
+      --accent-color: #1d9bf0;
+      --border-color: #eff3f4;
+      --speaker-bg: #e8f5fe;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 16px;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .lang-select {
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin: 0 0 6px 0;
+    }
+
+    .meta-info {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    /* 画像生成ボタンのスタイル */
+    .btn-generate-image {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-generate-image:hover {
+      background-color: #1a8cd8;
+    }
+
+    /* ★ スクロール領域用のコンテナ */
+    .card-scroll-area {
+      max-height: 90vh;
+      overflow-y: auto;
+      padding-right: 4px; /* スクロールバーとの間の微調整 */
+    }
+
+    .summary-box {
+      background-color: #f8f9fa;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #333;
+      margin-bottom: 14px;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .caption-box {
+      white-space: pre-wrap;
+      background-color: #fff9e6;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      border: 1px solid #ffe58f;
+    }
+
+    .caption-title {
+      font-weight: bold;
+      font-size: 0.75rem;
+      color: #8c6b00;
+      margin-bottom: 4px;
+    }
+
+    .transcript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 80vh; /* ★ 50vhの余白を追加 */
+    }
+
+    .transcript-item {
+      display: flex;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .transcript-item:last-child {
+      border-bottom: none;
+    }
+
+    .speaker-tag {
+      background-color: var(--speaker-bg);
+      color: var(--accent-color);
+      font-weight: bold;
+      font-size: 0.75rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+      height: fit-content;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .dialogue-content {
+      flex: 1;
+    }
+
+    .text-th {
+     font-weight: 500;
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+    }
+
+    .pronunciation {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 3px;
+          color: #e67e22;
+    }
+
+    .translation {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .time-tag {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      margin-left: 6px;
+    }
+
+    /* レンダリング用の非表示コンテナ */
+    #renderHiddenContainer {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>X Transcript Viewer</h1>
+      <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+        <option value="ja">日本語 (JA)</option>
+        <option value="en">English (EN)</option>
+        <option value="ko">한국어 (KO)</option>
+        <option value="zh-TW">繁體中文 (ZH-TW)</option>
+        <option value="id">Bahasa Indonesia (ID)</option>
+        <option value="pt">Português (PT)</option>
+      </select>
+    </header>
+
+    <main id="contentArea">
+      <!-- 動的にコンテンツが挿入されます -->
+    </main>
+  </div>
+
+  <!-- 画像読み取り・キャプション用の隠し要素 -->
+  <div id="renderHiddenContainer"></div>
+
+  <!-- カスタマイズ＆プレビュー用モーダル -->
+  <div id="customizerModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:#fff; border-radius:12px; padding:20px; width:90%; max-width:1000px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px;">
+        <h3 style="margin:0;">🖼️ 画像カスタマイズ & プレビュー</h3>
+        <button onclick="closeCustomizer()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+
+     <!-- コントロール群 -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.85rem;">
+        <div>
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">背景タイプ</label>
+          <select id="bgTypeSelect" onchange="updatePreviewLayout()" style="width:100%; padding:4px;">
+            <option value="color">単色カラー</option>
+            <option value="preset">デフォルト背景画像</option>
+            <option value="file">ローカル画像をアップロード</option>
+            <option value="url">画像URLを指定</option>
+          </select>
+        </div>
+
+        <!-- デフォルト季節画像の選択ボタン -->
+        <div style="grid-column: 1 / -1;">
+          <label style="font-weight:bold; display:block; margin-bottom:6px;">デフォルト背景画像</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" onclick="selectPresetBg('public/assets/spring.png')" style="padding:6px 12px; border-radius:12px; border:1px solid #ccc; background:#fff; cursor:pointer;">🌸 春 (Spring)</button>
+            <button type="button" onclick="selectPresetBg('public/assets/summer.png')" style="padding:6px 12px; border-radius:12px; border:1px solid #ccc; background:#fff; cursor:pointer;">🌻 夏 (Summer)</button>
+            <button type="button" onclick="selectPresetBg('public/assets/autumn.png')" style="padding:6px 12px; border-radius:12px; border:1px solid #ccc; background:#fff; cursor:pointer;">🍁 秋 (Autumn)</button>
+            <button type="button" onclick="selectPresetBg('public/assets/winter.png')" style="padding:6px 12px; border-radius:12px; border:1px solid #ccc; background:#fff; cursor:pointer;">❄️ 冬 (Winter)</button>
+          </div>
+        </div>
+
+        <div id="bgControlColor">
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">背景色</label>
+          <input type="color" id="bgColorInput" value="#CAADFF" onchange="updatePreviewLayout()" style="width:100%; height:30px; cursor:pointer;">
+        </div>
+
+        <div id="bgControlFile" style="display:none;">
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">画像選択</label>
+          <input type="file" id="bgFileInput" accept="image/*" onchange="handleFileUpload(event)" style="width:100%;">
+        </div>
+
+        <div id="bgControlUrl" style="display:none;">
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">画像URL</label>
+          <input type="text" id="bgUrlInput" placeholder="https://..." oninput="updatePreviewLayout()" style="width:100%; padding:4px;">
+        </div>
+
+        <div>
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">カード背景不透明度</label>
+          <input type="range" id="cardOpacityInput" min="0" max="1" step="0.05" value="0.85" oninput="updatePreviewLayout()" style="width:100%;">
+        </div>
+
+        <div>
+          <label style="font-weight:bold; display:block; margin-bottom:4px;">文字色</label>
+          <input type="color" id="textColorInput" value="#1A1A1A" onchange="updatePreviewLayout()" style="width:100%; height:30px; cursor:pointer;">
+        </div>
+      </div>
+
+      <!-- リアルタイムプレビュー領域 -->
+      <div style="width:100%; display:flex; justify-content:center; background:#333; padding:10px; border-radius:8px; overflow:hidden;">
+        <div id="previewContainer" style="transform-origin: top center;"></div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button onclick="closeCustomizer()" style="padding:8px 16px; border-radius:16px; border:1px solid #ccc; background:#fff; cursor:pointer;">キャンセル</button>
+        <button onclick="downloadCustomizedImage()" class="btn-generate-image" style="padding:8px 20px;">ダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = "ja";
+    let statusData = [];
+    let loadedDetailDataMap = {}; // IDと詳細データを保持
+    let currentCustomItemKey = null;
+    let customBgImageDataUrl = "";
+    let currentPresetBgPath = "";
+
+    // 設定値 (3_generate_image.py の CONFIG 相当)
+    const IMAGE_CONFIG = {
+      image_width: 1920,
+      image_height: 1080,
+      footer_text: "Translation by Gemini https://perses-translation-pocket.pages.dev/"
+      //header_text_default: "perses translation pocket"
+    };
+
+    async function init() {
+      try {
+        const response = await fetch('./data/status_management.json');
+        statusData = await response.json();
+        await render();
+      } catch (error) {
+        console.error('データの取得に失敗しました:', error);
+        document.getElementById('contentArea').innerHTML = '<p>データの読み込みに失敗しました。</p>';
+      }
+    }
+
+    function changeLanguage() {
+      currentLang = document.getElementById('langSelect').value;
+      render();
+    }
+
+    async function render() {
+      const container = document.getElementById('contentArea');
+      container.innerHTML = '';
+
+      for (const item of statusData) {
+        let detailData = {};
+        try {
+          const detailRes = await fetch(`./data/x_posts/${item.file}`);
+          detailData = await detailRes.json();
+          const itemKey = item.id || detailData.id || item.file;
+          loadedDetailDataMap[itemKey] = detailData;
+        } catch (e) {
+          console.warn(`ファイル ${item.file} の読み込みに失敗しました`);
+        }
+
+        const titleText = detailData.title?.[currentLang] || detailData.title?.ja || '';
+        const summaryText = item.summary?.[currentLang] || item.summary?.ja || '';
+        const captionText = detailData.caption?.[currentLang] || detailData.caption?.ja || '';
+        const itemKey = item.id || detailData.id || item.file;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">${escapeHtml(titleText)}</h2>
+              <div class="meta-info"> ${item.published_at || 'unknown'}</div>
+            </div>
+          </div>
+            
+          <button class="btn-generate-image" onclick="openCustomizer('${itemKey}')">
+            🖼️ カスタマイズして保存
+          </button>
+
+          ${detailData.x_url ? `
+            <div class="x-embed-container">
+              <blockquote class="twitter-tweet" data-media-max-width="560">
+                <a href="${detailData.x_url}"></a>
+              </blockquote>
+            </div>
+          ` : ''}
+
+          <div class="card-scroll-area">
+            ${summaryText ? `
+              <div class="summary-box">
+                💡 ${escapeHtml(summaryText)}
+              </div>
+            ` : ''}
+
+            ${captionText ? `
+              <div class="caption-box">
+                <div class="caption-title">caption</div>
+                ${escapeHtml(captionText)}
+              </div>
+            ` : ''}
+
+            <div class="transcript-list">
+              ${(detailData.transcript || []).map(line => renderLine(line)).join('')}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      }
+
+      if (window.twttr && window.twttr.widgets) {
+        window.twttr.widgets.load();
+      }
+    }
+
+    function renderLine(line) {
+      const transText = line.translations?.[currentLang] || line.translations?.ja || '';
+      // 日本語選択時のみかな表記を表示する
+      const kana = (currentLang === 'ja' && line.pronunciation_kana) ? `[${line.pronunciation_kana}]` : '';
+      const roman = line.pronunciation_roman ? `(${line.pronunciation_roman})` : '';
+
+      return `
+        <div class="transcript-item">
+          <div class="speaker-tag">${escapeHtml(line.speaker || 'UNKNOWN')}</div>
+          <div class="dialogue-content">
+            <div class="translation">${escapeHtml(transText)}</div>
+            <div class="text-th">
+              ${escapeHtml(line.text)}
+              <span class="time-tag">${line.start}s - ${line.end}s</span>
+            </div>
+            <div class="pronunciation">${escapeHtml(kana)} ${escapeHtml(roman)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // モーダル表示
+    function openCustomizer(itemKey) {
+      currentCustomItemKey = itemKey;
+      customBgImageDataUrl = "";
+      document.getElementById("bgTypeSelect").value = "color";
+      document.getElementById("customizerModal").style.display = "flex";
+      updatePreviewLayout();
+    }
+
+    function closeCustomizer() {
+      document.getElementById("customizerModal").style.display = "none";
+    }
+
+    // ファイルアップロードハンドラ
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          customBgImageDataUrl = e.target.result;
+          updatePreviewLayout();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // プリセット画像選択関数（そのまま保持）
+    function selectPresetBg(path) {
+      currentPresetBgPath = path;
+      document.getElementById("bgTypeSelect").value = "preset";
+      updatePreviewLayout();
+    }
+
+    // プレビュー要素の生成・読み込み
+    function buildCardElement(data, options) {
+      let lines = [];
+      if (data.video_subtitle && data.video_subtitle.lines) {
+        lines = data.video_subtitle.lines;
+      } else if (data.transcript) {
+        lines = data.transcript;
+      }
+
+      const fullText = formatLinesToText(lines);
+
+      // ★ 修正: title (現在の言語) と x_url を組み合わせてヘッダーに設定
+      const titleText = data.title?.[currentLang] || data.title?.ja || '';
+      const urlText = data.x_url || '';
+      
+      // title と url が両方ある場合は改行またはスペースで結合（ここでは1行に綺麗に収まるよう配置）
+      const headerText = data.video_subtitle?.header_text 
+        || (titleText && urlText ? `${titleText}   ${urlText}` : titleText || urlText || IMAGE_CONFIG.header_text_default);
+
+      const { fontSize, lineHeight } = calculateDynamicStyles(fullText);
+
+      // ★ 修正：背景画像のときは下地の暗い色(#1a1a1a)を消し、透明または指定色のみにする
+      let backgroundStyle = '';
+        if (options.bgType === 'color') {
+          backgroundStyle = `background-color: ${options.bgColor};`;
+        } else if (options.bgType === 'preset' && currentPresetBgPath) {
+          backgroundStyle = `background-image: url('${currentPresetBgPath}'); background-size: cover; background-position: center;`;
+        } else if (options.bgType === 'file' && customBgImageDataUrl) {
+          backgroundStyle = `background-image: url('${customBgImageDataUrl}'); background-size: cover; background-position: center;`;
+        } else if (options.bgType === 'url' && options.bgUrl) {
+          backgroundStyle = `background-image: url('${options.bgUrl}'); background-size: cover; background-position: center;`;
+        }
+
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = `
+        width: 1920px;
+        height: 1080px;
+        ${backgroundStyle}
+        font-family: 'Noto Sans JP', sans-serif;
+        padding: 60px 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+      `;
+
+      // opacityの16進数変換
+      const alphaHex = Math.round(options.cardOpacity * 255).toString(16).padStart(2, '0');
+
+      wrapper.innerHTML = `
+          <div style="
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff${alphaHex};
+            color: ${options.textColor};
+            border-radius: 24px;
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.01); /* ★ 影を極力薄く変更 */
+            box-sizing: border-box;
+          ">
+          <div style="
+            height: 60px;
+            font-size: 30px;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+          ">${escapeHtml(headerText)}</div>
+
+          <div style="
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 20px 0;
+            overflow: hidden;
+          ">
+            <div style="
+              font-size: ${fontSize}px;
+              line-height: ${lineHeight};
+              font-weight: 500;
+              white-space: pre-wrap;
+              word-break: break-word;
+            ">${escapeHtml(fullText)}</div>
+          </div>
+
+          <div style="
+            height: 50px;
+            font-size: 20px;
+            opacity: 0.6;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+          ">${escapeHtml(IMAGE_CONFIG.footer_text)}</div>
+        </div>
+      `;
+
+      return wrapper;
+    }
+
+    // プレビュー表示更新
+    function updatePreviewLayout() {
+      if (!currentCustomItemKey) return;
+      const data = loadedDetailDataMap[currentCustomItemKey];
+      if (!data) return;
+
+      const bgType = document.getElementById("bgTypeSelect").value;
+      document.getElementById("bgControlColor").style.display = bgType === 'color' ? 'block' : 'none';
+      document.getElementById("bgControlFile").style.display = bgType === 'file' ? 'block' : 'none';
+      document.getElementById("bgControlUrl").style.display = bgType === 'url' ? 'block' : 'none';
+
+      const options = {
+        bgType: bgType,
+        bgColor: document.getElementById("bgColorInput").value,
+        bgUrl: document.getElementById("bgUrlInput").value,
+        cardOpacity: parseFloat(document.getElementById("cardOpacityInput").value),
+        textColor: document.getElementById("textColorInput").value
+      };
+
+      const previewContainer = document.getElementById("previewContainer");
+      previewContainer.innerHTML = "";
+
+      const element = buildCardElement(data, options);
+      
+      // プレビュー用に縮小表示（1920x1080 -> 縮小）
+      const scaleWrapper = document.createElement('div');
+      scaleWrapper.style.cssText = "width: 1920px; height: 1080px; transform: scale(0.35); transform-origin: top center;";
+      scaleWrapper.appendChild(element);
+
+
+      previewContainer.appendChild(scaleWrapper);
+    }
+
+    // カスタマイズ画像のダウンロード実行
+    async function downloadCustomizedImage() {
+      if (!currentCustomItemKey) return;
+      const data = loadedDetailDataMap[currentCustomItemKey];
+
+      const options = {
+        bgType: document.getElementById("bgTypeSelect").value,
+        bgColor: document.getElementById("bgColorInput").value,
+        bgUrl: document.getElementById("bgUrlInput").value,
+        cardOpacity: parseFloat(document.getElementById("cardOpacityInput").value),
+        textColor: document.getElementById("textColorInput").value
+      };
+
+      const hiddenContainer = document.getElementById('renderHiddenContainer');
+      hiddenContainer.innerHTML = '';
+      const element = buildCardElement(data, options);
+      hiddenContainer.appendChild(element);
+
+      try {
+        const canvas = await html2canvas(element, {
+          width: 1920,
+          height: 1080,
+          scale: 1,
+          useCORS: true,
+          backgroundColor: null // ★追加: デフォルトの暗い背景合成を無効化
+        });
+
+        const link = document.createElement('a');
+        link.download = `perses_translation_${data.id || currentCustomItemKey}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        closeCustomizer();
+      } catch (err) {
+        console.error('画像生成エラー:', err);
+        alert('画像の生成に失敗しました。');
+      } finally {
+        hiddenContainer.innerHTML = '';
+      }
+    }
+
+
+    // --- 画像生成・ダウンロード処理 (3_generate_image.py のロジックを移植) ---
+
+    function calculateDynamicStyles(text) {
+      const charCount = text.length;
+      const lineCount = text.split('\n').length;
+      if (charCount <= 200 && lineCount <= 6) return { fontSize: 50, lineHeight: 1.5 };
+      if (charCount <= 250 && lineCount <= 8) return { fontSize: 48, lineHeight: 1.45 };
+      if (charCount <= 400 && lineCount <= 15) return { fontSize: 37, lineHeight: 1.3 };
+      if (charCount <= 600 && lineCount <= 22) return { fontSize: 30, lineHeight: 1.25 };
+      return { fontSize: 24, lineHeight: 1.2 };
+    }
+
+    function formatLinesToText(lines) {
+      const formatted = [];
+      for (const item of lines) {
+        const spk = (item.speaker || '').trim();
+        const trans = (item.translations?.[currentLang] || item.translations?.ja || item.ja || '').trim();
+        if (spk && trans) {
+          formatted.push(`${spk}：${trans}`);
+        } else if (trans) {
+          formatted.push(trans);
+        }
+      }
+      return formatted.join('\n');
+    }
+
+    async function generateAndDownloadImage(itemKey) {
+      const data = loadedDetailDataMap[itemKey];
+      if (!data) {
+        alert('対象データの取得に失敗しました。');
+        return;
+      }
+
+      // 1. 対話データまたは字幕データの整形
+      let lines = [];
+      if (data.video_subtitle && data.video_subtitle.lines) {
+        lines = data.video_subtitle.lines;
+      } else if (data.transcript) {
+        lines = data.transcript;
+      }
+
+      const fullText = formatLinesToText(lines);
+      const headerText = data.video_subtitle?.header_text || IMAGE_CONFIG.header_text_default;
+      const { fontSize, lineHeight } = calculateDynamicStyles(fullText);
+
+      // 2. 隠しコンテナに画像用レイアウト要素（1920x1080）を作成
+      const hiddenContainer = document.getElementById('renderHiddenContainer');
+      hiddenContainer.innerHTML = `
+        <div style="
+          width: 1920px;
+          height: 1080px;
+          background-color: #CAADFF;
+          font-family: 'Noto Sans JP', sans-serif;
+          padding: 60px 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+        ">
+          <div style="
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            color: #1A1A1A;
+            border-radius: 24px;
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+          ">
+            <div style="
+              height: 40px;
+              font-size:20px;
+              font-weight: 500;
+              color: #1A1A1A;
+              display: flex;
+              align-items: center;
+            ">${escapeHtml(headerText)}</div>
+
+            <div style="
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              margin: 20px 0;
+              overflow: hidden;
+            ">
+              <div style="
+                font-size: ${fontSize}px;
+                line-height: ${lineHeight};
+                font-weight: 500;
+                white-space: pre-wrap;
+                word-break: break-word;
+              ">${escapeHtml(fullText)}</div>
+            </div>
+
+            <div style="
+              height: 50px;
+              font-size: 34px;
+              color: #4A4A4A;
+              text-align: right;
+              display: flex;
+              align-items: center;
+              justify-content: flex-end;
+            ">${escapeHtml(IMAGE_CONFIG.footer_text)}</div>
+          </div>
+        </div>
+      `;
+
+      try {
+        // 3. html2canvas で描画・キャプション生成
+        const targetElement = hiddenContainer.firstElementChild;
+        const canvas = await html2canvas(targetElement, {
+          width: 1920,
+          height: 1080,
+          scale: 1, // 高解像度が必要な場合は 2 に変更可能
+          useCORS: true
+        });
+
+        // 4. 画像の自動ダウンロード実行
+        const link = document.createElement('a');
+        link.download = `perses_translation_${data.id || itemKey}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.error('画像生成エラー:', err);
+        alert('画像の生成に失敗しました。');
+      } finally {
+        // 後処理: 隠し要素をクリア
+        hiddenContainer.innerHTML = '';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

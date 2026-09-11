@@ -136,8 +136,9 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = ""):
     max_retries = 5
 
     for attempt in range(1, max_retries + 1):
+        print("✨ 処理中:gemini呼び出し　6秒待機 ✨")
         # 15 RPM 制限（1分15回＝4秒に1回）を絶対超えないよう、呼び出し直前に必ずインターバルを置く
-        time.sleep(3.5)
+        time.sleep(6)
 
         target_model = AVAILABLE_MODELS[current_model_index]
         try:
@@ -160,7 +161,7 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = ""):
                     current_key_index += 1
                     client = get_client(current_key_index)
                     print(f"🔄 APIキーを切り替えます (Key Index: {current_key_index})")
-                    time.sleep(2)
+                    time.sleep(5)
                     continue
                 # 2. モデルの切り替え
                 elif current_model_index + 1 < len(AVAILABLE_MODELS):
@@ -168,14 +169,14 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = ""):
                     current_key_index = 0
                     client = get_client(current_key_index)
                     print(f"🔄 モデルを切り替えます ({AVAILABLE_MODELS[current_model_index]})")
-                    time.sleep(2)
+                    time.sleep(5)
                     continue
 
                 # 3. 切り替えるキーもモデルもない場合は60秒待機
                 print("⏳ 全てのキーで制限に達しました。枠回復のため 60秒 待機します...")
                 time.sleep(60)
             else:
-                time.sleep(5)
+                time.sleep(7)
 
     raise RuntimeError("Gemini APIのリトライ上限に達しました。")
 
