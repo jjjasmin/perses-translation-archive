@@ -217,7 +217,12 @@ CONFIG = {
         "PALM": os.path.join(ASSETS_DIR, "palm.jpg"),
         "PLUGGY": os.path.join(ASSETS_DIR, "pluggy.jpg"),
     },
-    "gemini_model": "gemini-3.5-flash",
+    "AVAILABLE_MODELS": [
+        "gemini-3.5-flash",
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+        "gemini-3.8-flash",
+    ],
 }
 
 def load_urls_from_file() -> list:
@@ -357,17 +362,51 @@ def translate_text_fields_with_gemini(
 【出力JSONフォーマット】
 入力データの構造を維持しつつ、translations や caption、title、summary 内に指定言語のキーを補完した完全なJSONを出力してください。
 """
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=[prompt],
-            config={"response_mime_type": "application/json"}
-        )
-        translated_res = json.loads(response.text.strip())
-        return translated_res
-    except Exception as e:
-        print(f"⚠️ 多言語翻訳ステップでエラーが発生しました (Error: {e})。元のデータをそのまま使用します。")
-        return data
+    models = CONFIG.get("AVAILABLE_MODELS", ["gemini-3.5-flash"])
+    model_idx = 0
+    max_retries = 5
+
+    for attempt in range(1, max_retries + 1):
+        target_model = models[model_idx]
+        try:
+            response = client.models.generate_content(
+                model=target_model,
+                contents=[prompt],
+                config={"response_mime_type": "application/json"}
+            )
+            translated_res = json.loads(response.text.strip())
+            return translated_res
+        except Exception as e:
+            err_msg = str(e)
+            is_429 = "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg
+            is_503 = "503" in err_msg or "UNAVAILABLE" in err_msg
+
+            if is_429:
+                # ① 利用可能な別キーへ切り替え
+                if key_mgr.current_index + 1 < len(key_mgr.api_keys):
+                    print(f"\n⚠️ 多言語翻訳: 制限検知 (429 / RESOURCE_EXHAUSTED)。次のキーへ切替えます...")
+                    client = key_mgr.switch_to_next_key()
+                # ② 全キー使い切り時は次のモデルに昇格
+                elif model_idx + 1 < len(models):
+                    model_idx += 1
+                    key_mgr.current_index = 0
+                    client = key_mgr.get_client()
+                    print(f"\n🔀 【モデル切り替え】 次のモデル 『{models[model_idx]}』 へ切替えて続行します。")
+                    time.sleep(3)
+                else:
+                    print("\n⏳ 全キー・全モデルが制限に達しました。60秒待機して再試行します...")
+                    time.sleep(60)
+                    key_mgr.current_index = 0
+                    client = key_mgr.get_client()
+            elif is_503:
+                print(f"\n⚠️ サーバー混雑中 (503)。7秒待機後に再試行 ({attempt}/{max_retries})...")
+                time.sleep(7)
+            else:
+                print(f"\n⚠️ 多言語翻訳ステップでエラーが発生しました (Error: {e})。")
+                time.sleep(5)
+
+    print("⚠️ 多言語翻訳の全リトライに失敗したため、元のデータをそのまま使用します。")
+    return data
 
 
 def analyze_video_with_gemini(
@@ -379,60 +418,69 @@ def analyze_video_with_gemini(
     config: dict,
     off_screen_speaker: str = "",
 ) -> dict:
-    client = key_mgr.get_client()
 
-    print("📸 メンバー参照画像をアップロード中...")
-    uploaded_photos = []
-    photo_instruction = "\n\n【参考：メンバーの顔画像データ】\n"
+    def prepare_contents_and_client(current_client):
+        """現在の API クライアントを使ってファイルを再アップロードし、contents を作成する"""
+        uploaded_photos = []
+        photo_instruction = "\n\n【参考：メンバーの顔画像データ】\n"
 
-    for name, photo_path in member_photo_paths.items():
-        if os.path.exists(photo_path):
-            try:
-                img_file = client.files.upload(file=photo_path)
-                uploaded_photos.append(img_file)
-                photo_instruction += f"・添付した画像 {img_file.name} は {name} の顔写真です。\n"
-                print(f"  └ ✅ {name} 読み込み成功")
-            except Exception as e:
-                print(f"  └ ⚠️ {name} 読み込み失敗: {e}")
+        print("📸 メンバー参照画像をアップロード中...")
+        for name, photo_path in member_photo_paths.items():
+            if os.path.exists(photo_path):
+                try:
+                    img_file = current_client.files.upload(file=photo_path)
+                    uploaded_photos.append(img_file)
+                    photo_instruction += f"・添付した画像 {img_file.name} は {name} の顔写真です。\n"
+                    print(f"  └ ✅ {name} 読み込み成功")
+                except Exception as e:
+                    print(f"  └ ⚠️ {name} 読み込み失敗: {e}")
 
-    print("📹 動画ファイルを Gemini へアップロード中...")
-    video_file = client.files.upload(file=video_path)
+        print("📹 動画ファイルを Gemini へアップロード中...")
+        video_file = current_client.files.upload(file=video_path)
 
-    while video_file.state.name == "PROCESSING":
-        print(".", end="", flush=True)
-        time.sleep(2)
-        video_file = client.files.get(name=video_file.name)
+        while video_file.state.name == "PROCESSING":
+            print(".", end="", flush=True)
+            time.sleep(2)
+            video_file = current_client.files.get(name=video_file.name)
 
-    if video_file.state.name == "FAILED":
-        raise RuntimeError("Gemini での動画処理に失敗しました。")
+        if video_file.state.name == "FAILED":
+            raise RuntimeError("Gemini での動画処理に失敗しました。")
 
-    extra_prompt = ""
-    if config["custom_instruction"].strip():
-        extra_prompt = f"【追加指示】\n・{config['custom_instruction'].strip()}\n"
+        extra_prompt = ""
+        if config["custom_instruction"].strip():
+            extra_prompt = f"【追加指示】\n・{config['custom_instruction'].strip()}\n"
 
-    off_screen_instruction = ""
-    if off_screen_speaker.strip():
-        off_screen_instruction = (
-            f"今回の動画でカメラ外で喋ってる人は、{off_screen_speaker.strip()}です。"
+        off_screen_instruction = ""
+        if off_screen_speaker.strip():
+            off_screen_instruction = (
+                f"今回の動画でカメラ外で喋ってる人は、{off_screen_speaker.strip()}です。"
+            )
+
+        prompt_text = base_prompt.replace("{translation_rules}", translation_rules)
+        prompt_text = (
+            prompt_text.replace("{target_tone}", config["target_tone"])
+            .replace("{extra_prompt}", extra_prompt)
+            .replace("{off_screen_instruction}", off_screen_instruction)
         )
 
-    prompt_text = base_prompt.replace("{translation_rules}", translation_rules)
-    prompt_text = (
-        prompt_text.replace("{target_tone}", config["target_tone"])
-        .replace("{extra_prompt}", extra_prompt)
-        .replace("{off_screen_instruction}", off_screen_instruction)
-    )
+        final_prompt = prompt_text + photo_instruction
+        contents_input = [video_file] + uploaded_photos + [final_prompt]
+        
+        return contents_input, video_file, uploaded_photos
 
-    final_prompt = prompt_text + photo_instruction
-    contents_input = [video_file] + uploaded_photos + [final_prompt]
+    client = key_mgr.get_client()
+    contents_input, video_file, uploaded_photos = prepare_contents_and_client(client)
 
     raw_output = ""
-    max_retries = 5
+    max_retries = 10
+    models = config.get("AVAILABLE_MODELS", ["gemini-3.5-flash"])
+    model_idx = 0
 
     for attempt in range(1, max_retries + 1):
+        target_model = models[model_idx]
         try:
             response = client.models.generate_content(
-                model=config["gemini_model"],
+                model=target_model,
                 contents=contents_input,
                 config={"response_mime_type": "application/json"}
             )
@@ -444,8 +492,27 @@ def analyze_video_with_gemini(
             is_503 = "503" in err_msg or "UNAVAILABLE" in err_msg
 
             if is_429:
-                print(f"\n⚠️ 制限検知 (429 / RESOURCE_EXHAUSTED)。次のキーへ切替えます...")
-                client = key_mgr.switch_to_next_key()
+                # ① まだAPIキーに余剰がある場合は次のキーヘ切替
+                if key_mgr.current_index + 1 < len(key_mgr.api_keys):
+                    print(f"\n⚠️ 動画解析: 制限検知 (429 / RESOURCE_EXHAUSTED)。次のキーへ切替えて再アップロードします...")
+                    client = key_mgr.switch_to_next_key()
+                    # ★ 新しいキーでファイルをアップロードし直す
+                    contents_input, video_file, uploaded_photos = prepare_contents_and_client(client)
+                # ② 全キー使い切り時は次のモデルへ昇格
+                elif model_idx + 1 < len(models):
+                    model_idx += 1
+                    key_mgr.current_index = 0
+                    client = key_mgr.get_client()
+                    print(f"\n🔀 【モデル切り替え】 次のモデル 『{models[model_idx]}』 へ切替えて続行します。")
+                    time.sleep(3)
+                    # ★ 新しいモデル用に（キーがIndex 0に戻るため）ファイルを再アップロード
+                    contents_input, video_file, uploaded_photos = prepare_contents_and_client(client)
+                else:
+                    print("\n⏳ 全キー・全モデルが制限に達しました。60秒待機して再試行します...")
+                    time.sleep(60)
+                    key_mgr.current_index = 0
+                    client = key_mgr.get_client()
+                    contents_input, video_file, uploaded_photos = prepare_contents_and_client(client)
             elif is_503:
                 print(f"\n⚠️ サーバー混雑中 (503)。7秒待機後に再試行 ({attempt}/{max_retries})...")
                 time.sleep(7)
@@ -453,12 +520,16 @@ def analyze_video_with_gemini(
                 print(f"\n❌ APIエラーが発生しました: {e}")
                 time.sleep(5)
 
+    # 後処理（削除失敗のエラーは無視）
     try:
         client.files.delete(name=video_file.name)
         for img_file in uploaded_photos:
             client.files.delete(name=img_file.name)
     except Exception:
         pass
+
+    if not raw_output:
+        raise RuntimeError("Gemini からの応答を取得できませんでした。")
 
     # JSONレスポンスを直接ロード
     result_data = json.loads(raw_output)

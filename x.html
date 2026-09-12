@@ -399,11 +399,27 @@
       }
     }
 
+    // 秒数(例: 135) を "02:15" 形式の文字列に変換する関数
+    function formatTime(seconds) {
+      if (seconds === undefined || seconds === null || isNaN(seconds)) return '00:00';
+      const secNum = parseInt(seconds, 10);
+      const minutes = Math.floor(secNum / 60);
+      const secs = secNum % 60;
+      
+      // 1桁の場合は頭に 0 を補完 (例: 2:5 -> 2:05)
+      const formattedSeconds = String(secs).padStart(2, '0');
+      
+      return `${minutes}:${formattedSeconds}`;
+    }
+
     function renderLine(line) {
       const transText = line.translations?.[currentLang] || line.translations?.ja || '';
-      // 日本語選択時のみかな表記を表示する
       const kana = (currentLang === 'ja' && line.pronunciation_kana) ? `[${line.pronunciation_kana}]` : '';
       const roman = line.pronunciation_roman ? `(${line.pronunciation_roman})` : '';
+
+      // 時間のフォーマット処理
+      const startTime = formatTime(line.start);
+      const endTime = formatTime(line.end);
 
       return `
         <div class="transcript-item">
@@ -412,7 +428,7 @@
             <div class="translation">${escapeHtml(transText)}</div>
             <div class="text-th">
               ${escapeHtml(line.text)}
-              <span class="time-tag">${line.start}s - ${line.end}s</span>
+              <span class="time-tag">${startTime} - ${endTime}</span>
             </div>
             <div class="pronunciation">${escapeHtml(kana)} ${escapeHtml(roman)}</div>
           </div>
