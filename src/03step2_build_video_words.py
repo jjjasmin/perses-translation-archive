@@ -1,7 +1,23 @@
-import json
+import argparse
 import glob
+import json
 import os
 import sys
+
+# ------------------------------------------
+# 0. 引数解析 (--force フラグの受け取り)
+# ------------------------------------------
+parser = argparse.ArgumentParser(
+    description="ビデオ別単語JSONのビルド処理"
+)
+parser.add_argument(
+    "--force",
+    action="store_true",
+    help="すでに completed の動画もスキップせずに強制再実行します",
+)
+args = parser.parse_args()
+
+FORCE_REBUILD = args.force
 
 # ------------------------------------------
 # 1. パス設定
@@ -20,7 +36,9 @@ os.makedirs(OUTPUT_WORDS_DIR, exist_ok=True)
 # 2. 単語マスタのロード
 # ------------------------------------------
 if not os.path.exists(MASTER_FILE):
-    print(f"❌ エラー: 単語マスタ 『{MASTER_FILE}』 が存在しません。ステップ1を先に実行してください。")
+    print(
+        f"❌ エラー: 単語マスタ 『{MASTER_FILE}』 が存在しません。ステップ1を先に実行してください。"
+    )
     sys.exit(1)
 
 with open(MASTER_FILE, "r", encoding="utf-8") as f:
@@ -44,10 +62,21 @@ for filepath in target_files:
     video_id = filename.replace("video_", "").replace(".json", "")
 
     status_info = status_data.get(video_id, {})
+
+    # 前提条件チェック: 単語抽出(words_extracted)が未完了の動画は処理不可
     if status_info.get("words_extracted") != "completed":
         continue
 
-    print(f"⚙️ ビデオ別単語JSON生成中: Video ID {video_id}...")
+    # 完了判定スキップ: FORCE_REBUILD が False かつ 既に words_built が completed の場合はスキップ
+    if not FORCE_REBUILD and status_info.get("words_built") == "completed":
+        print(
+            f"⏩ [{video_id}] は既に words_built が完了しているためスキップします。"
+        )
+        continue
+
+    print(
+        f"⚙️ ビデオ別単語JSON生成中: Video ID {video_id}... (Force: {FORCE_REBUILD})"
+    )
 
     with open(filepath, "r", encoding="utf-8") as f:
         video_data = json.load(f)
@@ -58,33 +87,32 @@ for filepath in target_files:
     for line in transcript:
         line_id = line.get("id")
         tokens = line.get("tokens", [])
-        
+
         matched_words = []
         for token in tokens:
             # マスタに存在する場合は詳細情報を付与
             if token in words_master:
-                matched_words.append({
-                    "text": token,
-                    **words_master[token]
-                })
+                matched_words.append({"text": token, **words_master[token]})
             else:
                 matched_words.append({
                     "text": token,
                     "pos": "unknown",
                     "components": [],
                     "tone": "",
-                    "breakdown_explanation": ""
+                    "breakdown_explanation": "",
                 })
 
-        video_words_list.append({
-            "id": line_id,
-            "words": matched_words
-        })
+        video_words_list.append({"id": line_id, "words": matched_words})
 
     # /data/words/word_{video_id}.json として出力
     output_filepath = os.path.join(OUTPUT_WORDS_DIR, f"word_{video_id}.json")
     with open(output_filepath, "w", encoding="utf-8") as f:
-        json.dump({"video_id": video_id, "transcript_words": video_words_list}, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {"video_id": video_id, "transcript_words": video_words_list},
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     print(f"  └─ 📄 保存完了: {output_filepath}")
 
@@ -93,7 +121,7 @@ for filepath in target_files:
         try:
             with open(VIDEOS_FILE, "r", encoding="utf-8") as vf:
                 videos_data = json.load(vf)
-            
+
             updated_v = False
             for v_item in videos_data:
                 if v_item.get("id") == video_id:
@@ -107,7 +135,9 @@ for filepath in target_files:
             if updated_v:
                 with open(VIDEOS_FILE, "w", encoding="utf-8") as vf:
                     json.dump(videos_data, vf, ensure_ascii=False, indent=2)
-                print(f"  └─ 🏷️ 『videos.json』のキーワードを更新しました。")
+                print(
+                    f"  └─ 🏷️ 『videos.json』のキーワードを更新しました。"
+                )
         except Exception as e:
             print(f"  └─ ⚠️ videos.json 更新エラー: {e}")
 
