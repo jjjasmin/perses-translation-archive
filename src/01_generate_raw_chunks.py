@@ -309,7 +309,22 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                 }
             )
             tracker.log(response, prefix=f"{chunk_info} ({target_model})")
-            return response.text.strip()
+
+            # ★ レスポンス本文の検証
+            raw_text = getattr(response, "text", None)
+            if raw_text is None:
+                finish_reason = ""
+                if getattr(response, "candidates", None):
+                    finish_reason = getattr(response.candidates[0], "finish_reason", "")
+                print(f"    ⚠️ APIからの返答本文が空 (None) です。(Finish Reason: {finish_reason})")
+                raise ValueError("EMPTY_RESPONSE")
+
+            return raw_text.strip()
+
+        except ValueError as e:
+            # ★ 空応答の場合はリトライせず即座に例外を投げて呼び出し元へ渡す
+            if str(e) == "EMPTY_RESPONSE":
+                raise e
 
         except Exception as e:
             err_msg = str(e)
@@ -502,15 +517,23 @@ def process_batch_with_split(
 【生成対象】\n{json.dumps(minimal_input, ensure_ascii=False)}
 【出力フォーマット】\n{output_format}"""
 
-    # メイン翻訳試行 (トークン消費を抑えるため、試行1回で失敗した場合は分割処理)
+    # メイン翻訳試行
+    is_empty_response = False
+
     for main_attempt in range(1, 2):
         chunk_info = f"{display_label} (メイン試行 {main_attempt})"
         print(f"{indent}🔄 処理中: {chunk_info}")
 
         try:
             raw_text = call_gemini_api_with_retry(prompt, chunk_info=chunk_info)
+        except ValueError as e:
+            if str(e) == "EMPTY_RESPONSE":
+                print(f"{indent}  ⚠️ 空応答を検知したため、バッチ分割処理へ移行します。")
+                is_empty_response = True
+                break  # ループを抜けて下の分割処理へ進む
+            print(f"{indent}  ❌ APIエラー: {e}")
+            return None
         except Exception as e:
-            # ★ API通信エラー（429/503/リトライ上限等）の場合は分割へ進めず、呼び出し元に None を返してバッチを保持
             print(f"{indent}  ❌ API通信エラー発生のためバッチを保持します: {e}")
             return None
 
@@ -533,12 +556,13 @@ def process_batch_with_split(
                         print(f"{indent}  🎉 リペア成功！")
                         return [candidate_repaired]
 
-    # ★【通信成功後にフォーマット不全となった場合のみここへ到達する】
+    # ★【修正ポイント】空応答時または検証不全時に分割処理（半減）へ進む[cite: 3]
     if len(batch) > 1:
         mid = len(batch) // 2
         left_batch = batch[:mid]
         right_batch = batch[mid:]
-        print(f"\n{indent}🚨 [JSON構造・ID不全検知 ➔ ID半減] ID {start_id}〜{end_id} ({len(batch)}件) で失敗したため、データ量を半減 ({len(left_batch)}件 / {len(right_batch)}件) して再試行します...")
+        reason_msg = "空応答検知" if is_empty_response else "JSON構造・ID不全検知"
+        print(f"\n{indent}🚨 [{reason_msg} ➔ ID半減] ID {start_id}〜{end_id} ({len(batch)}件) で失敗したため、データ量を半減 ({len(left_batch)}件 / {len(right_batch)}件) して再試行します...")
 
         res_left = process_batch_with_split(left_batch, transcript_list, original_title, is_first_chunk=is_first_chunk, depth=depth + 1, chunk_label=chunk_label)
         if res_left is None:
@@ -684,7 +708,7 @@ def main(video_ids_or_urls=None):
                     pass
         else:
             # 同じモードでの「再開（レジューム）」処理
-            start_chunk_idx = v_status.get("last_processed_chunk", 0)
+            start_chunk_idx = ja_status.get("last_processed_chunk", 0)
             parsed_chunks_data = []
             if start_chunk_idx > 0 and os.path.exists(temp_chunk_file):
                 try:

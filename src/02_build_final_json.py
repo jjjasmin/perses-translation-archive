@@ -108,27 +108,54 @@ def fetch_transcript(video_id: str):
     raise RuntimeError("対象の字幕（タイ語手動・タイ語自動・英語手動）が見つかりませんでした。")
 
 
-def archive_temp_files(video_id: str):
-    """正常終了時に一時ファイルを archive フォルダへ移動する"""
-    target_files = [
-        os.path.join(TEMP_DIR, f"temp_source_{video_id}.json"),
-        os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
-    ]
-    
-    for file_path in target_files:
-        if os.path.exists(file_path):
-            file_name = os.path.basename(file_path)
+def archive_temp_files(video_id: str, is_need_fix: bool = False):
+    """
+    一時ファイルの整理処理:
+    is_need_fix=True の場合は今まで通り全一時ファイルを archive フォルダへ退避。
+    is_need_fix=False の場合は temp_raw_chunks を削除し、temp_source のみ退避する。
+    """
+    chunks_file = os.path.join(TEMP_DIR, f"temp_raw_chunks_{video_id}.json")
+    source_file = os.path.join(TEMP_DIR, f"temp_source_{video_id}.json")
+
+    if is_need_fix:
+        # 今まで通り両方のファイルを archive フォルダへ退避
+        target_files = [source_file, chunks_file]
+        for file_path in target_files:
+            if os.path.exists(file_path):
+                file_name = os.path.basename(file_path)
+                dest_path = os.path.join(ARCHIVE_DIR, file_name)
+                
+                if os.path.exists(dest_path):
+                    try:
+                        os.remove(dest_path)
+                    except Exception:
+                        pass
+                
+                try:
+                    shutil.move(file_path, dest_path)
+                    print(f"📦 一時ファイルを退避しました: {file_name} -> temp_archive/")
+                except Exception as e:
+                    print(f"⚠️ 一時ファイルの退避に失敗しました ({file_name}): {e}")
+    else:
+        # 全成功時: temp_raw_chunks を削除
+        if os.path.exists(chunks_file):
+            try:
+                os.remove(chunks_file)
+                print(f"🗑️ ビルド成功のため一時ファイルを削除しました: {os.path.basename(chunks_file)}")
+            except Exception as e:
+                print(f"⚠️ 一時ファイルの削除に失敗しました ({os.path.basename(chunks_file)}): {e}")
+
+        # temp_source は退避
+        if os.path.exists(source_file):
+            file_name = os.path.basename(source_file)
             dest_path = os.path.join(ARCHIVE_DIR, file_name)
-            
-            # 過去に同じファイルが退避先に存在する場合は上書きできるよう事前削除
             if os.path.exists(dest_path):
                 try:
                     os.remove(dest_path)
                 except Exception:
                     pass
-            
             try:
-                shutil.move(file_path, dest_path)
+                shutil.move(source_file, dest_path)
                 print(f"📦 一時ファイルを退避しました: {file_name} -> temp_archive/")
             except Exception as e:
                 print(f"⚠️ 一時ファイルの退避に失敗しました ({file_name}): {e}")
@@ -401,7 +428,7 @@ def build_final_json(
     else:
         print(f"✅ 『{output_file}』 および 『videos.json』 の保存に成功しました！")
         
-    archive_temp_files(video_id)
+    archive_temp_files(video_id, is_need_fix=is_need_fix)
 
     return True
 

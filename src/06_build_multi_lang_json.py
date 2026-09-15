@@ -145,4 +145,10 @@ def build_multi_lang_json(
             json.dump(status_data, f, ensure_ascii=False, indent=2)
 
     print(f"✅ [{lang_code}] データの統合が完了しました: video_{video_id}.json")
+
+    # 統合成功後に一時ファイルを削除するコードを追加
+    if os.path.exists(temp_lang_chunk_file):
+        os.remove(temp_lang_chunk_file)
+        print(f"🗑️ 一時ファイルを削除しました: {temp_lang_chunk_file}")
+
     return True
