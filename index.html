@@ -1659,20 +1659,31 @@ document.addEventListener('click', (e) => {
         // 4パターンの例文テンプレート
         const templates = [
           // パターン1：エモさ・推し活共感重視
-          `🎬【日本語字幕付き】『${videoTitle}』\n\nPERSESメンバーのタイ語の発言やニュアンスを日本語字幕で楽しめます✨\n字幕をクリックで好きなシーンへジャンプ！\n\n#PERSES #パーセス #PERSES和訳\n`,
+          `🎬【日本語字幕付き】『${videoTitle}』\n\nPERSESメンバーのタイ語の発言やニュアンスを日本語字幕で楽しめます✨\n字幕をクリックで好きなシーンへジャンプ！\n\n#PERSES #PERSES_translation #PERSES和訳\n`,
 
           // パターン2：機能（字幕＆単語辞書）アピール重視(データ未完成のためコメントアウト)
-          //`💡 タイ語学習にも使える PERSES 日本語字幕アーカイブ\n\n『${videoTitle}』の和訳＆タイ語字幕を公開中！\n気になるタイ語単語をタップすると読み方と意味が出る辞書機能つき🔍\n\n#PERSES #PERSES_TH #PERSES和訳\n`,
-
-          // パターン2.5：機能（字幕＆単語辞書）アピール重視(データ未完成のためコメントアウト)
-          `💡 タイ語学習にも使える PERSES 日本語字幕アーカイブ\n\n『${videoTitle}』の和訳＆タイ語字幕を公開中！\nぜひチェックしてみてください✨\n\n#PERSES #PERSES_TH #PERSES和訳\n`,
+          `💡 タイ語学習にも使える PERSES『${videoTitle}』の和訳＆タイ語字幕\n気になるタイ語単語をタップすると読み方と意味が出る辞書機能つき🔍\n\n#PERSES #PERSES_translation #PERSES和訳\n`,
 
           // パターン3：短くすっきり
-          `PERSES『${videoTitle}』の日本語字幕動画です🎥\n動画と字幕が連動して流れるので推しの会話がリアルタイムで楽しめます✨\n\n🔽 翻訳付きで見る\n#PERSES #PERSES和訳\n`,
+          `PERSES『${videoTitle}』の日本語字幕動画を更新しました🎥\n\n#PERSES #PERSES_translation #PERSES和訳\n🔽 翻訳付きで見る\n`,
 
-          // パターン4：ファン（PIXES）への呼びかけ風
-          `日本のPIESESのみなさん🙌\n『${videoTitle}』の日本語翻訳字幕をアップしました！\n\n字幕と動画が連動しているので、可愛い発言を日本語でチェックしてみてください✨\n\n🔽 動画はこちらから\n#PERSES #PERSES和訳\n`
-        ];
+          // パターン4：ファンへの呼びかけ風
+          //`PIECESのみなさん🙌\n『${videoTitle}』の翻訳字幕を更新しました！\n\n可愛い発言をチェックしてみてください✨\n\n#PERSES #PERSES_translation #PERSES和訳\n🔽 動画はこちらから\n`,
+
+          // 多言語翻訳アピール用のテンプレート例文アイデア（4パターン）
+
+          // パターン1：【多言語網羅・視覚重視】一目で6カ国語対応が伝わるスタイル
+      `✨ PERSES Multi-language Subtitles Updated! ✨\n\n🇯🇵 日本語字幕\n🇺🇸 EN subs\n🇰🇷 한국어 자막\n🇹🇼 繁體字字幕\n🇮🇩 Sub Indo\n🇵🇹 Legendas PT\n\nWatch with subtitles in your language! \n\n#PERSES_translation #PERSES和訳\n`,
+
+      // パターン2：【更新通知メイン】翻訳追加のお知らせ＋言語一覧
+      `✨ Translation Updated! / 翻訳を更新しました ✨\nAvailable Subtitles / 対応言語:\n🇯🇵 JP / 🇺🇸 EN / 🇰🇷 KR / 🇹🇼 TC / 🇮🇩 ID / 🇵🇹 PT\n\n#PERSES_translation #PERSES和訳\nCheck out the link below 🔽\n`,
+
+      // パターン3：【キャッチー＆コンパクト】「多言語で見れる」をアピール
+      `🌏 Watch PERSES with Subtitles in 6 Languages!\n多言語翻訳を更新しました！\n\n🇯🇵 🇺🇸 🇰🇷 🇹🇼 🇮🇩 🇵🇹\n\nEnjoy the video in your language! 🎬\n\n#PERSES_translation #PERSES和訳\n`,
+
+      // パターン4：【グローバルファン向けメッセージ風】直感的な呼びかけ
+      `🎉 New Subtitles Added! / 6カ国語の字幕を追加しました！\n\n🎥 『${videoTitle}』\n\n🇯🇵 JP | 🇺🇸 EN | 🇰🇷 KR | 🇹🇼 TC | 🇮🇩 ID | 🇵🇹 PT\n\nSelect your language and enjoy! ✨\n\n#PERSES_translation #PERSES和訳\n`
+    ];
 
         // ランダムに1つ選択
         const randomText = templates[Math.floor(Math.random() * templates.length)];
