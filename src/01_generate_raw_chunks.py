@@ -124,7 +124,7 @@ else:
         "gemini-3.7-flash",
         "gemini-3.8-flash",
     ]
-    CHUNK_SIZE = 30  # 精度重視で30件ずつ
+    CHUNK_SIZE = 20  # 精度重視で20件ずつ
 
 # リペア用軽量モデルを定数として定義
 LIGHT_MODEL_NAME = "gemini-3.5-flash-lite"
@@ -367,8 +367,8 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                 # sleep_time = base_backoff * (2 ** (attempt - 1))
                 # print(f"⚠️ [503 サーバー混雑] {sleep_time}秒待機して再試行します (試行 {attempt}/{max_retries})...")
                 # time.sleep(sleep_time)
-                print(f"⚠️ [503 サーバー混雑] 7秒待機して再試行します (試行 {attempt}/{max_retries})...")
-                time.sleep(7)
+                print(f"⚠️ [503 サーバー混雑] 14秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                time.sleep(14)
             else:
                 print(f"❌ 予期せぬAPIエラー: {e}")
                 time.sleep(5)
