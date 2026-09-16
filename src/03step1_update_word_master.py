@@ -11,7 +11,7 @@ from google.genai.errors import ServerError
 # ------------------------------------------
 # 実行オプション設定
 # ------------------------------------------
-TARGET_PRIORITY = 2  # 特定priorityのみ実行する場合は数字を指定（例: 888）
+TARGET_PRIORITY = None  # 特定priorityのみ実行する場合は数字を指定（例: 888）
 
 # ------------------------------------------
 # 1. APIキー・設定
@@ -68,7 +68,10 @@ def call_gemini_api_with_retry(prompt: str):
                 contents=prompt,
                 config={"response_mime_type": "application/json"},
             )
-            return response.text.strip()
+            # 安全に text を取得 (None の場合は空文字を返す)
+            text_res = getattr(response, "text", None) or ""
+            return text_res.strip()
+
         except Exception as e:
             err_msg = str(e)
             is_429 = "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg
@@ -84,7 +87,8 @@ def call_gemini_api_with_retry(prompt: str):
                         contents=prompt,
                         config={"response_mime_type": "application/json"},
                     )
-                    return response.text.strip()
+                    text_res = getattr(response, "text", None) or ""
+                    return text_res.strip()
                 except Exception:
                     pass
 
@@ -436,7 +440,7 @@ Markdown枠なしの純粋なJSONオブジェクトを出力してください�
                     break
             except Exception as e:
                 print(f"⚠️ 試行 {attempt}/10 パース失敗: {e}")
-            time.sleep(1)
+            time.sleep(5)
 
         if not batch_success:
             parse_failed = True
