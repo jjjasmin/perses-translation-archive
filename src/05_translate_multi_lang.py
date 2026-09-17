@@ -136,9 +136,9 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = ""):
     max_retries = 5
 
     for attempt in range(1, max_retries + 1):
-        print("✨ 処理中:gemini呼び出し　3秒待機 ✨")
+        print("✨ 処理中:gemini呼び出し　4秒待機 ✨")
         # 15 RPM 制限（1分15回＝4秒に1回）を絶対超えないよう、呼び出し直前に必ずインターバルを置く
-        time.sleep(3)
+        time.sleep(4)
 
         target_model = AVAILABLE_MODELS[current_model_index]
         try:
