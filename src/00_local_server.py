@@ -20,6 +20,7 @@ from watchdog.observers import Observer
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 TEMP_DIR = BASE_DIR / "data" / "temp"               # main/data/temp
+TRANSCRIPTS_DIR = BASE_DIR / "data" / "transcripts" # main/data/transcripts
 PIPELINE_STATUS_FILE = BASE_DIR / "pipeline_status.json"  # main/pipeline_status.json
 
 # お使いの環境の「ダウンロード」フォルダパス
@@ -27,6 +28,7 @@ DOWNLOADS_DIR = Path.home() / "Downloads"
 
 # ディレクトリの事前作成
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
+TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==========================================
 # 1. 動画IDの抽出ユーティリティ
@@ -79,36 +81,48 @@ status_mgr = PipelineStatusManager(PIPELINE_STATUS_FILE)
 # ==========================================
 # 3. ファイル自動移動処理 (Watchdog & 既存一括移動)
 # ==========================================
-def process_existing_downloads():
-    """起動時にDownloadsフォルダに残っているtemp_source_*.jsonを一括移動"""
-    print(f"🧹 [Watchdog] Downloads 内の既存ファイルをチェック中: {DOWNLOADS_DIR}")
-    for file_path in DOWNLOADS_DIR.glob("temp_source_*.json"):
-        move_file_to_temp(file_path)
-
-def move_file_to_temp(src_path: Path):
-    """ファイルを安全に main/data/temp へ移動"""
+def move_file(src_path: Path, target_dir: Path):
+    """ファイルを指定のフォルダへ移動（同名ファイルが存在する場合は上書き）"""
     if not src_path.exists():
         return
     
     # 書き込み完了待ち（ダウンロード直後のファイルロック対策）
     time.sleep(1)
     
-    dest_path = TEMP_DIR / src_path.name
+    dest_path = target_dir / src_path.name
     try:
+        # 同名ファイルがある場合の上書きに対応
+        if dest_path.exists():
+            dest_path.unlink()
         shutil.move(str(src_path), str(dest_path))
         print(f"📦 [Watchdog] 移動完了: {src_path.name} -> {dest_path}")
     except Exception as e:
         print(f"❌ [Watchdog] 移動失敗 ({src_path.name}): {e}")
 
+def process_file_by_name(path: Path):
+    """ファイル名パターンに応じて移動先を分岐"""
+    if path.name.startswith("temp_source_") and path.name.endswith(".json"):
+        move_file(path, TEMP_DIR)
+    elif path.name.startswith("video_") and path.name.endswith(".json"):
+        move_file(path, TRANSCRIPTS_DIR)
+
+def process_existing_downloads():
+    """起動時にDownloadsフォルダに残っている該当ファイルを一括移動"""
+    print(f"🧹 [Watchdog] Downloads 内の既存ファイルをチェック中: {DOWNLOADS_DIR}")
+    for file_path in DOWNLOADS_DIR.glob("temp_source_*.json"):
+        move_file(file_path, TEMP_DIR)
+    for file_path in DOWNLOADS_DIR.glob("video_*.json"):
+        move_file(file_path, TRANSCRIPTS_DIR)
+
 class JsonDownloadHandler(FileSystemEventHandler):
     def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith(".json"):
-            move_file_to_temp(Path(event.src_path))
+        if not event.is_directory:
+            process_file_by_name(Path(event.src_path))
 
     def on_moved(self, event):
         # ブラウザが .crdownload から .json にリネーム（完了）した瞬間を検知
-        if not event.is_directory and event.dest_path.endswith(".json"):
-            move_file_to_temp(Path(event.dest_path))
+        if not event.is_directory:
+            process_file_by_name(Path(event.dest_path))
 
 def start_folder_watchdog():
     # 1. 起動時にまず既存ファイルを処理
