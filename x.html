@@ -203,6 +203,109 @@
       height: 1080px;
       overflow: hidden;
     }
+
+
+    /* レイアウト切り替え切替コントローラー */
+    .layout-switcher {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .layout-btn {
+      padding: 6px 14px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .layout-btn.active {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+
+    /* --- 横並びレイアウト (horizontal) --- */
+    .card-content-layout.layout-horizontal {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: flex-start;
+      margin-top: 15px;
+    }
+
+    .layout-horizontal .media-column {
+      flex: 0 0 325px;
+      max-width: 325px;
+    }
+
+    /* info-column をスクロールエリアに変更 */
+    .layout-horizontal .info-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+      /* 動画の埋め込み高さに合わせて上限を設定（必要に応じて高さ調整してください） */
+      max-height: 580px; 
+      overflow-y: auto;
+      padding-right: 8px; /* スクロールバーとの間に余白を確保 */
+    }
+
+    /* 横並び時の transcript-list のスクロール設定を解除 */
+    .layout-horizontal .transcript-list {
+      max-height: none;
+      overflow-y: visible;
+    }
+
+
+    /* --- 縦並びレイアウト (vertical) --- */
+    .card-content-layout.layout-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .layout-vertical .media-column {
+      width: 100%;
+      max-width: 325px;
+      margin: 0 auto;
+    }
+
+    /* 縦並び時も info-column をスクロールエリアに設定 */
+    .layout-vertical .info-column {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+      /* 縦並び用のスクロール設定 */
+      max-height: 400px; /* 必要に応じて使いやすい高さ（350px〜500px等）に調整してください */
+      overflow-y: auto;
+      padding-right: 8px; /* スクロールバー用の余白 */
+    }
+
+    /* 縦並び時も transcript-list 自体のスクロールは解除 */
+    .layout-vertical .transcript-list {
+      max-height: none;
+      overflow-y: visible;
+    }
+
+
+    /* 共通スタイル */
+    .transcript-list {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 12px;
+      background-color: #f9f9f9;
+      margin-bottom: 300px;
+    }
   </style>
 </head>
 <body>
@@ -219,6 +322,17 @@
         <option value="pt">Português (PT)</option>
       </select>
     </header>
+
+    <div class="layout-switcher">
+      <button id="btnLayoutHorizontal" class="layout-btn active" onclick="switchLayout('horizontal')">
+        📄 横並び
+      </button>
+      <button id="btnLayoutVertical" class="layout-btn" onclick="switchLayout('vertical')">
+        📱 縦並び
+      </button>
+    </div>
+
+    <div id="contentArea"></div>
 
     <main id="contentArea">
       <!-- 動的にコンテンツが挿入されます -->
@@ -305,6 +419,9 @@
     let customBgImageDataUrl = "";
     let currentPresetBgPath = "";
 
+    // 現在のレイアウト状態 ('horizontal' または 'vertical')
+    let currentLayout = 'horizontal';
+
     // 設定値 (3_generate_image.py の CONFIG 相当)
     const IMAGE_CONFIG = {
       image_width: 1920,
@@ -329,6 +446,22 @@
       render();
     }
 
+    // レイアウト切替関数
+    function switchLayout(layout) {
+      if (currentLayout === layout) return;
+      currentLayout = layout;
+
+      // ボタンの見た目を更新
+      document.getElementById('btnLayoutHorizontal').classList.toggle('active', layout === 'horizontal');
+      document.getElementById('btnLayoutVertical').classList.toggle('active', layout === 'vertical');
+
+      // 全カードのクラスを差し替え
+      const layouts = document.querySelectorAll('.card-content-layout');
+      layouts.forEach(el => {
+        el.className = `card-content-layout layout-${currentLayout}`;
+      });
+    }
+
     async function render() {
       const container = document.getElementById('contentArea');
       container.innerHTML = '';
@@ -336,7 +469,6 @@
       for (const item of statusData) {
         let detailData = {};
         try {
-          // ★ 修正: item.file にサブディレクトリが含まれるため `./data/${item.file}` で直接取得
           const detailRes = await fetch(`./data/${item.file}`);
           detailData = await detailRes.json();
           const itemKey = item.id || detailData.id || item.file;
@@ -349,6 +481,7 @@
         const summaryText = item.summary?.[currentLang] || item.summary?.ja || '';
         const captionText = detailData.caption?.[currentLang] || detailData.caption?.ja || '';
         const itemKey = item.id || detailData.id || item.file;
+        
         const videoUrl = detailData.url || detailData.x_url || '';
         const platform = item.platform || detailData.platform || '';
 
@@ -359,45 +492,52 @@
           <div class="card-header">
             <div>
               <h2 class="card-title">${escapeHtml(titleText)}</h2>
-              <div class="meta-info"> ${item.published_at || 'unknown'}</div>
+              <div class="meta-info">${item.published_at || 'unknown'}</div>
             </div>
+            <button class="btn-generate-image" onclick="openCustomizer('${itemKey}')">
+              🖼️ カスタマイズして保存
+            </button>
           </div>
+
+          <!-- currentLayout を動的に適用 -->
+          <div class="card-content-layout layout-${currentLayout}">
             
-          <button class="btn-generate-image" onclick="openCustomizer('${itemKey}')">
-            🖼️ カスタマイズして保存
-          </button>
-
-          ${renderEmbedHtml(videoUrl, platform)}
-
-          <div class="card-scroll-area">
-            ${summaryText ? `
-              <div class="summary-box">
-                💡 ${escapeHtml(summaryText)}
-              </div>
-            ` : ''}
-
-            ${captionText ? `
-              <div class="caption-box">
-                <div class="caption-title">caption</div>
-                ${escapeHtml(captionText)}
-              </div>
-            ` : ''}
-
-            <div class="transcript-list">
-              ${(detailData.transcript || []).map(line => renderLine(line)).join('')}
+            <!-- 左/上: 動画カラム -->
+            <div class="media-column">
+              ${renderEmbedHtml(videoUrl, platform)}
             </div>
+
+            <!-- 右/下: 情報カラム -->
+            <div class="info-column">
+              ${summaryText ? `
+                <div class="summary-box">
+                  💡 ${escapeHtml(summaryText)}
+                </div>
+              ` : ''}
+
+              ${captionText ? `
+                <div class="caption-box">
+                  <div class="caption-title">caption</div>
+                  ${escapeHtml(captionText)}
+                </div>
+              ` : ''}
+
+              <div class="transcript-list">
+                ${(detailData.transcript || []).map(line => renderLine(line)).join('')}
+              </div>
+            </div>
+
           </div>
         `;
 
         container.appendChild(card);
       }
 
-      // X（Twitter）埋め込みの再読み込み
+      // Twitter / TikTok 埋め込みの再ロード処理
       if (window.twttr && window.twttr.widgets) {
         window.twttr.widgets.load();
       }
       
-      // ★ 修正: TikTok埋め込みスクリプトを安全に再ロードしてプレーヤーを展開
       const oldScript = document.getElementById('tiktok-embed-script');
       if (oldScript) {
         oldScript.remove();
