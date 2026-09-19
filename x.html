@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+  <script async src="https://www.tiktok.com/embed.js"></script>
   <!-- html2canvasライブラリの読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <title>X Post Viewer</title>
@@ -335,7 +336,8 @@
       for (const item of statusData) {
         let detailData = {};
         try {
-          const detailRes = await fetch(`./data/x_posts/${item.file}`);
+          // ★ 修正: item.file にサブディレクトリが含まれるため `./data/${item.file}` で直接取得
+          const detailRes = await fetch(`./data/${item.file}`);
           detailData = await detailRes.json();
           const itemKey = item.id || detailData.id || item.file;
           loadedDetailDataMap[itemKey] = detailData;
@@ -347,6 +349,8 @@
         const summaryText = item.summary?.[currentLang] || item.summary?.ja || '';
         const captionText = detailData.caption?.[currentLang] || detailData.caption?.ja || '';
         const itemKey = item.id || detailData.id || item.file;
+        const videoUrl = detailData.url || detailData.x_url || '';
+        const platform = item.platform || detailData.platform || '';
 
         const card = document.createElement('div');
         card.className = 'card';
@@ -363,13 +367,7 @@
             🖼️ カスタマイズして保存
           </button>
 
-          ${detailData.x_url ? `
-            <div class="x-embed-container">
-              <blockquote class="twitter-tweet" data-media-max-width="560">
-                <a href="${detailData.x_url}"></a>
-              </blockquote>
-            </div>
-          ` : ''}
+          ${renderEmbedHtml(videoUrl, platform)}
 
           <div class="card-scroll-area">
             ${summaryText ? `
@@ -394,8 +392,50 @@
         container.appendChild(card);
       }
 
+      // X（Twitter）埋め込みの再読み込み
       if (window.twttr && window.twttr.widgets) {
         window.twttr.widgets.load();
+      }
+      
+      // ★ 修正: TikTok埋め込みスクリプトを安全に再ロードしてプレーヤーを展開
+      const oldScript = document.getElementById('tiktok-embed-script');
+      if (oldScript) {
+        oldScript.remove();
+      }
+      const script = document.createElement('script');
+      script.id = 'tiktok-embed-script';
+      script.src = 'https://www.tiktok.com/embed.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    // プラットフォームに応じた埋め込みHTMLを生成する関数
+    function renderEmbedHtml(videoUrl, platform) {
+      if (!videoUrl) return '';
+
+      const isTikTok = platform === 'tiktok' || videoUrl.includes('tiktok.com');
+
+      if (isTikTok) {
+        const match = videoUrl.match(/video\/(\d+)/);
+        const videoId = match ? match[1] : '';
+
+        return `
+          <div class="tiktok-embed-container" style="display:flex; justify-content:center; margin: 10px 0;">
+            <blockquote class="tiktok-embed" cite="${escapeHtml(videoUrl)}" data-video-id="${videoId}" style="max-width: 605px; min-width: 325px;">
+              <section>
+                <a target="_blank" href="${escapeHtml(videoUrl)}"></a>
+              </section>
+            </blockquote>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="x-embed-container">
+            <blockquote class="twitter-tweet" data-media-max-width="560">
+              <a href="${escapeHtml(videoUrl)}"></a>
+            </blockquote>
+          </div>
+        `;
       }
     }
 
@@ -485,9 +525,9 @@
 
       const fullText = formatLinesToText(lines);
 
-      // ★ 修正: title (現在の言語) と x_url を組み合わせてヘッダーに設定
+      // ★ 修正: title (現在の言語) と url (x_url Fallback) を組み合わせてヘッダーに設定
       const titleText = data.title?.[currentLang] || data.title?.ja || '';
-      const urlText = data.x_url || '';
+      const urlText = data.url || data.x_url || '';
       
       // title と url が両方ある場合は改行またはスペースで結合（ここでは1行に綺麗に収まるよう配置）
       const headerText = data.video_subtitle?.header_text 

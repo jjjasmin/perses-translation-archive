@@ -13,10 +13,12 @@ load_dotenv(dotenv_path=os.path.join(BASE_DIR, ".env"))
 
 # パス設定
 X_POSTS_DIR = os.path.join(BASE_DIR, "data", "x_posts")
+TIKTOK_POSTS_DIR = os.path.join(BASE_DIR, "data", "tiktok_posts")
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 STATUS_FILE_PATH = os.path.join(BASE_DIR, "data", "status_management.json")
 
 os.makedirs(X_POSTS_DIR, exist_ok=True)
+os.makedirs(TIKTOK_POSTS_DIR, exist_ok=True)
 
 # ==========================================
 # 埋め込み用テキスト（元 prompt.txt / translation_rules.txt）
@@ -242,7 +244,8 @@ def load_urls_from_file() -> list:
 
 
 def extract_status_id(url: str) -> str:
-    match = re.search(r"status/(\d+)", url)
+    # X/Twitter の status/ID と TikTok の video/ID の両方に対応
+    match = re.search(r"(?:status|video)/(\d+)", url)
     return match.group(1) if match else str(int(time.time()))
 
 
@@ -259,7 +262,7 @@ def download_x_video(url: str, output_path: str) -> str | None:
 
 
 def get_x_post_info(url: str) -> dict:
-    """yt-dlp を使用して X 投稿のメタデータ（投稿日時等）を取得する"""
+    """yt-dlp を使用して投稿のメタデータ（投稿日時等）を取得する"""
     cmd = [
         "yt-dlp",
         "--no-warnings",
@@ -271,14 +274,15 @@ def get_x_post_info(url: str) -> dict:
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         info = json.loads(res.stdout)
         
-        # timestamp (UNIX時間) から YYYY-MM-DD HH:MM:SS 形式の文字列を作成
         published_at = ""
         if "timestamp" in info and info["timestamp"]:
             published_at = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["timestamp"]))
         elif "upload_date" in info and info["upload_date"]:
-            # YYYYMMDD 形式の場合
-            d = info["upload_date"]
-            published_at = f"{d[:4]}-{d[4:6]}-{d[6:8]}"
+            d = str(info["upload_date"])
+            if len(d) == 8:
+                published_at = f"{d[:4]}-{d[4:6]}-{d[6:8]} 00:00:00"
+            else:
+                published_at = d
 
         return {"published_at": published_at}
     except Exception as e:
@@ -545,9 +549,10 @@ def analyze_video_with_gemini(
     return result_data
 
 
-def update_status_management_file(item_data: dict, json_filename: str):
+def update_status_management_file(item_data: dict, relative_json_path: str):
     """
     既存のステータス管理JSONを読み込み、新規または更新データを反映して保存する。
+    relative_json_path: 例 "x_posts/x_123.json" や "tiktok_posts/tiktok_456.json"
     """
     status_list = []
     if os.path.exists(STATUS_FILE_PATH):
@@ -559,16 +564,17 @@ def update_status_management_file(item_data: dict, json_filename: str):
 
     status_entry = {
         "id": item_data.get("id", ""),
+        "platform": item_data.get("platform", "x"),
         "summary": item_data.get("summary", {}),
         "published_at": item_data.get("published_at", ""),
-        "file": json_filename,
+        "file": relative_json_path,
         "keywords": []
     }
 
-    # 同一IDが既存にあれば更新、なければ末尾に追加
+    # 同一ID かつ 同一プラットフォーム があれば更新、なければ追加
     updated = False
     for i, entry in enumerate(status_list):
-        if entry.get("id") == status_entry["id"]:
+        if entry.get("id") == status_entry["id"] and entry.get("platform") == status_entry["platform"]:
             status_list[i] = status_entry
             updated = True
             break
@@ -594,11 +600,19 @@ def main():
     cfg = CONFIG
 
     for idx, video_url in enumerate(urls):
+        # プラットフォームの判定
+        is_tiktok = "tiktok.com" in video_url.lower()
+        platform_prefix = "tiktok" if is_tiktok else "x"
+        
+        # 出力先ディレクトリ・相対パス・絶対パスの設定
+        target_dir = TIKTOK_POSTS_DIR if is_tiktok else X_POSTS_DIR
+        dir_name = "tiktok_posts" if is_tiktok else "x_posts"
+        
         status_id = extract_status_id(video_url)
-
-        # 個別JSONファイルのパス
-        json_filename = f"x_{status_id}.json"
-        json_output_path = os.path.join(X_POSTS_DIR, json_filename)
+        json_filename = f"{platform_prefix}_{status_id}.json"
+        
+        relative_json_path = f"{dir_name}/{json_filename}"
+        json_output_path = os.path.join(target_dir, json_filename)
 
         existing_data = None
         needs_video_analysis = True
@@ -610,21 +624,17 @@ def main():
                 with open(json_output_path, "r", encoding="utf-8") as f:
                     existing_data = json.load(f)
                 
-                # 動画解析はすでに完了している
                 needs_video_analysis = False
                 
-                # 多言語（例: en）が存在するかチェック
                 title_langs = existing_data.get("title", {})
                 if "en" in title_langs:
                     needs_multilingual = False
 
             except Exception:
-                # ファイルが壊れている等の場合は最初からやり直し
                 needs_video_analysis = True
 
-        # 完全完了（動画解析も多言語翻訳も終わっている）ならスキップ
         if not needs_video_analysis and not needs_multilingual:
-            print(f"⏭️ スキップ [{idx + 1}/{len(urls)}]: status_id({status_id}) は多言語翻訳まで完了済みです。")
+            print(f"⏭️ スキップ [{idx + 1}/{len(urls)}]: [{platform_prefix.upper()}] status_id({status_id}) は多言語翻訳まで完了済みです。")
             continue
 
         video_path = os.path.join(
@@ -632,9 +642,9 @@ def main():
         )
 
         try:
-            # 1. 動画解析ステップ（未完了の場合のみ実行）
+            # 1. 動画解析ステップ
             if needs_video_analysis:
-                print(f"\n🎬 処理中 [{idx + 1}/{len(urls)}]: {video_url}")
+                print(f"\n🎬 処理中 [{idx + 1}/{len(urls)}] [{platform_prefix.upper()}]: {video_url}")
                 
                 post_info = get_x_post_info(video_url)
                 item_published_at = post_info.get("published_at", "")
@@ -655,10 +665,11 @@ def main():
                     off_screen_speaker="",
                 )
                 
-                # 中間データ（動画解析結果）の作成
+                # 中間データ作成（"platform" と 共通の "url" キーを定義）
                 current_output = {
                     "id": status_id,
-                    "x_url": video_url,
+                    "platform": platform_prefix,
+                    "url": video_url,
                     "published_at": item_published_at,
                     "title": parsed_data.get("title", {}),
                     "summary": parsed_data.get("summary", {}),
@@ -666,14 +677,13 @@ def main():
                     "transcript": parsed_data.get("transcript", [])
                 }
                 
-                # ひとまず日本語/タイ語のみで中間保存しておく
                 with open(json_output_path, "w", encoding="utf-8") as f:
                     json.dump(current_output, f, ensure_ascii=False, indent=2)
             else:
-                print(f"\n🔄 多言語翻訳の再実行 [{idx + 1}/{len(urls)}]: status_id({status_id}) の既存データを読み込みました。")
+                print(f"\n🔄 多言語翻訳の再実行 [{idx + 1}/{len(urls)}]: [{platform_prefix.upper()}] status_id({status_id}) の既存データを読み込みました。")
                 current_output = existing_data
 
-            # 2. 多言語翻訳ステップ（未完了の場合のみ実行）
+            # 2. 多言語翻訳ステップ
             if needs_multilingual:
                 print("🌐 多言語 (en, ko, zh-TW, id, pt) への翻訳を実行中...")
                 full_data = translate_text_fields_with_gemini(
@@ -682,10 +692,10 @@ def main():
                     target_langs=["en", "ko", "zh-TW", "id", "pt"]
                 )
 
-                # 最終データ（多言語込み）に更新して上書き保存
                 final_output = {
                     "id": status_id,
-                    "x_url": current_output.get("x_url", video_url),
+                    "platform": platform_prefix,
+                    "url": current_output.get("url", current_output.get("x_url", video_url)),
                     "published_at": current_output.get("published_at", ""),
                     "title": full_data.get("title", {}),
                     "summary": full_data.get("summary", {}),
@@ -696,8 +706,8 @@ def main():
                 with open(json_output_path, "w", encoding="utf-8") as f:
                     json.dump(final_output, f, ensure_ascii=False, indent=2)
 
-                update_status_management_file(final_output, json_filename)
-                print(f"✅ 多言語解析完了！データ保存先: `data/x_posts/x_{status_id}.json`")
+                update_status_management_file(final_output, relative_json_path)
+                print(f"✅ 多言語解析完了！データ保存先: `data/{relative_json_path}`")
 
         finally:
             if os.path.exists(video_path):
