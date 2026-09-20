@@ -196,7 +196,7 @@
 
     .layout-buttons {
       display: flex;
-      gap: 8px;
+      gap: 5px;
       flex-wrap: wrap; /* 追加: 子要素の折り返しを許可 */
     }
 
@@ -1289,7 +1289,6 @@ body.dark-mode .search-clear-btn:hover {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 14px;
           font-family: 'Hiragino Maru Gothic ProN', 'Quicksand', 'Yu Gothic', sans-serif; /* 丸みのあるフォント */
         }
 
