@@ -26,20 +26,74 @@
       background-color: var(--bg-color);
       color: var(--text-main);
       margin: 0;
-      padding: 16px;
+      padding: 0;
       font-size: 14px;
     }
 
     .container {
       max-width: 800px;
       margin: 0 auto;
+      padding: 30px 16px;
+    }
+
+    /* 最上部固定エリア */
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      padding: 12px 16px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* ヘッダー非表示時のスタイル */
+    .sticky-header.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+      position: fixed;
+      width: 100%;
+    }
+
+    /* フローティング検索（トグル）ボタン */
+    .search-toggle-btn {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 1001;
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .search-toggle-btn.hidden {
+      display: none;
+    }
+
+    .sticky-header-content {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 12px;
     }
 
     h1 {
@@ -54,6 +108,107 @@
       background-color: var(--card-bg);
       font-size: 0.8rem;
       cursor: pointer;
+    }
+
+    /* カテゴリボタン群 */
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding-bottom: 4px;
+    }
+
+    #yearButtons,
+    #monthButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--text-sub);
+      min-width: 35px;
+    }
+
+    .btn-filter {
+      padding: 4px 12px;
+      border: 1px solid var(--border-color);
+      background-color: #f0f3f4;
+      color: var(--text-main);
+      border-radius: 16px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+      background-color: #e2e8f0;
+    }
+
+    .btn-filter.active {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* 月ボタン下のタイトル一覧スタイル */
+    .title-list-container {
+      background-color: #f8f9fa;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .title-list-item:hover {
+      background-color: #e8f5fe;
+      color: var(--accent-color);
+    }
+
+    .title-list-text {
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+
+    .title-list-date {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 2px;
     }
 
     .card {
@@ -83,7 +238,6 @@
       color: var(--text-sub);
     }
 
-    /* 画像生成ボタンのスタイル */
     .btn-generate-image {
       background-color: var(--accent-color);
       color: #ffffff;
@@ -100,11 +254,12 @@
       background-color: #1a8cd8;
     }
 
-    /* ★ スクロール領域用のコンテナ */
-    .card-scroll-area {
-      max-height: 90vh;
-      overflow-y: auto;
-      padding-right: 4px; /* スクロールバーとの間の微調整 */
+    /* 各カード内の字幕操作コントロール群 */
+    .card-subtitle-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
     }
 
     .summary-box {
@@ -135,10 +290,17 @@
     }
 
     .transcript-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-bottom: 80vh; /* ★ 50vhの余白を追加 */
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 12px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      padding-bottom: 300px;
+    }
+
+    .transcript-list:hover {
+      background-color: #f0f4f8;
     }
 
     .transcript-item {
@@ -146,6 +308,7 @@
       gap: 10px;
       padding-bottom: 10px;
       border-bottom: 1px dashed var(--border-color);
+      scroll-margin-top: 10px; /* 一番上にスクロールした際の上部余白 */
     }
 
     .transcript-item:last-child {
@@ -169,16 +332,15 @@
     }
 
     .text-th {
-     font-weight: 500;
-    font-size: 1.05rem;
-    margin-bottom: 4px;
+      font-weight: 500;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
     }
 
     .pronunciation {
       font-size: 0.75rem;
-      color: var(--text-sub);
       margin-bottom: 3px;
-          color: #e67e22;
+      color: #e67e22;
     }
 
     .translation {
@@ -194,7 +356,6 @@
       margin-left: 6px;
     }
 
-    /* レンダリング用の非表示コンテナ */
     #renderHiddenContainer {
       position: absolute;
       left: -9999px;
@@ -204,17 +365,12 @@
       overflow: hidden;
     }
 
-
-    /* レイアウト切り替え切替コントローラー */
     .layout-switcher {
       display: flex;
-      justify-content: flex-end;
       gap: 10px;
-      margin-bottom: 15px;
     }
 
     .layout-btn {
-      padding: 6px 14px;
       border: 1px solid #ccc;
       background-color: #fff;
       border-radius: 6px;
@@ -243,26 +399,21 @@
       max-width: 325px;
     }
 
-    /* info-column をスクロールエリアに変更 */
     .layout-horizontal .info-column {
       flex: 1;
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      
-      /* 動画の埋め込み高さに合わせて上限を設定（必要に応じて高さ調整してください） */
       max-height: 580px; 
       overflow-y: auto;
-      padding-right: 8px; /* スクロールバーとの間に余白を確保 */
+      padding-right: 8px;
     }
 
-    /* 横並び時の transcript-list のスクロール設定を解除 */
     .layout-horizontal .transcript-list {
       max-height: none;
       overflow-y: visible;
     }
-
 
     /* --- 縦並びレイアウト (vertical) --- */
     .card-content-layout.layout-vertical {
@@ -278,33 +429,85 @@
       margin: 0 auto;
     }
 
-    /* 縦並び時も info-column をスクロールエリアに設定 */
     .layout-vertical .info-column {
       width: 100%;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      
-      /* 縦並び用のスクロール設定 */
-      max-height: 400px; /* 必要に応じて使いやすい高さ（350px〜500px等）に調整してください */
+      max-height: 400px;
       overflow-y: auto;
-      padding-right: 8px; /* スクロールバー用の余白 */
+      padding-right: 8px;
     }
 
-    /* 縦並び時も transcript-list 自体のスクロールは解除 */
     .layout-vertical .transcript-list {
       max-height: none;
       overflow-y: visible;
     }
 
+    /* モーダルスタイル（共通） */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
 
-    /* 共通スタイル */
-    .transcript-list {
-      border: 1px solid #eee;
-      border-radius: 8px;
-      padding: 12px;
-      background-color: #f9f9f9;
-      margin-bottom: 300px;
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 1000px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .close-btn {
+      border: none;
+      background: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .no-data-msg {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+
+    #loadingSentinel {
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+
+    /* 字幕アクティブ表示 */
+    .transcript-item.active {
+      background-color: #e8f5fe;
+      border-left: 4px solid var(--accent-color);
+      padding-left: 8px;
+      transition: background-color 0.2s ease, padding 0.2s ease;
     }
   </style>
 </head>
@@ -315,54 +518,93 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-DK62NQHXGB');
 </script>
 
-
 <body>
 
-  <div class="container">
-    <header>
-      <h1>X Transcript Viewer</h1>
-      <select id="langSelect" class="lang-select" onchange="changeLanguage()">
-        <option value="ja">日本語 (JA)</option>
-        <option value="en">English (EN)</option>
-        <option value="ko">한국어 (KO)</option>
-        <option value="zh-TW">繁體中文 (ZH-TW)</option>
-        <option value="id">Bahasa Indonesia (ID)</option>
-        <option value="pt">Português (PT)</option>
-      </select>
-    </header>
+  <!-- 検索（ヘッダー再表示）ボタン -->
+  <button id="searchToggleBtn" class="search-toggle-btn hidden" onclick="toggleHeader()">
+    🔍
+  </button>
 
-    <div class="layout-switcher">
-      <button id="btnLayoutHorizontal" class="layout-btn active" onclick="switchLayout('horizontal')">
-        📄 横並び
-      </button>
-      <button id="btnLayoutVertical" class="layout-btn" onclick="switchLayout('vertical')">
-        📱 縦並び
-      </button>
+  <!-- 最上部固定ナビゲーションバー -->
+  <div id="stickyHeader" class="sticky-header">
+    <div class="sticky-header-content">
+      <header>
+        <h1>SNS翻訳</h1>
+
+        <div class="controls-row">
+          <div class="layout-switcher">
+            <button id="btnLayoutHorizontal" class="layout-btn active" onclick="switchLayout('horizontal')">
+              横
+            </button>
+            <button id="btnLayoutVertical" class="layout-btn" onclick="switchLayout('vertical')">
+              縦
+            </button>
+          </div>
+        </div>
+
+        <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+          <option value="ja">日本語 (JA)</option>
+          <option value="en">English (EN)</option>
+          <option value="ko">한국어 (KO)</option>
+          <option value="zh-TW">繁體中文 (ZH-TW)</option>
+          <option value="id">Bahasa Indonesia (ID)</option>
+          <option value="pt">Português (PT)</option>
+        </select>
+      </header>
+
+      <div class="filter-section">
+        <!-- 年選択ボタン -->
+        <div class="filter-row">
+          <span class="filter-label">year</span>
+          <div id="yearButtons" style="display: flex; gap: 6px;"></div>
+        </div>
+        <!-- 月選択ボタン -->
+        <div class="filter-row">
+          <span class="filter-label">month</span>
+          <div id="monthButtons" style="display: flex; gap: 6px;"></div>
+        </div>
+      </div>
+
+      <!-- 月ボタンの直下に表示されるタイトル一覧 -->
+      <div id="titleListArea" class="title-list-container"></div>
+
     </div>
+  </div>
 
-    <div id="contentArea"></div>
-
+  <div class="container">
     <main id="contentArea">
       <!-- 動的にコンテンツが挿入されます -->
     </main>
+    <div id="loadingSentinel"></div>
+  </div>
+
+  <!-- 単一カード表示用モーダル -->
+  <div id="cardModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="close-btn" onclick="closeCardModal()">✕</button>
+      </div>
+      <div id="modalCardContainer">
+        <!-- クリックされた1件のカードがここに読み込まれます -->
+      </div>
+    </div>
   </div>
 
   <!-- 画像読み取り・キャプション用の隠し要素 -->
   <div id="renderHiddenContainer"></div>
 
   <!-- カスタマイズ＆プレビュー用モーダル -->
-  <div id="customizerModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#fff; border-radius:12px; padding:20px; width:90%; max-width:1000px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px;">
+  <div id="customizerModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
         <h3 style="margin:0;">🖼️ 画像カスタマイズ & プレビュー</h3>
-        <button onclick="closeCustomizer()" style="border:none; background:none; font-size:1.2rem; cursor:pointer;">✕</button>
+        <button class="close-btn" onclick="closeCustomizer()">✕</button>
       </div>
 
-     <!-- コントロール群 -->
+      <!-- コントロール群 -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.85rem;">
         <div>
           <label style="font-weight:bold; display:block; margin-bottom:4px;">背景タイプ</label>
@@ -374,7 +616,6 @@
           </select>
         </div>
 
-        <!-- デフォルト季節画像の選択ボタン -->
         <div style="grid-column: 1 / -1;">
           <label style="font-weight:bold; display:block; margin-bottom:6px;">デフォルト背景画像</label>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -426,126 +667,404 @@
   <script>
     let currentLang = "ja";
     let statusData = [];
-    let loadedDetailDataMap = {}; // IDと詳細データを保持
+    let loadedDetailDataMap = {}; 
     let currentCustomItemKey = null;
     let customBgImageDataUrl = "";
     let currentPresetBgPath = "";
 
-    // 現在のレイアウト状態 ('horizontal' または 'vertical')
+    // グローバルタイマー管理変数
+    let syncTimer = null;
+    let syncStartTime = null;
+    let activeCardElement = null;
+    let activeTranscriptData = [];
+
+    // 年月フィルター状態
+    let selectedYear = String(new Date().getFullYear());
+    let selectedMonth = String(new Date().getMonth() + 1);
+
+    // 無限スクロール用制御変数
+    let filteredData = [];
+    let currentDisplayIndex = 0;
+    const PAGE_SIZE = 3;
+    let observer = null;
+
+    // 現在のレイアウト状態
     let currentLayout = 'horizontal';
 
-    // 設定値 (3_generate_image.py の CONFIG 相当)
+    let lastScrollY = window.scrollY;
+    const stickyHeader = document.getElementById('stickyHeader');
+    const searchToggleBtn = document.getElementById('searchToggleBtn');
+
+    // 設定値
     const IMAGE_CONFIG = {
       image_width: 1920,
       image_height: 1080,
       footer_text: "Translation by Gemini https://perses-translation-pocket.pages.dev/"
-      //header_text_default: "perses translation pocket"
     };
 
     async function init() {
       try {
         const response = await fetch('./data/status_management.json');
         statusData = await response.json();
-        await render();
+
+        await preloadDetailData();
+        setupFilterButtons();
+        setupIntersectionObserver();
+        applyFilterAndReset();
       } catch (error) {
         console.error('データの取得に失敗しました:', error);
         document.getElementById('contentArea').innerHTML = '<p>データの読み込みに失敗しました。</p>';
       }
     }
 
-    function changeLanguage() {
-      currentLang = document.getElementById('langSelect').value;
-      render();
+    async function preloadDetailData() {
+      for (const item of statusData) {
+        try {
+          const detailRes = await fetch(`./data/${item.file}`);
+          const detailData = await detailRes.json();
+          const itemKey = item.id || detailData.id || item.file;
+          loadedDetailDataMap[itemKey] = detailData;
+        } catch (e) {
+          console.warn(`ファイル ${item.file} の読み込みに失敗しました`);
+        }
+      }
     }
 
-    // レイアウト切替関数
+    function setupFilterButtons() {
+      const currentYearNum = new Date().getFullYear();
+      let minYear = currentYearNum;
+      
+      statusData.forEach(item => {
+        if (item.published_at) {
+          const y = parseInt(item.published_at.substring(0, 4), 10);
+          if (!isNaN(y) && y < minYear) minYear = y;
+        }
+      });
+
+      const yearContainer = document.getElementById('yearButtons');
+      yearContainer.innerHTML = '';
+
+      const years = [];
+      for (let y = currentYearNum; y >= 2021; y--) {
+        years.push(String(y));
+      }
+      years.push('before2020');
+
+      years.forEach(yStr => {
+        const btn = document.createElement('button');
+        btn.className = `btn-filter ${yStr === selectedYear ? 'active' : ''}`;
+        btn.textContent = yStr === 'before2020' ? 'before2020' : `${yStr}`;
+        btn.onclick = () => selectYear(yStr);
+        yearContainer.appendChild(btn);
+      });
+
+      const monthContainer = document.getElementById('monthButtons');
+      monthContainer.innerHTML = '';
+      for (let m = 1; m <= 12; m++) {
+        const mStr = String(m);
+        const btn = document.createElement('button');
+        btn.className = `btn-filter ${mStr === selectedMonth ? 'active' : ''}`;
+        btn.textContent = `${m}`;
+        btn.onclick = () => selectMonth(mStr);
+        monthContainer.appendChild(btn);
+      }
+    }
+
+    function selectYear(yStr) {
+      selectedYear = yStr;
+      document.querySelectorAll('#yearButtons .btn-filter').forEach(btn => {
+        const isMatch = (yStr === 'before2020' && btn.textContent === 'before2020') || btn.textContent === `${yStr}`;
+        btn.classList.toggle('active', isMatch);
+      });
+      applyFilterAndReset();
+    }
+
+    function selectMonth(mStr) {
+      selectedMonth = mStr;
+      document.querySelectorAll('#monthButtons .btn-filter').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === `${mStr}`);
+      });
+      applyFilterAndReset();
+    }
+
+    function applyFilterAndReset() {
+      stopSubtitleSync();
+
+      filteredData = statusData.filter(item => {
+        if (!item.published_at) return false;
+        const parts = item.published_at.split('-');
+        if (parts.length < 2) return false;
+
+        const itemYear = parseInt(parts[0], 10);
+        const itemMonth = parseInt(parts[1], 10);
+
+        let yearMatch = false;
+        if (selectedYear === 'before2020') {
+          yearMatch = itemYear < 2020;
+        } else {
+          yearMatch = itemYear === parseInt(selectedYear, 10);
+        }
+
+        const monthMatch = itemMonth === parseInt(selectedMonth, 10);
+        return yearMatch && monthMatch;
+      });
+
+      renderTitleListArea();
+
+      currentDisplayIndex = 0;
+      document.getElementById('contentArea').innerHTML = '';
+      
+      if (filteredData.length === 0) {
+        document.getElementById('contentArea').innerHTML = '<div class="no-data-msg">指定された年月のデータはありません。</div>';
+        document.getElementById('loadingSentinel').style.display = 'none';
+      } else {
+        document.getElementById('loadingSentinel').style.display = 'block';
+        loadMoreCards();
+      }
+    }
+
+    function renderTitleListArea() {
+      const container = document.getElementById('titleListArea');
+      container.innerHTML = '';
+
+      if (filteredData.length === 0) {
+        container.innerHTML = '<div class="no-data-msg">該当のタイトルはありません</div>';
+        return;
+      }
+
+      filteredData.forEach(item => {
+        const itemKey = item.id || item.file;
+        const detailData = loadedDetailDataMap[itemKey] || {};
+        const titleText = detailData.title?.[currentLang] || detailData.title?.ja || '無題';
+
+        const row = document.createElement('div');
+        row.className = 'title-list-item';
+        row.onclick = () => openSingleCardModal(itemKey);
+
+        row.innerHTML = `
+          <span class="title-list-text">📄 ${escapeHtml(titleText)}</span>
+          <span class="title-list-date">${item.published_at || ''}</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function openSingleCardModal(itemKey) {
+      const item = statusData.find(i => (i.id || i.file) === itemKey);
+      if (!item) return;
+
+      const modalContainer = document.getElementById('modalCardContainer');
+      modalContainer.innerHTML = '';
+
+      const card = createCardElement(item);
+      modalContainer.appendChild(card);
+
+      document.getElementById('cardModal').style.display = 'flex';
+      reloadEmbedScripts();
+    }
+
+    function closeCardModal() {
+      stopSubtitleSync();
+      document.getElementById('cardModal').style.display = 'none';
+    }
+
+    function loadMoreCards() {
+      if (currentDisplayIndex >= filteredData.length) return;
+
+      const container = document.getElementById('contentArea');
+      const nextBatch = filteredData.slice(currentDisplayIndex, currentDisplayIndex + PAGE_SIZE);
+
+      nextBatch.forEach(item => {
+        const card = createCardElement(item);
+        container.appendChild(card);
+      });
+
+      currentDisplayIndex += nextBatch.length;
+      reloadEmbedScripts();
+
+      if (currentDisplayIndex >= filteredData.length) {
+        document.getElementById('loadingSentinel').style.display = 'none';
+      }
+    }
+
+    function setupIntersectionObserver() {
+      const sentinel = document.getElementById('loadingSentinel');
+      observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreCards();
+        }
+      }, { rootMargin: '200px' });
+      observer.observe(sentinel);
+    }
+
+    function changeLanguage() {
+      currentLang = document.getElementById('langSelect').value;
+      applyFilterAndReset();
+
+      const cardModal = document.getElementById('cardModal');
+      if (cardModal.style.display === 'flex') {
+        const activeCardBtn = cardModal.querySelector('.btn-generate-image');
+        if (activeCardBtn) {
+          const match = activeCardBtn.getAttribute('onclick').match(/'([^']+)'/);
+          if (match && match[1]) openSingleCardModal(match[1]);
+        }
+      }
+    }
+
     function switchLayout(layout) {
       if (currentLayout === layout) return;
       currentLayout = layout;
 
-      // ボタンの見た目を更新
       document.getElementById('btnLayoutHorizontal').classList.toggle('active', layout === 'horizontal');
       document.getElementById('btnLayoutVertical').classList.toggle('active', layout === 'vertical');
 
-      // 全カードのクラスを差し替え
       const layouts = document.querySelectorAll('.card-content-layout');
       layouts.forEach(el => {
         el.className = `card-content-layout layout-${currentLayout}`;
       });
     }
 
-    async function render() {
-      const container = document.getElementById('contentArea');
-      container.innerHTML = '';
+    function createCardElement(item) {
+      const itemKey = item.id || item.file;
+      const detailData = loadedDetailDataMap[itemKey] || {};
 
-      for (const item of statusData) {
-        let detailData = {};
-        try {
-          const detailRes = await fetch(`./data/${item.file}`);
-          detailData = await detailRes.json();
-          const itemKey = item.id || detailData.id || item.file;
-          loadedDetailDataMap[itemKey] = detailData;
-        } catch (e) {
-          console.warn(`ファイル ${item.file} の読み込みに失敗しました`);
-        }
+      const titleText = detailData.title?.[currentLang] || detailData.title?.ja || '';
+      const summaryText = item.summary?.[currentLang] || item.summary?.ja || '';
+      const captionText = detailData.caption?.[currentLang] || detailData.caption?.ja || '';
 
-        const titleText = detailData.title?.[currentLang] || detailData.title?.ja || '';
-        const summaryText = item.summary?.[currentLang] || item.summary?.ja || '';
-        const captionText = detailData.caption?.[currentLang] || detailData.caption?.ja || '';
-        const itemKey = item.id || detailData.id || item.file;
-        
-        const videoUrl = detailData.url || detailData.x_url || '';
-        const platform = item.platform || detailData.platform || '';
+      const videoUrl = detailData.url || detailData.x_url || '';
+      const platform = item.platform || detailData.platform || '';
 
-        const card = document.createElement('div');
-        card.className = 'card';
+      const card = document.createElement('div');
+      card.className = 'card';
 
-        card.innerHTML = `
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">${escapeHtml(titleText)}</h2>
-              <div class="meta-info">${item.published_at || 'unknown'}</div>
-            </div>
-            <button class="btn-generate-image" onclick="openCustomizer('${itemKey}')">
-              🖼️ カスタマイズして保存
-            </button>
+      card.innerHTML = `
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">${escapeHtml(titleText)}</h2>
+            <div class="meta-info">${item.published_at || 'unknown'}</div>
           </div>
+          <button class="btn-generate-image" onclick="openCustomizer('${itemKey}')">
+            transcript img
+          </button>
+        </div>
 
-          <!-- currentLayout を動的に適用 -->
-          <div class="card-content-layout layout-${currentLayout}">
+        <div class="card-content-layout layout-${currentLayout}">
+          <div class="media-column">
+            ${renderEmbedHtml(videoUrl, platform)}
+            <!-- カード内コントロール -->
+            <div class="card-subtitle-controls">
+              <button class="layout-btn btn-toggle-card-sync active">字幕スクロール: ON</button>
+              <button class="layout-btn btn-reset-card-sync">最初から合わせる</button>
+            </div>
+          </div>
+          
+          <div class="info-column">
             
-            <!-- 左/上: 動画カラム -->
-            <div class="media-column">
-              ${renderEmbedHtml(videoUrl, platform)}
+
+            ${summaryText ? `<div class="summary-box">💡 ${escapeHtml(summaryText)}</div>` : ''}
+            ${captionText ? `<div class="caption-box"><div class="caption-title">caption</div>${escapeHtml(captionText)}</div>` : ''}
+
+            <div class="transcript-list">
+              ${(detailData.transcript || []).map(line => renderLine(line)).join('')}
             </div>
-
-            <!-- 右/下: 情報カラム -->
-            <div class="info-column">
-              ${summaryText ? `
-                <div class="summary-box">
-                  💡 ${escapeHtml(summaryText)}
-                </div>
-              ` : ''}
-
-              ${captionText ? `
-                <div class="caption-box">
-                  <div class="caption-title">caption</div>
-                  ${escapeHtml(captionText)}
-                </div>
-              ` : ''}
-
-              <div class="transcript-list">
-                ${(detailData.transcript || []).map(line => renderLine(line)).join('')}
-              </div>
-            </div>
-
           </div>
-        `;
+        </div>
+      `;
 
-        container.appendChild(card);
+      // カード内のローカル同期状態
+      let isCardSyncEnabled = true;
+
+      const toggleBtn = card.querySelector('.btn-toggle-card-sync');
+      const resetBtn = card.querySelector('.btn-reset-card-sync');
+      const transcriptList = card.querySelector('.transcript-list');
+
+      // 字幕ON/OFF切替
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isCardSyncEnabled = !isCardSyncEnabled;
+
+        if (isCardSyncEnabled) {
+          toggleBtn.textContent = '字幕スクロール: ON';
+          toggleBtn.classList.add('active');
+        } else {
+          toggleBtn.textContent = '字幕スクロール: OFF';
+          toggleBtn.classList.remove('active');
+          if (activeCardElement === card) {
+            stopSubtitleSync();
+          }
+        }
+      });
+
+      // 最初から合わせる
+      resetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!isCardSyncEnabled) return;
+
+        activeCardElement = card;
+        activeTranscriptData = detailData.transcript || [];
+        syncStartTime = Date.now();
+        runSubtitleSync();
+      });
+
+      // 字幕エリアタップで動かす
+      if (transcriptList) {
+        transcriptList.addEventListener('click', () => {
+          if (!isCardSyncEnabled) return;
+          activeCardElement = card;
+          activeTranscriptData = detailData.transcript || [];
+          syncStartTime = Date.now();
+          runSubtitleSync();
+        });
       }
 
-      // Twitter / TikTok 埋め込みの再ロード処理
+      return card;
+    }
+
+    // タイマー駆動・自動スクロール処理
+    function runSubtitleSync() {
+      if (syncTimer) clearInterval(syncTimer);
+
+      syncTimer = setInterval(() => {
+        if (!activeCardElement) {
+          stopSubtitleSync();
+          return;
+        }
+
+        const elapsedTime = (Date.now() - syncStartTime) / 1000;
+        const items = activeCardElement.querySelectorAll('.transcript-item');
+
+        activeTranscriptData.forEach((line, index) => {
+          const itemEl = items[index];
+          if (!itemEl) return;
+
+          if (elapsedTime >= line.start && elapsedTime <= line.end) {
+            if (!itemEl.classList.contains('active')) {
+              items.forEach(el => el.classList.remove('active'));
+              itemEl.classList.add('active');
+
+              itemEl.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          }
+        });
+      }, 250);
+    }
+
+    function stopSubtitleSync() {
+      if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
+      }
+      if (activeCardElement) {
+        const items = activeCardElement.querySelectorAll('.transcript-item');
+        items.forEach(el => el.classList.remove('active'));
+      }
+    }
+
+    function reloadEmbedScripts() {
       if (window.twttr && window.twttr.widgets) {
         window.twttr.widgets.load();
       }
@@ -561,10 +1080,8 @@
       document.body.appendChild(script);
     }
 
-    // プラットフォームに応じた埋め込みHTMLを生成する関数
     function renderEmbedHtml(videoUrl, platform) {
       if (!videoUrl) return '';
-
       const isTikTok = platform === 'tiktok' || videoUrl.includes('tiktok.com');
 
       if (isTikTok) {
@@ -573,7 +1090,7 @@
 
         return `
           <div class="tiktok-embed-container" style="display:flex; justify-content:center; margin: 10px 0;">
-            <blockquote class="tiktok-embed" cite="${escapeHtml(videoUrl)}" data-video-id="${videoId}" style="max-width: 605px; min-width: 325px;">
+            <blockquote class="tiktok-embed" cite="${escapeHtml(videoUrl)}" data-video-id="${videoId}" data-autoplay="0" style="max-width: 605px; min-width: 325px;">
               <section>
                 <a target="_blank" href="${escapeHtml(videoUrl)}"></a>
               </section>
@@ -591,16 +1108,12 @@
       }
     }
 
-    // 秒数(例: 135) を "02:15" 形式の文字列に変換する関数
     function formatTime(seconds) {
       if (seconds === undefined || seconds === null || isNaN(seconds)) return '00:00';
       const secNum = parseInt(seconds, 10);
       const minutes = Math.floor(secNum / 60);
       const secs = secNum % 60;
-      
-      // 1桁の場合は頭に 0 を補完 (例: 2:5 -> 2:05)
       const formattedSeconds = String(secs).padStart(2, '0');
-      
       return `${minutes}:${formattedSeconds}`;
     }
 
@@ -609,7 +1122,6 @@
       const kana = (currentLang === 'ja' && line.pronunciation_kana) ? `[${line.pronunciation_kana}]` : '';
       const roman = line.pronunciation_roman ? `(${line.pronunciation_roman})` : '';
 
-      // 時間のフォーマット処理
       const startTime = formatTime(line.start);
       const endTime = formatTime(line.end);
 
@@ -633,7 +1145,7 @@
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // モーダル表示
+    // カスタマイザー関連
     function openCustomizer(itemKey) {
       currentCustomItemKey = itemKey;
       customBgImageDataUrl = "";
@@ -646,7 +1158,6 @@
       document.getElementById("customizerModal").style.display = "none";
     }
 
-    // ファイルアップロードハンドラ
     function handleFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
@@ -659,14 +1170,12 @@
       }
     }
 
-    // プリセット画像選択関数（そのまま保持）
     function selectPresetBg(path) {
       currentPresetBgPath = path;
       document.getElementById("bgTypeSelect").value = "preset";
       updatePreviewLayout();
     }
 
-    // プレビュー要素の生成・読み込み
     function buildCardElement(data, options) {
       let lines = [];
       if (data.video_subtitle && data.video_subtitle.lines) {
@@ -676,28 +1185,23 @@
       }
 
       const fullText = formatLinesToText(lines);
-
-      // ★ 修正: title (現在の言語) と url (x_url Fallback) を組み合わせてヘッダーに設定
       const titleText = data.title?.[currentLang] || data.title?.ja || '';
       const urlText = data.url || data.x_url || '';
-      
-      // title と url が両方ある場合は改行またはスペースで結合（ここでは1行に綺麗に収まるよう配置）
       const headerText = data.video_subtitle?.header_text 
         || (titleText && urlText ? `${titleText}   ${urlText}` : titleText || urlText || IMAGE_CONFIG.header_text_default);
 
       const { fontSize, lineHeight } = calculateDynamicStyles(fullText);
 
-      // ★ 修正：背景画像のときは下地の暗い色(#1a1a1a)を消し、透明または指定色のみにする
       let backgroundStyle = '';
-        if (options.bgType === 'color') {
-          backgroundStyle = `background-color: ${options.bgColor};`;
-        } else if (options.bgType === 'preset' && currentPresetBgPath) {
-          backgroundStyle = `background-image: url('${currentPresetBgPath}'); background-size: cover; background-position: center;`;
-        } else if (options.bgType === 'file' && customBgImageDataUrl) {
-          backgroundStyle = `background-image: url('${customBgImageDataUrl}'); background-size: cover; background-position: center;`;
-        } else if (options.bgType === 'url' && options.bgUrl) {
-          backgroundStyle = `background-image: url('${options.bgUrl}'); background-size: cover; background-position: center;`;
-        }
+      if (options.bgType === 'color') {
+        backgroundStyle = `background-color: ${options.bgColor};`;
+      } else if (options.bgType === 'preset' && currentPresetBgPath) {
+        backgroundStyle = `background-image: url('${currentPresetBgPath}'); background-size: cover; background-position: center;`;
+      } else if (options.bgType === 'file' && customBgImageDataUrl) {
+        backgroundStyle = `background-image: url('${customBgImageDataUrl}'); background-size: cover; background-position: center;`;
+      } else if (options.bgType === 'url' && options.bgUrl) {
+        backgroundStyle = `background-image: url('${options.bgUrl}'); background-size: cover; background-position: center;`;
+      }
 
       const wrapper = document.createElement('div');
       wrapper.style.cssText = `
@@ -712,23 +1216,22 @@
         box-sizing: border-box;
       `;
 
-      // opacityの16進数変換
       const alphaHex = Math.round(options.cardOpacity * 255).toString(16).padStart(2, '0');
 
       wrapper.innerHTML = `
-          <div style="
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff${alphaHex};
-            color: ${options.textColor};
-            border-radius: 24px;
-            padding: 50px 70px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.01); /* ★ 影を極力薄く変更 */
-            box-sizing: border-box;
-          ">
+        <div style="
+          width: 100%;
+          height: 100%;
+          background-color: #ffffff${alphaHex};
+          color: ${options.textColor};
+          border-radius: 24px;
+          padding: 50px 70px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.01);
+          box-sizing: border-box;
+        ">
           <div style="
             height: 60px;
             font-size: 30px;
@@ -770,7 +1273,6 @@
       return wrapper;
     }
 
-    // プレビュー表示更新
     function updatePreviewLayout() {
       if (!currentCustomItemKey) return;
       const data = loadedDetailDataMap[currentCustomItemKey];
@@ -794,16 +1296,13 @@
 
       const element = buildCardElement(data, options);
       
-      // プレビュー用に縮小表示（1920x1080 -> 縮小）
       const scaleWrapper = document.createElement('div');
       scaleWrapper.style.cssText = "width: 1920px; height: 1080px; transform: scale(0.35); transform-origin: top center;";
       scaleWrapper.appendChild(element);
 
-
       previewContainer.appendChild(scaleWrapper);
     }
 
-    // カスタマイズ画像のダウンロード実行
     async function downloadCustomizedImage() {
       if (!currentCustomItemKey) return;
       const data = loadedDetailDataMap[currentCustomItemKey];
@@ -827,7 +1326,7 @@
           height: 1080,
           scale: 1,
           useCORS: true,
-          backgroundColor: null // ★追加: デフォルトの暗い背景合成を無効化
+          backgroundColor: null
         });
 
         const link = document.createElement('a');
@@ -842,9 +1341,6 @@
         hiddenContainer.innerHTML = '';
       }
     }
-
-
-    // --- 画像生成・ダウンロード処理 (3_generate_image.py のロジックを移植) ---
 
     function calculateDynamicStyles(text) {
       const charCount = text.length;
@@ -870,116 +1366,41 @@
       return formatted.join('\n');
     }
 
-    async function generateAndDownloadImage(itemKey) {
-      const data = loadedDetailDataMap[itemKey];
-      if (!data) {
-        alert('対象データの取得に失敗しました。');
-        return;
+    // スクロール時のヘッダー自動表示・非表示処理
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 1) {
+        showHeader();
+      } 
+      else if (currentScrollY > lastScrollY && currentScrollY > 2) {
+        hideHeader();
       }
+      
+      lastScrollY = currentScrollY;
+    });
 
-      // 1. 対話データまたは字幕データの整形
-      let lines = [];
-      if (data.video_subtitle && data.video_subtitle.lines) {
-        lines = data.video_subtitle.lines;
-      } else if (data.transcript) {
-        lines = data.transcript;
-      }
-
-      const fullText = formatLinesToText(lines);
-      const headerText = data.video_subtitle?.header_text || IMAGE_CONFIG.header_text_default;
-      const { fontSize, lineHeight } = calculateDynamicStyles(fullText);
-
-      // 2. 隠しコンテナに画像用レイアウト要素（1920x1080）を作成
-      const hiddenContainer = document.getElementById('renderHiddenContainer');
-      hiddenContainer.innerHTML = `
-        <div style="
-          width: 1920px;
-          height: 1080px;
-          background-color: #CAADFF;
-          font-family: 'Noto Sans JP', sans-serif;
-          padding: 60px 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-sizing: border-box;
-        ">
-          <div style="
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.85);
-            color: #1A1A1A;
-            border-radius: 24px;
-            padding: 50px 70px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            box-sizing: border-box;
-          ">
-            <div style="
-              height: 40px;
-              font-size:20px;
-              font-weight: 500;
-              color: #1A1A1A;
-              display: flex;
-              align-items: center;
-            ">${escapeHtml(headerText)}</div>
-
-            <div style="
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              margin: 20px 0;
-              overflow: hidden;
-            ">
-              <div style="
-                font-size: ${fontSize}px;
-                line-height: ${lineHeight};
-                font-weight: 500;
-                white-space: pre-wrap;
-                word-break: break-word;
-              ">${escapeHtml(fullText)}</div>
-            </div>
-
-            <div style="
-              height: 50px;
-              font-size: 34px;
-              color: #4A4A4A;
-              text-align: right;
-              display: flex;
-              align-items: center;
-              justify-content: flex-end;
-            ">${escapeHtml(IMAGE_CONFIG.footer_text)}</div>
-          </div>
-        </div>
-      `;
-
-      try {
-        // 3. html2canvas で描画・キャプション生成
-        const targetElement = hiddenContainer.firstElementChild;
-        const canvas = await html2canvas(targetElement, {
-          width: 1920,
-          height: 1080,
-          scale: 1, // 高解像度が必要な場合は 2 に変更可能
-          useCORS: true
-        });
-
-        // 4. 画像の自動ダウンロード実行
-        const link = document.createElement('a');
-        link.download = `perses_translation_${data.id || itemKey}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      } catch (err) {
-        console.error('画像生成エラー:', err);
-        alert('画像の生成に失敗しました。');
-      } finally {
-        // 後処理: 隠し要素をクリア
-        hiddenContainer.innerHTML = '';
+    function toggleHeader() {
+      if (stickyHeader.classList.contains('hidden')) {
+        showHeader();
+      } else {
+        hideHeader();
       }
     }
 
-    init();
+    function hideHeader() {
+      stickyHeader.classList.add('hidden');
+      searchToggleBtn.classList.remove('hidden');
+    }
+
+    function showHeader() {
+      stickyHeader.classList.remove('hidden');
+      searchToggleBtn.classList.add('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      init();
+    });
   </script>
 </body>
 </html>
