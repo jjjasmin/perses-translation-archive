@@ -371,6 +371,50 @@
       padding: 0.6rem 0;
     }
     .panel-btn.active { border-color: #00d2ff; background: #005b82; font-weight: bold; }
+
+
+    /* アコーディオン見出し（クリック可能化） */
+    .tag-category-title {
+      font-size: 0.85rem;
+      color: #00d2ff;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.5rem;
+      background-color: #222;
+      border-radius: 6px;
+      border: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 開閉用の矢印マーク */
+    .tag-category-title::after {
+      content: '▼';
+      font-size: 0.7rem;
+      transition: transform 0.2s ease;
+    }
+
+    .tag-category-title.collapsed::after {
+      transform: rotate(-90deg);
+    }
+
+    /* アコーディオン内のタグボタン容器 */
+    .tag-group-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+
+    /* 非表示状態 */
+    .tag-group-content.hidden {
+      display: none;
+    }
+    
   </style>
 </head>
 
@@ -465,6 +509,10 @@
     let lastSelectedTagElement = null;
     let ytPlayer = null;
     let subtitleTimer = null;
+    // スクリプト先頭付近の変数を変更
+    let seek10mTimer = null;
+    let seek30mTimer = null;
+    let isSeekLongPress = false;
 
     
     let currentDisplayPreset = 'ja-kana';
@@ -524,41 +572,66 @@
           }
 
       function renderTags() {
-        const tagContainer = document.getElementById('tagContainer');
-        tagContainer.innerHTML = '';
+            const tagContainer = document.getElementById('tagContainer');
+            tagContainer.innerHTML = '';
 
-        // まず #ALL ボタンを配置
-        const allBtn = document.createElement('button');
-        allBtn.className = `tag-btn focusable ${selectedTag === '#ALL' ? 'active' : ''}`;
-        allBtn.innerText = '#ALL';
-        allBtn.onclick = (e) => filterByTag('#ALL', e.currentTarget);
-        tagContainer.appendChild(allBtn);
+            // まず #ALL ボタンを配置
+            const allBtn = document.createElement('button');
+            allBtn.className = `tag-btn focusable ${selectedTag === '#ALL' ? 'active' : ''}`;
+            allBtn.innerText = '#ALL';
+            allBtn.onclick = (e) => filterByTag('#ALL', e.currentTarget);
+            tagContainer.appendChild(allBtn);
 
-        if (selectedTag === '#ALL') {
-          lastSelectedTagElement = allBtn;
-        }
+            if (selectedTag === '#ALL') {
+              lastSelectedTagElement = allBtn;
+            }
 
-        // カテゴリごとに見出しとボタンを出力
-        for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
-          const titleEl = document.createElement('div');
-          titleEl.className = 'tag-category-title';
-          titleEl.style.cssText = 'font-size: 0.75rem; color: #00d2ff; margin-top: 1rem; font-weight: bold; text-transform: uppercase;';
-          titleEl.innerText = categoryName;
-          tagContainer.appendChild(titleEl);
+            // カテゴリごとに見出しとボタン(アコーディオン構造)を出力
+            for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
+              const hasActiveTag = Object.keys(categoryTags).includes(selectedTag);
 
-          for (const tagKey of Object.keys(categoryTags)) {
-            const btn = document.createElement('button');
-            btn.className = `tag-btn focusable ${tagKey === selectedTag ? 'active' : ''}`;
-            btn.innerText = tagKey;
-            btn.onclick = (e) => filterByTag(tagKey, e.currentTarget);
-            tagContainer.appendChild(btn);
+              // カテゴリ見出し（アコーディオンヘッダー）
+              const titleEl = document.createElement('div');
+              titleEl.className = `tag-category-title focusable ${hasActiveTag ? '' : 'collapsed'}`;
+              titleEl.tabIndex = 0;
+              titleEl.innerText = categoryName;
 
-            if (tagKey === selectedTag) {
-              lastSelectedTagElement = btn;
+              // タグボタンを格納するコンテナ
+              const contentEl = document.createElement('div');
+              contentEl.className = `tag-group-content ${hasActiveTag ? '' : 'hidden'}`;
+
+              // 開閉トグル処理
+              const toggleAccordion = () => {
+                const isHidden = contentEl.classList.toggle('hidden');
+                titleEl.classList.toggle('collapsed', isHidden);
+              };
+
+              titleEl.onclick = toggleAccordion;
+              titleEl.onkeydown = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleAccordion();
+                }
+              };
+
+              tagContainer.appendChild(titleEl);
+
+              // カテゴリ内のタグボタン作成
+              for (const tagKey of Object.keys(categoryTags)) {
+                const btn = document.createElement('button');
+                btn.className = `tag-btn focusable ${tagKey === selectedTag ? 'active' : ''}`;
+                btn.innerText = tagKey;
+                btn.onclick = (e) => filterByTag(tagKey, e.currentTarget);
+                contentEl.appendChild(btn);
+
+                if (tagKey === selectedTag) {
+                  lastSelectedTagElement = btn;
+                }
+              }
+
+              tagContainer.appendChild(contentEl);
             }
           }
-        }
-      }
 
     function renderVideos() {
       const grid = document.getElementById('videoGrid');
@@ -788,6 +861,7 @@
         if (firstTag) firstTag.focus();
       }, 500);
 
+      // --- keydown イベント（長押しタイマーのセット） ---
       document.addEventListener('keydown', (e) => {
         const key = e.key;
         const code = e.keyCode || e.which;
@@ -827,24 +901,69 @@
             return;
           }
 
-          if (key === 'MediaFastForward' || code === 228 || (key === 'ArrowRight' && !customPanelVisible)) {
-            if (document.activeElement !== document.getElementById('openPanelBtn') && document.activeElement !== document.getElementById('backToSelectBtn')) {
-              e.preventDefault();
-              if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
-                ytPlayer.seekTo(ytPlayer.getCurrentTime() + 10, true);
-              }
-              return;
+          // ----------------------------------------------------
+      // 進む（ArrowRight / MediaFastForward）長押し制御
+      // ----------------------------------------------------
+      if (key === 'MediaFastForward' || code === 228 || (key === 'ArrowRight' && !customPanelVisible)) {
+        if (document.activeElement !== document.getElementById('openPanelBtn') && document.activeElement !== document.getElementById('backToSelectBtn')) {
+          e.preventDefault();
+          if (e.repeat) return; // 長押し時の連続発火を無視
+
+          isSeekLongPress = false;
+          clearTimeout(seek10mTimer);
+          clearTimeout(seek30mTimer);
+
+          // 1秒長押し：10分（600秒）進む
+          seek10mTimer = setTimeout(() => {
+            isSeekLongPress = true;
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+              ytPlayer.seekTo(ytPlayer.getCurrentTime() + 600, true);
             }
-          }
-          if (key === 'MediaRewind' || code === 227 || (key === 'ArrowLeft' && !customPanelVisible)) {
-            if (document.activeElement !== document.getElementById('openPanelBtn') && document.activeElement !== document.getElementById('backToSelectBtn')) {
-              e.preventDefault();
-              if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
-                ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 10), true);
-              }
-              return;
+          }, 1000);
+
+          // 3秒長押し：10分＋20分（合計30分1800秒）進む
+          seek30mTimer = setTimeout(() => {
+            isSeekLongPress = true;
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+              ytPlayer.seekTo(ytPlayer.getCurrentTime() + 1200, true);
             }
-          }
+          }, 3000);
+
+          return;
+        }
+      }
+
+      // ----------------------------------------------------
+      // 戻る（ArrowLeft / MediaRewind）長押し制御
+      // ----------------------------------------------------
+      if (key === 'MediaRewind' || code === 227 || (key === 'ArrowLeft' && !customPanelVisible)) {
+        if (document.activeElement !== document.getElementById('openPanelBtn') && document.activeElement !== document.getElementById('backToSelectBtn')) {
+          e.preventDefault();
+          if (e.repeat) return; // 長押し時の連続発火を無視
+
+          isSeekLongPress = false;
+          clearTimeout(seek10mTimer);
+          clearTimeout(seek30mTimer);
+
+          // 1秒長押し：10分（600秒）戻る
+          seek10mTimer = setTimeout(() => {
+            isSeekLongPress = true;
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+              ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 600), true);
+            }
+          }, 1000);
+
+          // 3秒長押し：10分＋20分（合計30分1800秒）戻る
+          seek30mTimer = setTimeout(() => {
+            isSeekLongPress = true;
+            if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+              ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 1200), true);
+            }
+          }, 3000);
+
+          return;
+        }
+      }
 
           if (key === 'ArrowUp' && !customPanelVisible) {
             e.preventDefault();
@@ -863,6 +982,37 @@
           moveFocus(key);
         }
       });
+
+      // --- keyup イベント ---
+        document.addEventListener('keyup', (e) => {
+          const key = e.key;
+          const code = e.keyCode || e.which;
+          const playerViewVisible = document.getElementById('player-view').style.display === 'block';
+
+          if (playerViewVisible) {
+            const isForwardKey = key === 'MediaFastForward' || code === 228 || key === 'ArrowRight';
+            const isRewindKey = key === 'MediaRewind' || code === 227 || key === 'ArrowLeft';
+
+            if (isForwardKey || isRewindKey) {
+              // キーが離されたら全ての長押し用タイマーを解除
+              clearTimeout(seek10mTimer);
+              clearTimeout(seek30mTimer);
+
+              // 1秒未満の短押しだった場合：10秒スキップ
+              if (!isSeekLongPress) {
+                if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                  const currentTime = ytPlayer.getCurrentTime();
+                  if (isForwardKey) {
+                    ytPlayer.seekTo(currentTime + 10, true);
+                  } else {
+                    ytPlayer.seekTo(Math.max(0, currentTime - 10), true);
+                  }
+                }
+              }
+              isSeekLongPress = false;
+            }
+          }
+        });
     }
 
     function moveFocus(direction) {
