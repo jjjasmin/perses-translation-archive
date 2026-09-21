@@ -147,7 +147,6 @@
     }
 
     .container {
-      max-width: 1440px;
       margin: 0 auto;
       background: #ffffff;
       padding: 18px;
@@ -1147,6 +1146,14 @@ body.dark-mode .search-clear-btn:hover {
             transform: scale(0.9); /* さらに文字をギュッと小さく見せたい場合 */
             transform-origin: left center;
           }
+
+          .transcript-section{
+            margin: 0 auto;
+            width: 94%;
+        padding-left: 5px;
+        padding-right: 0px;
+        max-height: 80vh;
+          }
         }
 
         .sub-ctrl-btn,
@@ -1332,3 +1339,11 @@ body.dark-mode .search-clear-btn:hover {
           border-radius: 8px;
         }
 
+/* PC表示時：左端に60pxの余白を設けてメニューと重ならないようにする */
+@media screen and (min-width: 769px) {
+    /* ページのメインコンテンツを囲む要素のCSSクラス/IDを指定してください */
+    .container {
+        margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
+        transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
+    }
+}

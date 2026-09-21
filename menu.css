@@ -1,0 +1,264 @@
+/* ==========================================================================
+   menu.css - 共通メニュー用スタイル
+   ========================================================================== */
+
+/* --- 1. PC用：サイドバー（Google アナリティクス風） --- */
+.pc-sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 60px; /* 初期状態：アイコンのみ表示 */
+    height: 100vh;
+    background: rgb(18 18 18 / 26%);
+    backdrop-filter: blur(12px);
+    z-index: 1001;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 15px 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* マウスオーバー時に幅を拡張 */
+.pc-sidebar-menu:hover {
+    width: 220px;
+}
+
+.pc-sidebar-menu .menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.pc-sidebar-menu .menu-item {
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+.pc-sidebar-menu .menu-link,
+.pc-sidebar-menu .submenu-toggle {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 0 18px; /* アイコンを中央寄りに固定配置 */
+    color: #007bff;
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pc-sidebar-menu .menu-link:hover,
+.pc-sidebar-menu .submenu-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* アイコンスタイル */
+.pc-sidebar-menu .menu-icon {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+    margin-right: 16px;
+}
+
+/* ラベルテキスト（ホバー展開時にフェードイン） */
+.pc-sidebar-menu .menu-label {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-weight: bold;
+}
+
+.pc-sidebar-menu:hover .menu-label {
+    opacity: 1;
+}
+
+/* サブメニュー展開用の矢印アイコン */
+.pc-sidebar-menu .arrow {
+    margin-left: auto;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+.pc-sidebar-menu:hover .arrow {
+    opacity: 1;
+}
+
+/* 初期状態：非表示（高さを0にして非表示） */
+.pc-sidebar-menu .submenu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    transition: max-height 0.3s ease; /* 滑らかに開閉 */
+}
+
+/* openクラス付与時：展開（中身の高さに合わせて適宜調整） */
+.pc-sidebar-menu .submenu-list.open {
+    max-height: 200px;
+}
+
+.pc-sidebar-menu .submenu-list .menu-link {
+    padding-left: 24px; /* ネスト感を出すためのインデント */
+    font-size: 0.88rem;
+}
+
+
+/* --- 2. スマホ用：フローティングフッター --- */
+.sp-floating-footer {
+    display: none; /* デフォルト非表示 */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45px;
+    background: rgba(18, 18, 18, 0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 999;
+    transition: transform 0.3s ease;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sp-floating-footer.hide {
+    transform: translateY(100%);
+}
+
+.sp-nav-list {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sp-nav-item {
+    flex: 1;
+    text-align: center;
+    height: 100%;
+}
+
+.sp-nav-link, 
+.sp-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #aaaaaa;
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    padding: 4px 0;
+    box-sizing: border-box;
+}
+
+.sp-nav-link:active, 
+.sp-nav-btn:active {
+    color: #ffffff;
+}
+
+.sp-nav-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.sp-nav-label {
+    font-size: 0.42rem;
+    line-height: 1;
+    letter-spacing: 0.5px;
+}
+
+
+/* --- 3. スマホ用：SUBCONTENTS ボトムシート & オーバーレイ --- */
+.sp-bottom-sheet {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background: rgba(24, 24, 24, 0.98);
+    backdrop-filter: blur(15px);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    z-index: 1002;
+    transition: bottom 0.3s ease;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    box-sizing: border-box;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.5);
+}
+
+.sp-bottom-sheet.open {
+    bottom: 0;
+}
+
+.sp-bottom-sheet .menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sp-bottom-sheet .menu-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #e0e0e0;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.sp-bottom-sheet .menu-link:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.sp-bottom-sheet .menu-icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+/* スマホボトムシート用 背景暗転用オーバーレイ */
+.sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sheet-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* --- 4. レスポンシブ切り替え（768px以下はスマホ表示） --- */
+@media screen and (max-width: 768px) {
+    .pc-sidebar-menu {
+        display: none; /* スマホ時はPCサイドバーを非表示 */
+    }
+    .sp-floating-footer {
+        display: block; /* スマホ時はフッターバーを表示 */
+    }
+}

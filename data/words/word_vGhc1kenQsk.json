@@ -55,22 +55,22 @@
           "breakdown_explanation": "「เข้า（入る）」＋「มา（来る）」で、こちらに向かって入ってくることを表します。"
         },
         {
-          "text": "จ้อง",
-          "meaning": "見つめる",
-          "pronunciation_kana": "ジョーン",
+          "text": "จ้องมอง",
+          "meaning": "じっと見つめる",
+          "pronunciation_kana": "ジョーン・モーン",
           "pos": "verb",
-          "components": [],
+          "components": [
+            {
+              "text": "จ้อง",
+              "meaning": "じっと見る"
+            },
+            {
+              "text": "มอง",
+              "meaning": "見る"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "มอง",
-          "meaning": "見る",
-          "pronunciation_kana": "モン",
-          "pos": "verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「จ้อง（じっと見る）」＋「มอง（見る）」の同義語を重ねた強調表現です。"
         },
         {
           "text": "ใกล้ๆ",
@@ -389,22 +389,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "คิดมาก",
-          "meaning": "考えすぎる・悩みすぎる",
-          "pronunciation_kana": "キット・マーク",
+          "text": "คิด",
+          "meaning": "考える",
+          "pronunciation_kana": "キット",
           "pos": "verb",
-          "components": [
-            {
-              "text": "คิด",
-              "meaning": "考える"
-            },
-            {
-              "text": "มาก",
-              "meaning": "多い・とても"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「คิด（考える）」＋「มาก（多い）」で、考えすぎる、悩みすぎることを意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มาก",
+          "meaning": "とても",
+          "pronunciation_kana": "マーク",
+          "pos": "adverb",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
         },
         {
           "text": "ชอบ",
@@ -443,22 +443,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ดูเหมือน",
-          "meaning": "〜のように見える",
-          "pronunciation_kana": "ドゥー・ムuan",
+          "text": "ดู",
+          "meaning": "見る",
+          "pronunciation_kana": "ドゥー",
           "pos": "verb",
-          "components": [
-            {
-              "text": "ดู",
-              "meaning": "見る"
-            },
-            {
-              "text": "เหมือน",
-              "meaning": "〜のようだ"
-            }
-          ],
+          "components": [],
           "tone": "mid",
-          "breakdown_explanation": "「ดู（見る）」＋「เหมือน（〜のようだ）」で、〜のように見えるという意味の複合語です。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เหมือน",
+          "meaning": "〜のようだ、似ている",
+          "pronunciation_kana": "ムアン",
+          "pos": "preposition",
+          "components": [],
+          "tone": "rising",
+          "breakdown_explanation": ""
         },
         {
           "text": "มี",
@@ -714,19 +714,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ไม่",
-          "meaning": "〜ない（否定）",
-          "pronunciation_kana": "マイ",
-          "pos": "adverb",
-          "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ได้",
-          "meaning": "〜できる、得る",
-          "pronunciation_kana": "ダイ",
-          "pos": "auxiliary",
+          "text": "ไม่ได้",
+          "meaning": "〜ではない・できなかった",
+          "pronunciation_kana": "マイ・ダイ",
+          "pos": "aux",
           "components": [],
           "tone": "falling",
           "breakdown_explanation": ""
@@ -854,22 +845,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ขึ้นมา",
-          "meaning": "湧き上がる・上がってくる",
-          "pronunciation_kana": "クン・マー",
-          "pos": "verb",
-          "components": [
-            {
-              "text": "ขึ้น",
-              "meaning": "上がる"
-            },
-            {
-              "text": "มา",
-              "meaning": "来る"
-            }
-          ],
+          "text": "ขึ้น",
+          "meaning": "上がる、上へ",
+          "pronunciation_kana": "クン",
+          "pos": "adverb",
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「ขึ้น（上がる）」＋「มา（来る）」で、動作がこちらに向かって起こることを表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มา",
+          "meaning": "来る",
+          "pronunciation_kana": "マー",
+          "pos": "verb",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "จะ",
@@ -2564,19 +2555,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ไม่",
-          "meaning": "〜ない（否定）",
-          "pronunciation_kana": "マイ",
-          "pos": "adverb",
-          "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ได้",
-          "meaning": "〜できる、得る",
-          "pronunciation_kana": "ダイ",
-          "pos": "auxiliary",
+          "text": "ไม่ได้",
+          "meaning": "〜ではない・できなかった",
+          "pronunciation_kana": "マイ・ダイ",
+          "pos": "aux",
           "components": [],
           "tone": "falling",
           "breakdown_explanation": ""
@@ -2704,22 +2686,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ขึ้นมา",
-          "meaning": "湧き上がる・上がってくる",
-          "pronunciation_kana": "クン・マー",
-          "pos": "verb",
-          "components": [
-            {
-              "text": "ขึ้น",
-              "meaning": "上がる"
-            },
-            {
-              "text": "มา",
-              "meaning": "来る"
-            }
-          ],
+          "text": "ขึ้น",
+          "meaning": "上がる、上へ",
+          "pronunciation_kana": "クン",
+          "pos": "adverb",
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「ขึ้น（上がる）」＋「มา（来る）」で、動作がこちらに向かって起こることを表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มา",
+          "meaning": "来る",
+          "pronunciation_kana": "マー",
+          "pos": "verb",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "จะ",
@@ -3823,22 +3805,22 @@
       "id": 21,
       "words": [
         {
-          "text": "เกิน",
-          "meaning": "〜すぎる",
-          "pronunciation_kana": "ガーン",
+          "text": "เกินไป",
+          "meaning": "すぎる・度を越す",
+          "pronunciation_kana": "ガーン・パイ",
           "pos": "adverb",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ไป",
-          "meaning": "行く",
-          "pronunciation_kana": "パイ",
-          "pos": "verb",
-          "components": [],
+          "components": [
+            {
+              "text": "เกิน",
+              "meaning": "超過する"
+            },
+            {
+              "text": "ไป",
+              "meaning": "行く・〜すぎる"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「เกิน（超える）」＋「ไป（行く）」で、程度が過ぎることを表します。"
         },
         {
           "text": "ไกล",
@@ -4283,22 +4265,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แต่",
+          "text": "แต่ว่า",
           "meaning": "しかし",
-          "pronunciation_kana": "テー",
-          "pos": "conjunction",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ว่า",
-          "meaning": "〜ということ",
-          "pronunciation_kana": "ワ",
-          "pos": "conjunction",
-          "components": [],
+          "pronunciation_kana": "テー・ワー",
+          "pos": "conj",
+          "components": [
+            {
+              "text": "แต่",
+              "meaning": "しかし"
+            },
+            {
+              "text": "ว่า",
+              "meaning": "〜という"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「แต่（しかし）」＋「ว่า（〜という）」で、逆接の接続詞です。"
         },
         {
           "text": "ฉัน",

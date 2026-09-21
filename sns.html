@@ -8,6 +8,9 @@
   <!-- html2canvasライブラリの読み込み -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <title>X Post Viewer</title>
+
+  <link rel="stylesheet" href="menu.css">
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700&display=swap');
 
@@ -27,11 +30,11 @@
       color: var(--text-main);
       margin: 0;
       padding: 0;
-      font-size: 14px;
+      font-size: 10px;
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 30px 16px;
     }
@@ -68,7 +71,7 @@
       border: none;
       border-radius: 20px;
       padding: 8px 16px;
-      font-size: 0.85rem;
+      font-size: 0.70rem;
       font-weight: bold;
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -83,7 +86,7 @@
     }
 
     .sticky-header-content {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -97,7 +100,7 @@
     }
 
     h1 {
-      font-size: 1.25rem;
+      font-size: 0.92rem;
       margin: 0;
     }
 
@@ -133,7 +136,7 @@
     }
 
     .filter-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: bold;
       color: var(--text-sub);
       min-width: 35px;
@@ -145,7 +148,7 @@
       background-color: #f0f3f4;
       color: var(--text-main);
       border-radius: 16px;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -182,7 +185,7 @@
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.2s;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
     }
 
     .title-list-item:hover {
@@ -199,7 +202,7 @@
     }
 
     .title-list-date {
-      font-size: 0.75rem;
+      font-size: 0.71rem;
       color: var(--text-sub);
       white-space: nowrap;
     }
@@ -228,13 +231,13 @@
     }
 
     .card-title {
-      font-size: 1.05rem;
+      font-size: 0.85rem;
       font-weight: bold;
       margin: 0 0 6px 0;
     }
 
     .meta-info {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-sub);
     }
 
@@ -244,7 +247,7 @@
       border: none;
       padding: 6px 12px;
       border-radius: 16px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.2s;
@@ -266,7 +269,7 @@
       background-color: #f8f9fa;
       padding: 10px 14px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.7rem;
       color: #333;
       margin-bottom: 14px;
       border-left: 4px solid var(--accent-color);
@@ -277,14 +280,14 @@
       background-color: #fff9e6;
       padding: 10px 14px;
       border-radius: 8px;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       margin-bottom: 16px;
       border: 1px solid #ffe58f;
     }
 
     .caption-title {
       font-weight: bold;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #8c6b00;
       margin-bottom: 4px;
     }
@@ -319,7 +322,7 @@
       background-color: var(--speaker-bg);
       color: var(--accent-color);
       font-weight: bold;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       padding: 3px 6px;
       border-radius: 4px;
       height: fit-content;
@@ -333,18 +336,18 @@
 
     .text-th {
       font-weight: 500;
-      font-size: 1.05rem;
+      font-size: 0.65rem;
       margin-bottom: 4px;
     }
 
     .pronunciation {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       margin-bottom: 3px;
       color: #e67e22;
     }
 
     .translation {
-      font-size: 0.95rem;
+      font-size: 0.8rem;
       color: var(--text-main);
       font-weight: bold;
       margin-bottom: 3px;
@@ -490,7 +493,7 @@
       text-align: center;
       padding: 20px;
       color: var(--text-sub);
-      font-size: 0.85rem;
+      font-size: 0.75rem;
     }
 
     #loadingSentinel {
@@ -509,6 +512,18 @@
       padding-left: 8px;
       transition: background-color 0.2s ease, padding 0.2s ease;
     }
+
+
+    /* PC表示時：左端に60pxの余白を設けてメニューと重ならないようにする */
+@media screen and (min-width: 769px) {
+    /* ページのメインコンテンツを囲む要素のCSSクラス/IDを指定してください */
+    .all-container {
+        margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
+        transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
+    }
+}
+
+
   </style>
 </head>
 
@@ -521,13 +536,120 @@
   gtag('config', 'G-DK62NQHXGB');
 </script>
 
+
 <body>
 
-  <!-- 検索（ヘッダー再表示）ボタン -->
-  <button id="searchToggleBtn" class="search-toggle-btn hidden" onclick="toggleHeader()">
-    🔍
-  </button>
 
+
+<!-- index.html の PC用メニュー領域を以下に置き換え -->
+<nav class="pc-sidebar-menu" id="pcSidebar">
+    <ul class="menu-list">
+      <li class="menu-item">
+            <button class="menu-link" id="pcSearchBtn" type="button" onclick="toggleHeader()">
+                <span class="menu-icon">🔍</span>
+                <span class="menu-label">SEARCH</span>
+            </button>
+        </li>
+        <li class="menu-item">
+            <a href="index.html" class="menu-link">
+                <span class="menu-icon">🏠</span>
+                <span class="menu-label">HOME</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="sns.html" class="menu-link">
+                <span class="menu-icon">🌐</span>
+                <span class="menu-label">SNS</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <button class="submenu-toggle" id="pcSubmenuBtn">
+                <span class="menu-icon">📂</span>
+                <span class="menu-label">SUBCONTENTS</span>
+                <span class="arrow">▼</span>
+            </button>
+            <ul class="submenu-list" id="pcSubmenu">
+        <li class="menu-item">
+            <a href="links.html" class="menu-link">
+                <span class="menu-icon">🏷️</span>
+                <span class="menu-label">XTAG</span>
+            </a>
+        </li>
+                <li>
+                    <a href="tv.html" class="menu-link">
+                        <span class="menu-icon">📺</span>
+                        <span class="menu-label">FIRETV</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html" class="menu-link">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-label">ADMIN</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_viewer.html" class="menu-link">
+                        <span class="menu-icon">👁️</span>
+                        <span class="menu-label">VIEWER</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<!-- メニュー背景オーバーレイ (共通) -->
+<div class="sheet-overlay" id="menuOverlay"></div>
+
+<!-- スマホ用フローティングフッター -->
+<nav class="sp-floating-footer" id="spFooter">
+    <ul class="sp-nav-list">
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn" id="spSearchBtn" onclick="scrollToSearch()">
+                <span class="sp-nav-icon">🔍</span>
+                <span class="sp-nav-label">search</span>
+            </button>
+        </li>
+        <li class="sp-nav-item">
+            <a href="index.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏠</span>
+                <span class="sp-nav-label">HOME</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="sns.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🌐</span>
+                <span class="sp-nav-label">SNS</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="links.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏷️</span>
+                <span class="sp-nav-label">XTAG</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn" id="spSubBtn">
+                <span class="sp-nav-icon">☰</span>
+                <span class="sp-nav-label">SUB</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<!-- スマホ用 SUBCONTENTS ボトムシート -->
+<div class="sp-bottom-sheet" id="spBottomSheet">
+    <ul class="menu-list">
+        <li class="menu-item"><a href="tv.html" class="menu-link">FIRETV</a></li>
+        <li class="menu-item"><a href="admin.html" class="menu-link">ADMIN</a></li>
+        <li class="menu-item"><a href="admin_viewer.html" class="menu-link">VIEWER</a></li>
+    </ul>
+</div>
+
+
+
+
+<div class="all-container">
   <!-- 最上部固定ナビゲーションバー -->
   <div id="stickyHeader" class="sticky-header">
     <div class="sticky-header-content">
@@ -605,7 +727,7 @@
       </div>
 
       <!-- コントロール群 -->
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.85rem;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; background:#f8f9fa; padding:12px; border-radius:8px; font-size:0.75rem;">
         <div>
           <label style="font-weight:bold; display:block; margin-bottom:4px;">背景タイプ</label>
           <select id="bgTypeSelect" onchange="updatePreviewLayout()" style="width:100%; padding:4px;">
@@ -663,6 +785,7 @@
       </div>
     </div>
   </div>
+</div>
 
   <script>
     let currentLang = "ja";
@@ -693,7 +816,6 @@
 
     let lastScrollY = window.scrollY;
     const stickyHeader = document.getElementById('stickyHeader');
-    const searchToggleBtn = document.getElementById('searchToggleBtn');
 
     // 設定値
     const IMAGE_CONFIG = {
@@ -704,8 +826,20 @@
 
     async function init() {
       try {
+        // スマホサイズ（768px以下）の場合は初期レイアウトを「縦（vertical）」に切り替え
+        if (window.innerWidth <= 768) {
+          switchLayout('vertical');
+        }
+
         const response = await fetch('./data/status_management.json');
         statusData = await response.json();
+
+        // --- 追加: statusData を published_at の降順（新しい順）にソート ---
+        statusData.sort((a, b) => {
+          const dateA = new Date(a.published_at || 0);
+          const dateB = new Date(b.published_at || 0);
+          return dateB - dateA; // 降順
+        });
 
         await preloadDetailData();
         setupFilterButtons();
@@ -807,6 +941,13 @@
 
         const monthMatch = itemMonth === parseInt(selectedMonth, 10);
         return yearMatch && monthMatch;
+      });
+
+      // --- 追加: 絞り込んだ結果を published_at の降順（新しい順）にソート ---
+      filteredData.sort((a, b) => {
+        const dateA = new Date(a.published_at || 0);
+        const dateB = new Date(b.published_at || 0);
+        return dateB - dateA; // 降順
       });
 
       renderTitleListArea();
@@ -1021,7 +1162,7 @@
       return card;
     }
 
-    // タイマー駆動・自動スクロール処理
+    // タイマー駆動・自動スクロール処理（修正版）
     function runSubtitleSync() {
       if (syncTimer) clearInterval(syncTimer);
 
@@ -1043,10 +1184,19 @@
               items.forEach(el => el.classList.remove('active'));
               itemEl.classList.add('active');
 
-              itemEl.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-              });
+              // --- 修正箇所：画面全体ではなく、字幕エリアの親スクロールコンテナ内だけをスクロール ---
+              const scrollContainer = activeCardElement.querySelector('.info-column');
+              if (scrollContainer) {
+                // 親コンテナの上端からの相対位置を計算してスクロール
+                const containerTop = scrollContainer.getBoundingClientRect().top;
+                const itemTop = itemEl.getBoundingClientRect().top;
+                const targetScrollTop = scrollContainer.scrollTop + (itemTop - containerTop);
+
+                scrollContainer.scrollTo({
+                  top: targetScrollTop,
+                  behavior: 'smooth'
+                });
+              }
             }
           }
         });
@@ -1390,17 +1540,17 @@
 
     function hideHeader() {
       stickyHeader.classList.add('hidden');
-      searchToggleBtn.classList.remove('hidden');
     }
 
     function showHeader() {
       stickyHeader.classList.remove('hidden');
-      searchToggleBtn.classList.add('hidden');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       init();
     });
   </script>
+
+<script src="menu.js"></script>
 </body>
 </html>

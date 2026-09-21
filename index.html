@@ -27,6 +27,7 @@
 <meta name="apple-mobile-web-app-title" content="PERSES POCKET">
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="menu.css">
 
 </head>
 
@@ -41,7 +42,120 @@
 </script>
 
 
+<script src="menu.js"></script>
+
 <body class="mode-2col-a">
+
+
+
+<!-- index.html の PC用メニュー領域を以下に置き換え -->
+<nav class="pc-sidebar-menu" id="pcSidebar">
+    <ul class="menu-list">
+      <li class="menu-item">
+            <button class="menu-link" id="pcSearchBtn" type="button" onclick="scrollToSearch()">
+                <span class="menu-icon">🔍</span>
+                <span class="menu-label">SEARCH</span>
+            </button>
+        </li>
+        <li class="menu-item">
+            <a href="index.html" class="menu-link">
+                <span class="menu-icon">🏠</span>
+                <span class="menu-label">HOME</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="sns.html" class="menu-link">
+                <span class="menu-icon">🌐</span>
+                <span class="menu-label">SNS</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <button class="submenu-toggle" id="pcSubmenuBtn">
+                <span class="menu-icon">📂</span>
+                <span class="menu-label">SUBCONTENTS</span>
+                <span class="arrow">▼</span>
+            </button>
+            <ul class="submenu-list" id="pcSubmenu">
+        <li class="menu-item">
+            <a href="links.html" class="menu-link">
+                <span class="menu-icon">🏷️</span>
+                <span class="menu-label">XTAG</span>
+            </a>
+        </li>
+                <li>
+                    <a href="tv.html" class="menu-link">
+                        <span class="menu-icon">📺</span>
+                        <span class="menu-label">FIRETV</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html" class="menu-link">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-label">ADMIN</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_viewer.html" class="menu-link">
+                        <span class="menu-icon">👁️</span>
+                        <span class="menu-label">VIEWER</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<!-- メニュー背景オーバーレイ (共通) -->
+<div class="sheet-overlay" id="menuOverlay"></div>
+
+<!-- スマホ用フローティングフッター -->
+<nav class="sp-floating-footer" id="spFooter">
+    <ul class="sp-nav-list">
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn" id="spSearchBtn" onclick="scrollToSearch()">
+                <span class="sp-nav-icon">🔍</span>
+                <span class="sp-nav-label">search</span>
+            </button>
+        </li>
+        <li class="sp-nav-item">
+            <a href="index.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏠</span>
+                <span class="sp-nav-label">HOME</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="sns.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🌐</span>
+                <span class="sp-nav-label">SNS</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="links.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏷️</span>
+                <span class="sp-nav-label">XTAG</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn" id="spSubBtn">
+                <span class="sp-nav-icon">☰</span>
+                <span class="sp-nav-label">SUB</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<!-- スマホ用 SUBCONTENTS ボトムシート -->
+<div class="sp-bottom-sheet" id="spBottomSheet">
+    <ul class="menu-list">
+        <li class="menu-item"><a href="tv.html" class="menu-link">FIRETV</a></li>
+        <li class="menu-item"><a href="admin.html" class="menu-link">ADMIN</a></li>
+        <li class="menu-item"><a href="admin_viewer.html" class="menu-link">VIEWER</a></li>
+    </ul>
+</div>
+
+
+
+
 
   <div class="container" id="app-container">
     <div class="header-area">
@@ -307,13 +421,6 @@
 
     <footer class="site-footer" style="margin-top: 40px; padding: 20px 16px; text-align: center; font-size: 0.6rem; color: #8a7a80; line-height: 1.6; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;">
       <p style="margin: 0 0 6px 0;"data-i18n="footer_disclaimer">当サイトは個人が運営するファンによる非公式の翻訳アーカイブです。公式および関係企業様とは一切関係ありません。</p>
-      <p style="margin: 0; font-size: 0.7rem;"data-i18n="footer_contact">問い合わせ・誤訳のご指摘等: 
-        <a href="https://x.com/2chicken4you" target="_blank" rel="noopener noreferrer" class="footer-link" style="color: #ff7597; text-decoration: none; font-weight: 600; transition: opacity 0.2s;">みんMING@2chicken4you</a>
-      </p>
-      <a href="admin.html">🛠️</a>
-      <a href="admin_viewer.html">🛠️</a>
-      <a href="tv.html">📺</a>
-      <a href="x.html">X</a>
     </footer>
   </div>
 
@@ -2007,5 +2114,6 @@ document.addEventListener('click', (e) => {
       document.body.focus();
     });
   </script>
+  
 </body>
 </html>

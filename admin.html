@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PERSES 発言者修正エディター（管理者）</title>
+  <link rel="stylesheet" href="menu.css">
   <style>
     * {
       box-sizing: border-box;
@@ -594,6 +595,15 @@
         top: 0;
       }
     }
+
+    /* PC表示時：左端に60pxの余白を設けてメニューと重ならないようにする */
+    @media screen and (min-width: 769px) {
+        /* ページのメインコンテンツを囲む要素のCSSクラス/IDを指定してください */
+        .container {
+            margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
+            transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
+        }
+    }
   </style>
 </head>
 
@@ -607,22 +617,119 @@
   gtag('config', 'G-DK62NQHXGB');
 </script>
 
+<script src="menu.js"></script>
 <body>
 
+<nav class="pc-sidebar-menu" id="pcSidebar">
+    <ul class="menu-list">
+      <li class="menu-item">
+            <button class="menu-link">
+                <span class="menu-icon"></span>
+                <span class="menu-label"></span>
+            </button>
+        </li>
+        <li class="menu-item">
+            <a href="index.html" class="menu-link">
+                <span class="menu-icon">🏠</span>
+                <span class="menu-label">HOME</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <a href="sns.html" class="menu-link">
+                <span class="menu-icon">🌐</span>
+                <span class="menu-label">SNS</span>
+            </a>
+        </li>
+        <li class="menu-item">
+            <button class="submenu-toggle" id="pcSubmenuBtn">
+                <span class="menu-icon">📂</span>
+                <span class="menu-label">SUBCONTENTS</span>
+                <span class="arrow">▼</span>
+            </button>
+            <ul class="submenu-list" id="pcSubmenu">
+        <li class="menu-item">
+            <a href="links.html" class="menu-link">
+                <span class="menu-icon">🏷️</span>
+                <span class="menu-label">XTAG</span>
+            </a>
+        </li>
+                <li>
+                    <a href="tv.html" class="menu-link">
+                        <span class="menu-icon">📺</span>
+                        <span class="menu-label">FIRETV</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin.html" class="menu-link">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-label">ADMIN</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_viewer.html" class="menu-link">
+                        <span class="menu-icon">👁️</span>
+                        <span class="menu-label">VIEWER</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<!-- メニュー背景オーバーレイ (共通) -->
+<div class="sheet-overlay" id="menuOverlay"></div>
+
+<!-- スマホ用フローティングフッター -->
+<nav class="sp-floating-footer" id="spFooter">
+    <ul class="sp-nav-list">
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn">
+                <span class="sp-nav-icon"></span>
+                <span class="sp-nav-label"></span>
+            </button>
+        </li>
+        <li class="sp-nav-item">
+            <a href="index.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏠</span>
+                <span class="sp-nav-label">HOME</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="sns.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🌐</span>
+                <span class="sp-nav-label">SNS</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <a href="links.html" class="sp-nav-link">
+                <span class="sp-nav-icon">🏷️</span>
+                <span class="sp-nav-label">XTAG</span>
+            </a>
+        </li>
+        <li class="sp-nav-item">
+            <button class="sp-nav-btn" id="spSubBtn">
+                <span class="sp-nav-icon">☰</span>
+                <span class="sp-nav-label">SUB</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<!-- スマホ用 SUBCONTENTS ボトムシート -->
+<div class="sp-bottom-sheet" id="spBottomSheet">
+    <ul class="menu-list">
+        <li class="menu-item"><a href="tv.html" class="menu-link">FIRETV</a></li>
+        <li class="menu-item"><a href="admin.html" class="menu-link">ADMIN</a></li>
+        <li class="menu-item"><a href="admin_viewer.html" class="menu-link">VIEWER</a></li>
+    </ul>
+</div>
+
+<div class="container">
   <!-- ヘッダー -->
   <div class="header">
     <div class="header-left">
-      <button class="hamburger-btn" id="menu-toggle" type="button">≡</button>
-      <h2>発言者修正エディター（管理者）</h2>
-
-      <!-- 🍔 リンク集ドロワー -->
-      <nav class="nav-menu" id="nav-menu">
-        <div class="menu-title">ページ移動</div>
-        <a href="index.html">🏠 メイン閲覧画面</a>
-        <a href="admin.html">🛠️ 発言者エディター</a>
-        <div class="menu-title" style="margin-top: 8px;">外部リンク</div>
-        <a href="https://tpop.fandom.com/wiki/PERSES" target="_blank">📖 PERSES Wiki</a>
-      </nav>
+      <h2>字幕修正エディタ</h2>
+      <p>データダウンロードはできます。アップロードは管理者のみ。</p>
     </div>
 
     <div class="header-actions">
@@ -705,7 +812,7 @@
       </div>
     </div>
   </div>
-
+</div>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     // デフォルトのクイック選択用メンバーリスト
@@ -726,13 +833,7 @@
     let isAutoScrollEnabled = true;
 
     // --- 1. ハンバーガーメニュー ＆ テーマ切り替え ---
-    const menuToggle = document.getElementById('menu-toggle');
-    const navMenu = document.getElementById('nav-menu');
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      navMenu.classList.toggle('show');
-    });
-    document.addEventListener('click', () => navMenu.classList.remove('show'));
+    
 
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     themeToggleBtn.addEventListener('click', () => {
