@@ -263,6 +263,7 @@
       gap: 8px;
       margin-bottom: 10px;
       align-items: center;
+      justify-content: center;
     }
 
     .summary-box {
@@ -422,7 +423,6 @@
     .card-content-layout.layout-vertical {
       display: flex;
       flex-direction: column;
-      gap: 15px;
       margin-top: 15px;
     }
 
@@ -521,6 +521,26 @@
         margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
         transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
     }
+}
+
+@media (max-width: 768px) {
+  /* 外枠（表示させたい領域のサイズ） */
+  .layout-vertical .tiktok-embed-container {
+    height: 352px !important; /* 表示したい高さ */
+    overflow: hidden !important; /* 枠外にはみ出た部分（テキスト等）を切り落とす */
+    position: relative !important;
+    margin:0px !important;
+  }
+
+  /* iframe本体を縮小＋位置調整して不要な部分を枠外へ追い出す */
+  .layout-vertical .tiktok-embed-container iframe {
+    transform: scale(0.6) translateY(-50px) !important; /* ズレ具合は translateY で調整 */
+    transform-origin: top center !important;
+  }
+
+  .card-subtitle-controls{
+    margin: 0px;
+  }
 }
 
 
