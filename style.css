@@ -912,6 +912,120 @@ body.dark-mode .search-clear-btn:hover {
     }
 
     /* ==========================================
+       style-x-fit バリエーション 3パターン
+       ========================================== */
+
+    /* 1. X-Fit Yellow Tag（鮮やかなイエロータグ風 / 動画配信・テロップ風） */
+    .overlay-subtitle-box.style-x-fit-yellow {
+      max-width: 60% !important; /* 中央60%の幅に制限して見切れを防止 */
+      margin: 0 auto;
+      display: inline-block;
+      width: auto;
+      max-width: fit-content;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      color: #ffffff;
+      font-weight: 800;
+      -webkit-text-stroke: 4px #000000; /* 縁取りの太さと色 */
+      paint-order: stroke fill;           /* 輪郭線を文字の塗りの背面に描画 */
+      text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8); /* 視認性を高める薄い落ち影のみ維持 */
+    }
+
+    /* 2. X-Fit Cyber Cyan（グラデーションフチ＋ダーク背景の近未来風フィット） */
+    .overlay-subtitle-box.style-x-fit-cyber {
+      max-width: 60% !important; /* 中央60%の幅に制限して見切れを防止 */
+      margin: 0 auto;
+      display: inline-block;
+      width: auto;
+      max-width: fit-content;
+      background: rgba(15, 23, 42, 0.92);
+      color: #38bdf8;
+      border: 1.5px solid #0284c7;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+      text-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
+      border-radius: 6px;
+      padding: 4px 12px;
+    }
+
+    /* 3. X-Fit Capsule Red（丸みのあるスポーティーな赤カプセル風） */
+    .overlay-subtitle-box.style-x-fit-capsule {
+      max-width: 60% !important; /* 中央60%の幅に制限して見切れを防止 */
+      margin: 0 auto;
+      display: inline-block;
+      width: auto;
+      max-width: fit-content;
+      background: rgba(225, 29, 72, 0.9);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-radius: 9999px; /* 完全なカプセル型（角丸） */
+      padding: 4px 16px;
+    }
+
+    /* ==========================================
+       追加の字幕デザイン 5パターン
+       ========================================== */
+
+    /* 1. Neon Cyan（ネオンサイアン / 鮮やかな夜間・サイバー風デザイン） */
+    .overlay-subtitle-box.style-neon-cyan {
+      background: rgba(10, 15, 30, 0.85);
+      color: #00f3ff;
+      border: 1.5px solid #00f3ff;
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.5), inset 0 0 6px rgba(0, 243, 255, 0.3);
+      text-shadow: 0 0 5px rgba(0, 243, 255, 0.8);
+      border-radius: 8px;
+    }
+
+    /* 2. Glassmorphism（グラスモフィズム / モダンな半透明すりガラス風） */
+    .overlay-subtitle-box.style-glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+    }
+
+    /* 3. Gold Luxury（ゴールドラグジュアリー / 高級感のある金フチデザイン） */
+    .overlay-subtitle-box.style-gold {
+      background: rgba(20, 15, 10, 0.9);
+      color: #fff8e7;
+      border: 1.5px solid #ffd700;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+      text-shadow: 0 0 4px rgba(255, 215, 0, 0.6);
+      border-radius: 6px;
+    }
+
+    /* 4. Pastel Pop（パステルポップ / 明るくポップなピンク系デザイン） */
+    .overlay-subtitle-box.style-pastel-pop {
+      background: rgba(255, 240, 245, 0.95);
+      color: #ff3366;
+      border: 2px solid #ff7597;
+      box-shadow: 0 4px 10px rgba(255, 117, 151, 0.3);
+      text-shadow: none;
+      font-weight: bold;
+      border-radius: 16px;
+    }
+
+    /* 5. Minimal Shadow（ミニマルシャドウ / 背景なし・太影のみのシンプルデザイン） */
+    .overlay-subtitle-box.style-minimal-shadow {
+      background: transparent;
+      color: #ffffff;
+      border: none;
+      box-shadow: none;
+      text-shadow: 
+        2px 2px 0px #000,
+        -2px -2px 0px #000,
+        2px -2px 0px #000,
+        -2px 2px 0px #000,
+        0px 3px 6px rgba(0,0,0,0.9);
+    }
+
+    /* ==========================================
        動画プレイヤー上のUIボタン自動非表示・表示制御
        ========================================== */
 
@@ -1346,4 +1460,19 @@ body.dark-mode .search-clear-btn:hover {
         margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
         transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
     }
+}
+
+/* ==========================================
+   フルスクリーンモード時の表示切り替え
+   ========================================== */
+
+/* 1. container の margin-left を 0px に変更 */
+.mode-fullscreen .container {
+  margin-left: 0px !important;
+}
+
+/* 2. pc-sidebar-menu と sp-floating-footer を非表示 */
+.mode-fullscreen .pc-sidebar-menu,
+.mode-fullscreen .sp-floating-footer {
+  display: none !important;
 }
