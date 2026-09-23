@@ -250,7 +250,7 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
     max_retries = 5
     base_backoff = 5
 
-    time.sleep(5)
+    time.sleep(1)
 
     for attempt in range(1, max_retries + 1):
         # 1. 直接 model_name が指定されている場合はそれを優先（リペア時など）
