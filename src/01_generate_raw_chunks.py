@@ -119,7 +119,6 @@ if args.lite:
 else:
     print("🌟 【高精度モード起動】 賢い Gemini 3.7 Flash 等で高品質生成を実行します。")
     AVAILABLE_MODELS = [
-        "gemini-3.5-flash",
         "gemini-3.6-flash",
         "gemini-3.7-flash",
         "gemini-3.8-flash",
