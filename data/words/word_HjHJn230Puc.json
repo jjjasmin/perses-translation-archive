@@ -95,10 +95,28 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เนนรันเนซ",
+          "text": "เนน",
           "pos": "unknown",
           "components": [],
           "tone": "",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "รัน",
+          "meaning": "走らせる・通す（英語 run）",
+          "pronunciation_kana": "ラン",
+          "pos": "verb",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เนซ",
+          "meaning": "ネス（固有名詞）",
+          "pronunciation_kana": "ネース",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -120,22 +138,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "วันนี้",
-          "meaning": "今日",
-          "pronunciation_kana": "ワン・ニー",
+          "text": "วัน",
+          "meaning": "日",
+          "pronunciation_kana": "ワン",
           "pos": "noun",
-          "components": [
-            {
-              "text": "วัน",
-              "meaning": "日"
-            },
-            {
-              "text": "นี้",
-              "meaning": "この"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「วัน（日）」＋「นี้（この）」で「今日」を意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "นี้",
+          "meaning": "この、ここ",
+          "pronunciation_kana": "ニー",
+          "pos": "determiner",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
         },
         {
           "text": "ต้อง",
@@ -770,9 +788,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เมื่อไหร่",
-          "meaning": "いつ",
-          "pronunciation_kana": "ムア・ライ",
+          "text": "เมื่อ",
+          "meaning": "〜のとき",
+          "pronunciation_kana": "ムア",
+          "pos": "conjunction",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ไหร่",
+          "meaning": "いくら、どれくらい（เท่าไหร่ で「どれくらい」）",
+          "pronunciation_kana": "ライ",
           "pos": "pronoun",
           "components": [],
           "tone": "low",
@@ -807,9 +834,11 @@
         },
         {
           "text": "โคจร",
-          "pos": "unknown",
+          "meaning": "軌道を描く / めぐる（ここでは共演するニュアンス）",
+          "pronunciation_kana": "コーゾーン",
+          "pos": "verb",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -849,10 +878,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ซีรี่ส",
-          "pos": "unknown",
+          "text": "ซีรีส์",
+          "meaning": "シリーズ・ドラマ",
+          "pronunciation_kana": "シーリー",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -924,12 +955,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เชอบ",
-          "meaning": "好き（※ชอบのタイポ）",
+          "text": "ชอบ",
+          "meaning": "好き",
           "pronunciation_kana": "チョープ",
           "pos": "verb",
           "components": [],
-          "tone": "falling",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -1032,12 +1063,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เฝ้า",
-          "meaning": "見守る・待ち続ける",
-          "pronunciation_kana": "ファオ",
-          "pos": "verb",
+          "text": "เขา",
+          "meaning": "彼・あの人",
+          "pronunciation_kana": "カオ",
+          "pos": "pronoun",
           "components": [],
-          "tone": "falling",
+          "tone": "rising",
           "breakdown_explanation": ""
         },
         {
@@ -1352,21 +1383,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แฟน",
-          "meaning": "ファン・恋人",
-          "pronunciation_kana": "ファン",
+          "text": "แฟแบค",
+          "meaning": "フラッシュバック",
+          "pronunciation_kana": "フラッシュバック",
           "pos": "noun",
           "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "แบค",
-          "meaning": "バック（Backの略の一部）",
-          "pronunciation_kana": "バック",
-          "pos": "noun",
-          "components": [],
-          "tone": "low",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -1529,9 +1551,11 @@
         },
         {
           "text": "สัมปทาน",
-          "pos": "unknown",
+          "meaning": " concession / 利権・独占枠",
+          "pronunciation_kana": "サンパターン",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -1562,12 +1586,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เ้า",
-          "meaning": "（発音のゆらぎ・フィラー）",
-          "pronunciation_kana": "オオ",
-          "pos": "particle",
+          "text": "เขา",
+          "meaning": "彼・あの人",
+          "pronunciation_kana": "カオ",
+          "pos": "pronoun",
           "components": [],
-          "tone": "falling",
+          "tone": "rising",
           "breakdown_explanation": ""
         },
         {
@@ -1626,9 +1650,11 @@
         },
         {
           "text": "พริวิเลจ",
-          "pos": "unknown",
+          "meaning": "特権（英語 privilege）",
+          "pronunciation_kana": "プリビレッジ",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -1677,22 +1703,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "นัก",
-          "meaning": "〜家・専門家・愛好家",
-          "pronunciation_kana": "ナック",
-          "pos": "prefix",
-          "components": [],
+          "text": "นักแสดง",
+          "meaning": "俳優・役者",
+          "pronunciation_kana": "ナック・萨戴ング",
+          "pos": "noun",
+          "components": [
+            {
+              "text": "นัก",
+              "meaning": "～家（専門家）"
+            },
+            {
+              "text": "แสดง",
+              "meaning": "演じる・表現する"
+            }
+          ],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "แสดง",
-          "meaning": "表す・示す・表現する",
-          "pronunciation_kana": "サダーン",
-          "pos": "verb",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「นัก（～する人）」＋「แสดง（演じる）」で俳優を意味します。"
         },
         {
           "text": "หน้า",
@@ -1718,22 +1744,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "นัก",
-          "meaning": "〜家・専門家・愛好家",
-          "pronunciation_kana": "ナック",
-          "pos": "prefix",
-          "components": [],
+          "text": "นักแสดง",
+          "meaning": "俳優・役者",
+          "pronunciation_kana": "ナック・萨戴ング",
+          "pos": "noun",
+          "components": [
+            {
+              "text": "นัก",
+              "meaning": "～家（専門家）"
+            },
+            {
+              "text": "แสดง",
+              "meaning": "演じる・表現する"
+            }
+          ],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "แสดง",
-          "meaning": "表す・示す・表現する",
-          "pronunciation_kana": "サダーン",
-          "pos": "verb",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「นัก（～する人）」＋「แสดง（演じる）」で俳優を意味します。"
         },
         {
           "text": "หน้า",
@@ -2268,8 +2294,8 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ",
-          "meaning": "あー、えー",
+          "text": "ออ",
+          "meaning": "ああ、なるほど",
           "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
@@ -2310,15 +2336,6 @@
           "pos": "verb",
           "components": [],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ม",
-          "meaning": "（音声の途切れ）",
-          "pronunciation_kana": "ム",
-          "pos": "other",
-          "components": [],
-          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -2570,22 +2587,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ผู้ใหญ่",
-          "meaning": "大人・目上の人・偉い人",
-          "pronunciation_kana": "プー・ヤイ",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "ผู้",
-              "meaning": "〜する人"
-            },
-            {
-              "text": "ใหญ่",
-              "meaning": "大きい"
-            }
-          ],
+          "text": "ผู้",
+          "meaning": "者、人（接頭辞）",
+          "pronunciation_kana": "プウ",
+          "pos": "prefix",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ใหญ่",
+          "meaning": "大きい",
+          "pronunciation_kana": "ヤイ",
+          "pos": "adjective",
+          "components": [],
           "tone": "low",
-          "breakdown_explanation": "「ผู้（〜する人）」＋「ใหญ่（大きい）」で、大人や目上の人を意味します。"
+          "breakdown_explanation": ""
         },
         {
           "text": "ทุกคน",
@@ -2836,22 +2853,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ผล",
-          "meaning": "結果・影響",
-          "pronunciation_kana": "ポン",
+          "text": "ผลงาน",
+          "meaning": "作品、成果",
+          "pronunciation_kana": "ポンガーン",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "ผล",
+              "meaning": "結果"
+            },
+            {
+              "text": "งาน",
+              "meaning": "仕事"
+            }
+          ],
           "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "งาน",
-          "meaning": "仕事・イベント・催し",
-          "pronunciation_kana": "ガーン",
-          "pos": "noun",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「ผล（結果・成果）」＋「งาน（仕事・作業）」で、仕事の成果である「作品」を意味します。"
         },
         {
           "text": "ก่อน",
@@ -2980,9 +2997,9 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แบ",
-          "meaning": "〜のような（スラング的短縮形）",
-          "pronunciation_kana": "ベ",
+          "text": "แบบ",
+          "meaning": "型、このように",
+          "pronunciation_kana": "ベープ",
           "pos": "noun",
           "components": [],
           "tone": "low",
@@ -3192,22 +3209,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "นะครับ",
-          "meaning": "～ですね（丁寧）",
-          "pronunciation_kana": "ナ・クラップ",
+          "text": "นะ",
+          "meaning": "〜ね（文末詞）",
+          "pronunciation_kana": "ナ",
           "pos": "particle",
-          "components": [
-            {
-              "text": "นะ",
-              "meaning": "～ね"
-            },
-            {
-              "text": "ครับ",
-              "meaning": "～です・ます"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「นะ（～ね）」＋「ครับ（丁寧語）」の複合表現です。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ครับ",
+          "meaning": "（男性の）～です・ます（丁寧語の語尾）",
+          "pronunciation_kana": "クラップ",
+          "pos": "particle",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
         },
         {
           "text": "ผม",
@@ -3368,10 +3385,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ึก",
-          "pos": "unknown",
+          "text": "นึก",
+          "meaning": "思う・思い出す",
+          "pronunciation_kana": "ヌーク",
+          "pos": "verb",
           "components": [],
-          "tone": "",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -3510,21 +3529,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ใช่ม",
-          "meaning": "〜でしょ、〜ですよね（省略・タイポ的表現）",
-          "pronunciation_kana": "チャイ・マイ",
-          "pos": "particle",
-          "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
           "text": "ใช่",
           "meaning": "そうだ・～ではないか",
           "pronunciation_kana": "チャイ",
           "pos": "verb",
           "components": [],
           "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ๆ",
+          "meaning": "（畳語の繰り返し記号）",
+          "pronunciation_kana": "（直前の言葉を繰り返す）",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -4245,6 +4264,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "ยัง",
+          "meaning": "まだ",
+          "pronunciation_kana": "ヤン",
+          "pos": "adverb",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "ไง",
           "meaning": "どうやって・どのように",
           "pronunciation_kana": "ガイ",
@@ -4286,10 +4314,12 @@
           "breakdown_explanation": "「จริง（本当）」を重ねて強調した表現です。"
         },
         {
-          "text": "คิต",
-          "pos": "unknown",
+          "text": "คือ",
+          "meaning": "〜である",
+          "pronunciation_kana": "クー",
+          "pos": "verb",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -4794,21 +4824,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เวิร์",
-          "meaning": "ヴァース",
-          "pronunciation_kana": "ウェー",
-          "pos": "foreign",
-          "components": [],
-          "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "Shop",
-          "meaning": "ショップ、お店",
-          "pronunciation_kana": "ショップ",
+          "text": "เวิร์คช็อป",
+          "meaning": "ワークショップ",
+          "pronunciation_kana": "ワークショップ",
           "pos": "noun",
           "components": [],
-          "tone": "mid",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -4889,22 +4910,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "จะ",
-          "meaning": "〜だろう・〜する予定だ",
-          "pronunciation_kana": "チャ",
+          "text": "จะมี",
+          "meaning": "〜することになっている",
+          "pronunciation_kana": "ジャ・ミー",
           "pos": "auxiliary verb",
-          "components": [],
+          "components": [
+            {
+              "text": "จะ",
+              "meaning": "〜する予定"
+            },
+            {
+              "text": "มี",
+              "meaning": "ある"
+            }
+          ],
           "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "มี",
-          "meaning": "ある、持つ",
-          "pronunciation_kana": "ミー",
-          "pos": "verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「จะ（〜する予定）」＋「มี（ある）」で、今後の予定や発生を表します。"
         },
         {
           "text": "เจอ",
@@ -4925,10 +4946,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ิงิง",
-          "pos": "unknown",
+          "text": "อิง",
+          "meaning": "もたれかかる・依拠する",
+          "pronunciation_kana": "イン",
+          "pos": "verb",
           "components": [],
-          "tone": "",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -5004,12 +5027,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ยิง",
-          "meaning": "撃つ・〜しまくる（強調表現）",
-          "pronunciation_kana": "イーン",
+          "text": "อิง",
+          "meaning": "もたれかかる・依拠する",
+          "pronunciation_kana": "イン",
           "pos": "verb",
           "components": [],
-          "tone": "high",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -5019,15 +5042,6 @@
           "pos": "noun",
           "components": [],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "เ",
-          "meaning": "（音声の断片）",
-          "pronunciation_kana": "エ",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -5198,13 +5212,13 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เงี้",
-          "meaning": "（อย่างนี้の省略の変形）",
-          "pronunciation_kana": "ニア",
+          "text": "เงี้ย",
+          "meaning": "こんな風に、みたいに（อย่างนี้の短縮・スラング）",
+          "pronunciation_kana": "ギア",
           "pos": "particle",
           "components": [],
           "tone": "high",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「อย่างนี้（このように）」の口語的な短縮形で、カジュアルに「〜みたいな感じ」を表します。"
         },
         {
           "text": "ครับ",
@@ -5302,12 +5316,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เย",
-          "meaning": "イェー（歓声・感嘆詞）",
-          "pronunciation_kana": "イェー",
-          "pos": "interjection",
+          "text": "เนี้ย",
+          "meaning": "これ、この（強調の表現）",
+          "pronunciation_kana": "ニエイ",
+          "pos": "particle",
           "components": [],
-          "tone": "mid",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -5374,12 +5388,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "พาร์",
-          "meaning": "PR・広報",
-          "pronunciation_kana": "パー",
+          "text": "พาร์ท",
+          "meaning": "パート",
+          "pronunciation_kana": "パート",
           "pos": "noun",
           "components": [],
-          "tone": "mid",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -5392,8 +5406,8 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เดก",
-          "meaning": "子供",
+          "text": "เด็ก",
+          "meaning": "子供、年下",
           "pronunciation_kana": "デック",
           "pos": "noun",
           "components": [],
@@ -5536,12 +5550,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ่า",
-          "meaning": "あぁ・ええと",
-          "pronunciation_kana": "アー",
+          "text": "ออ",
+          "meaning": "ああ、なるほど",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
-          "tone": "low",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -5604,10 +5618,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ซีรีส",
-          "pos": "unknown",
+          "text": "ซีรีส์",
+          "meaning": "シリーズ・ドラマ",
+          "pronunciation_kana": "シーリー",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -5674,12 +5690,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ซีรี่ส์",
+          "text": "ซีรีส์",
           "meaning": "シリーズ・ドラマ",
-          "pronunciation_kana": "スィリー",
+          "pronunciation_kana": "シーリー",
           "pos": "noun",
           "components": [],
-          "tone": "falling",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -5701,19 +5717,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กิ่น",
-          "meaning": "匂い（กลิ่น の変形・あるいはタイポ）",
-          "pronunciation_kana": "ギン",
+          "text": "กลิ่น",
+          "meaning": "匂い、香り",
+          "pronunciation_kana": "グリン",
           "pos": "noun",
           "components": [],
-          "tone": "low",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
-          "text": "สนิ่ม",
-          "pos": "unknown",
+          "text": "สนิม",
+          "meaning": "錆",
+          "pronunciation_kana": "サニーム",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -5753,22 +5771,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กำลัง",
-          "meaning": "〜しているところだ",
-          "pronunciation_kana": "ガラン",
-          "pos": "auxiliary verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ใจ",
-          "meaning": "心",
-          "pronunciation_kana": "ジャイ",
+          "text": "กำลังใจ",
+          "meaning": "励まし・応援・気力",
+          "pronunciation_kana": "ガラン・ジャイ",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "กำลัง",
+              "meaning": "力"
+            },
+            {
+              "text": "ใจ",
+              "meaning": "心"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「กำลัง（力）」＋「ใจ（心）」で、精神的な力や「応援・励まし」を意味します。"
         },
         {
           "text": "ให้",
@@ -5780,22 +5798,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "การ",
-          "meaning": "〜すること（名詞化辞）",
-          "pronunciation_kana": "ガーン",
-          "pos": "particle",
-          "components": [],
+          "text": "การแสดง",
+          "meaning": "演技・パフォーマンス",
+          "pronunciation_kana": "ガーン・サデーン",
+          "pos": "noun",
+          "components": [
+            {
+              "text": "การ",
+              "meaning": "〜すること（接頭辞）"
+            },
+            {
+              "text": "แสดง",
+              "meaning": "表現する・演じる"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "แสดง",
-          "meaning": "表す・示す・表現する",
-          "pronunciation_kana": "サダーン",
-          "pos": "verb",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「การ（名詞化）」＋「แสดง（表現・演技）」で演技を意味します。"
         },
         {
           "text": "ของ",
@@ -5947,22 +5965,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กำลัง",
-          "meaning": "〜しているところだ",
-          "pronunciation_kana": "ガラン",
-          "pos": "auxiliary verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ใจ",
-          "meaning": "心",
-          "pronunciation_kana": "ジャイ",
+          "text": "กำลังใจ",
+          "meaning": "励まし・応援・気力",
+          "pronunciation_kana": "ガラン・ジャイ",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "กำลัง",
+              "meaning": "力"
+            },
+            {
+              "text": "ใจ",
+              "meaning": "心"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「กำลัง（力）」＋「ใจ（心）」で、精神的な力や「応援・励まし」を意味します。"
         },
         {
           "text": "ให้",
@@ -6019,22 +6037,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กำลัง",
-          "meaning": "〜しているところだ",
-          "pronunciation_kana": "ガラン",
-          "pos": "auxiliary verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ใจ",
-          "meaning": "心",
-          "pronunciation_kana": "ジャイ",
+          "text": "กำลังใจ",
+          "meaning": "励まし・応援・気力",
+          "pronunciation_kana": "ガラン・ジャイ",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "กำลัง",
+              "meaning": "力"
+            },
+            {
+              "text": "ใจ",
+              "meaning": "心"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「กำลัง（力）」＋「ใจ（心）」で、精神的な力や「応援・励まし」を意味します。"
         },
         {
           "text": "ให้",
@@ -6145,18 +6163,9 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ยัง",
-          "meaning": "まだ",
-          "pronunciation_kana": "ヤン",
-          "pos": "adverb",
-          "components": [],
-          "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ไง",
-          "meaning": "どうやって・どのように",
-          "pronunciation_kana": "ガイ",
+          "text": "ยังไง",
+          "meaning": "どのように・どう",
+          "pronunciation_kana": "ヤン・ガイ",
           "pos": "pronoun",
           "components": [],
           "tone": "mid",
@@ -6172,12 +6181,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ค่ะ",
-          "meaning": "（女性の丁寧な語尾）",
-          "pronunciation_kana": "カー",
+          "text": "คะ",
+          "meaning": "～ですか・～ね（女性の疑問・呼びかけ）",
+          "pronunciation_kana": "カ",
           "pos": "particle",
           "components": [],
-          "tone": "falling",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -6817,9 +6826,9 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ศึก",
-          "meaning": "戦い・戦闘",
-          "pronunciation_kana": "スック",
+          "text": "ตึก",
+          "meaning": "ビル、建物",
+          "pronunciation_kana": "トゥック",
           "pos": "noun",
           "components": [],
           "tone": "low",
@@ -6862,12 +6871,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ปับ",
-          "meaning": "直ちに・パッと",
-          "pronunciation_kana": "パップ",
-          "pos": "adverb",
+          "text": "รับ",
+          "meaning": "受け取る",
+          "pronunciation_kana": "ラップ",
+          "pos": "verb",
           "components": [],
-          "tone": "low",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -6880,9 +6889,9 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แน",
-          "meaning": "ねぇ（呼びかけ・強調）",
-          "pronunciation_kana": "ナエ",
+          "text": "ๆ",
+          "meaning": "（畳語の繰り返し記号）",
+          "pronunciation_kana": "（直前の言葉を繰り返す）",
           "pos": "particle",
           "components": [],
           "tone": "mid",
@@ -7107,13 +7116,6 @@
           "pos": "verb",
           "components": [],
           "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ั้ง",
-          "pos": "unknown",
-          "components": [],
-          "tone": "",
           "breakdown_explanation": ""
         },
         {
@@ -7712,40 +7714,40 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เสีย",
-          "meaning": "失う、無駄にする",
-          "pronunciation_kana": "スィア",
-          "pos": "verb",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "เที่ยว",
-          "meaning": "遊びに行く・旅行する",
-          "pronunciation_kana": "ティアオ",
-          "pos": "verb",
-          "components": [],
+          "text": "เสียเที่ยว",
+          "meaning": "無駄足になる、損をする",
+          "pronunciation_kana": "シア・ティアオ",
+          "pos": "idiom",
+          "components": [
+            {
+              "text": "เสีย",
+              "meaning": "失う・ダメになる"
+            },
+            {
+              "text": "เที่ยว",
+              "meaning": "旅行する・出かける"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「เสีย（失う）」＋「เที่ยว（出かける）」で、わざわざ出掛けたのに何もなく無駄になる（骨折り損になる）という慣用表現です。"
         },
         {
-          "text": "นิด",
+          "text": "นิดนึง",
           "meaning": "少し",
-          "pronunciation_kana": "ニット",
-          "pos": "noun",
-          "components": [],
+          "pronunciation_kana": "ニッ・ヌン",
+          "pos": "adverb",
+          "components": [
+            {
+              "text": "นิด",
+              "meaning": "少し"
+            },
+            {
+              "text": "นึง",
+              "meaning": "1つ（の略）"
+            }
+          ],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "นึง",
-          "meaning": "ひとつの（หนึ่งの短縮）",
-          "pronunciation_kana": "ヌン",
-          "pos": "particle",
-          "components": [],
-          "tone": "high",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「นิด（少し）」＋「นึง（หนึ่งの短縮：1つ）」で、「ほんの少し」という意味になります。"
         },
         {
           "text": "แต่",
@@ -7838,22 +7840,22 @@
           "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
         },
         {
-          "text": "ทั่ว",
-          "meaning": "〜中・あまねく",
-          "pronunciation_kana": "トゥア",
-          "pos": "adjective",
-          "components": [],
+          "text": "ทั่วถึง",
+          "meaning": "行き渡る・隅々まで",
+          "pronunciation_kana": "トゥア・トゥン",
+          "pos": "adverb",
+          "components": [
+            {
+              "text": "ทั่ว",
+              "meaning": "全体に・あまねく"
+            },
+            {
+              "text": "ถึง",
+              "meaning": "到る・達する"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ถึง",
-          "meaning": "到達する、着く",
-          "pronunciation_kana": "トゥン",
-          "pos": "verb",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「ทั่ว（全体に）」＋「ถึง（到る）」で、広く行き渡る様子を表します。"
         },
         {
           "text": "ที่สุด",
@@ -7946,7 +7948,7 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ลิฟ",
+          "text": "ลิฟต์",
           "meaning": "エレベーター",
           "pronunciation_kana": "リフト",
           "pos": "noun",
@@ -8032,22 +8034,22 @@
       "id": 29,
       "words": [
         {
-          "text": "ถ่าย",
-          "meaning": "撮影する",
-          "pronunciation_kana": "ターイ",
+          "text": "ถ่ายรูป",
+          "meaning": "写真を撮る",
+          "pronunciation_kana": "タイ・ループ",
           "pos": "verb",
-          "components": [],
+          "components": [
+            {
+              "text": "ถ่าย",
+              "meaning": "写す・撮る"
+            },
+            {
+              "text": "รูป",
+              "meaning": "写真・姿"
+            }
+          ],
           "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "รูป",
-          "meaning": "写真・画像・形",
-          "pronunciation_kana": "ループ",
-          "pos": "noun",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「ถ่าย（撮る）」＋「รูป（写真）」で「写真を撮る」という意味になります。"
         },
         {
           "text": "ให้",
@@ -8447,10 +8449,19 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ไม่ได้",
-          "meaning": "〜ではない・できなかった",
-          "pronunciation_kana": "マイ・ダイ",
-          "pos": "aux",
+          "text": "ไม่",
+          "meaning": "〜ない（否定）",
+          "pronunciation_kana": "マイ",
+          "pos": "adverb",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ได้",
+          "meaning": "〜できる、得る",
+          "pronunciation_kana": "ダイ",
+          "pos": "auxiliary",
           "components": [],
           "tone": "falling",
           "breakdown_explanation": ""
@@ -8916,31 +8927,22 @@
           "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
         },
         {
-          "text": "มี",
-          "meaning": "ある、持つ",
-          "pronunciation_kana": "ミー",
+          "text": "มีความสุข",
+          "meaning": "幸せである",
+          "pronunciation_kana": "ミー・クワーム・スク",
           "pos": "verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ความ",
-          "meaning": "〜さ（名詞化辞）",
-          "pronunciation_kana": "クﾜム",
-          "pos": "prefix",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "สุข",
-          "meaning": "幸福、幸せ",
-          "pronunciation_kana": "スック",
-          "pos": "noun",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
+          "components": [
+            {
+              "text": "มี",
+              "meaning": "持つ・ある"
+            },
+            {
+              "text": "ความสุข",
+              "meaning": "幸福"
+            }
+          ],
+          "tone": "high",
+          "breakdown_explanation": "「มี（持つ）」＋「ความสุข（幸福）」で、幸せを感じている状態を表します。"
         },
         {
           "text": "กลับ",
@@ -9024,10 +9026,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "หล่า",
-          "meaning": "末っ子、かわい子ちゃん（イサーン方言）",
-          "pronunciation_kana": "ラー",
-          "pos": "noun",
+          "text": "หล่อ",
+          "meaning": "イケメンの・ハンサムな",
+          "pronunciation_kana": "ロー",
+          "pos": "adjective",
           "components": [],
           "tone": "low",
           "breakdown_explanation": ""
@@ -9065,10 +9067,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ึเป่า",
-          "pos": "unknown",
+          "text": "รึ",
+          "meaning": "~か（疑問の助詞）",
+          "pronunciation_kana": "リ",
+          "pos": "particle",
           "components": [],
-          "tone": "",
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เปล่า",
+          "meaning": "いいえ、〜ない",
+          "pronunciation_kana": "プラーオ",
+          "pos": "particle",
+          "components": [],
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -9378,10 +9391,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เ",
-          "meaning": "（音声の断片）",
-          "pronunciation_kana": "エ",
-          "pos": "particle",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -9721,9 +9734,9 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "งน",
-          "meaning": "仕事（誤字）",
-          "pronunciation_kana": "ンガン",
+          "text": "งาน",
+          "meaning": "仕事・イベント・催し",
+          "pronunciation_kana": "ガーン",
           "pos": "noun",
           "components": [],
           "tone": "mid",
@@ -9748,10 +9761,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แต่",
-          "meaning": "しかし",
-          "pronunciation_kana": "テー",
-          "pos": "conjunction",
+          "text": "แต่ง",
+          "meaning": "飾る・化粧する",
+          "pronunciation_kana": "ターン",
+          "pos": "verb",
           "components": [],
           "tone": "low",
           "breakdown_explanation": ""
@@ -9802,12 +9815,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ",
-          "meaning": "あー、えー",
+          "text": "อ้อ",
+          "meaning": "あぁ（なるほど）",
           "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
-          "tone": "mid",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -10140,10 +10153,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ขื้น",
-          "pos": "unknown",
+          "text": "ขึ้น",
+          "meaning": "上がる、上へ",
+          "pronunciation_kana": "クン",
+          "pos": "adverb",
           "components": [],
-          "tone": "",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -10174,10 +10189,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "โโอ",
-          "pos": "unknown",
+          "text": "โอะ",
+          "meaning": "おっ、おっと（間投詞）",
+          "pronunciation_kana": "オ",
+          "pos": "interjection",
           "components": [],
-          "tone": "",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -10844,17 +10861,19 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ออือ",
-          "pos": "unknown",
+          "text": "อือ",
+          "meaning": "うん",
+          "pronunciation_kana": "ウー",
+          "pos": "interjection",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
+          "text": "อือ",
+          "meaning": "うん",
+          "pronunciation_kana": "ウー",
+          "pos": "interjection",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -10905,22 +10924,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
-          "pos": "preposition",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ขวัญ",
-          "meaning": "魂・クワン",
-          "pronunciation_kana": "クワン",
+          "text": "ของขวัญ",
+          "meaning": "プレゼント、贈り物",
+          "pronunciation_kana": "コーン・クワン",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜のもの"
+            },
+            {
+              "text": "ขวัญ",
+              "meaning": "魂、守護霊"
+            }
+          ],
           "tone": "low",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「ของ（〜のもの）」＋「ขวัญ（魂・生命力）」で、相手の幸福を祈る贈り物＝プレゼントを意味します。"
         },
         {
           "text": "หรือ",
@@ -11013,30 +11032,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กิต",
-          "meaning": "クリッティン（人名や愛称の略）",
-          "pronunciation_kana": "キット",
+          "text": "กิตติน",
+          "meaning": "クリッティン（人名）",
+          "pronunciation_kana": "ギッティン",
           "pos": "noun",
           "components": [],
           "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ติ",
-          "meaning": "批判する・難癖をつける（言い間違えのパーツ）",
-          "pronunciation_kana": "ティ",
-          "pos": "verb",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "น",
-          "meaning": "〜たち（英語の複数形sに相当する音写等の一部）",
-          "pronunciation_kana": "ヌ",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -11067,19 +11068,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ก่อ",
-          "meaning": "築く、起こす",
-          "pronunciation_kana": "コー",
+          "text": "กอด",
+          "meaning": "抱きしめる",
+          "pronunciation_kana": "ゴート",
           "pos": "verb",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ด",
-          "meaning": "（文字の断片）",
-          "pronunciation_kana": "ドー",
-          "pos": "unknown",
           "components": [],
           "tone": "low",
           "breakdown_explanation": ""
@@ -11103,19 +11095,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ปาล",
-          "meaning": "パル（人名の一部）",
-          "pronunciation_kana": "パーン",
+          "text": "ปาล์ม",
+          "meaning": "パーム（人名）",
+          "pronunciation_kana": "パーム",
           "pos": "noun",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ม",
-          "meaning": "（音声の途切れ）",
-          "pronunciation_kana": "ム",
-          "pos": "other",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -11166,19 +11149,19 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ี่",
-          "meaning": "（タイポの可能性のあるパーツ）",
-          "pronunciation_kana": "ティ",
-          "pos": "particle",
+          "text": "พี่",
+          "meaning": "年上の人、兄・姉、俺（親しい男性の一人称）",
+          "pronunciation_kana": "ピー",
+          "pos": "pronoun",
           "components": [],
-          "tone": "low",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
-          "text": "จ๋",
-          "meaning": "ジャ（人名の省略形）",
-          "pronunciation_kana": "ジャ",
-          "pos": "noun",
+          "text": "จ๋า",
+          "meaning": "ねえ（呼びかけの語）",
+          "pronunciation_kana": "ジャーパー",
+          "pos": "particle",
           "components": [],
           "tone": "rising",
           "breakdown_explanation": ""
@@ -11414,46 +11397,57 @@
           "breakdown_explanation": "「ไม่（〜ない）」＋「มี（ある）」で、存在しないことを表します。"
         },
         {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
-          "pos": "preposition",
+          "text": "ของขวัญ",
+          "meaning": "プレゼント、贈り物",
+          "pronunciation_kana": "コーン・クワン",
+          "pos": "noun",
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜のもの"
+            },
+            {
+              "text": "ขวัญ",
+              "meaning": "魂、守護霊"
+            }
+          ],
+          "tone": "low",
+          "breakdown_explanation": "「ของ（〜のもの）」＋「ขวัญ（魂・生命力）」で、相手の幸福を祈る贈り物＝プレゼントを意味します。"
+        },
+        {
+          "text": "นะ",
+          "meaning": "〜ね（文末詞）",
+          "pronunciation_kana": "ナ",
+          "pos": "particle",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ครับ",
+          "meaning": "（男性の）～です・ます（丁寧語の語尾）",
+          "pronunciation_kana": "クラップ",
+          "pos": "particle",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ผม",
+          "meaning": "私（男性の自称）・髪の毛",
+          "pronunciation_kana": "プム",
+          "pos": "pronoun",
           "components": [],
           "tone": "rising",
           "breakdown_explanation": ""
         },
         {
-          "text": "ขวัญ",
-          "meaning": "魂・クワン",
-          "pronunciation_kana": "クワン",
-          "pos": "noun",
+          "text": "อูม",
+          "meaning": "うーん（笑い声等の混じり）",
+          "pronunciation_kana": "ウーム",
+          "pos": "interjection",
           "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "นะครับ",
-          "meaning": "～ですね（丁寧）",
-          "pronunciation_kana": "ナ・クラップ",
-          "pos": "particle",
-          "components": [
-            {
-              "text": "นะ",
-              "meaning": "～ね"
-            },
-            {
-              "text": "ครับ",
-              "meaning": "～です・ます"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「นะ（～ね）」＋「ครับ（丁寧語）」の複合表現です。"
-        },
-        {
-          "text": "ผมูม",
-          "pos": "unknown",
-          "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         }
       ]
@@ -11507,10 +11501,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ูม",
-          "pos": "unknown",
+          "text": "อูม",
+          "meaning": "うーん（笑い声等の混じり）",
+          "pronunciation_kana": "ウーム",
+          "pos": "interjection",
           "components": [],
-          "tone": "",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -11721,22 +11717,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
-          "pos": "preposition",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ขวัญ",
-          "meaning": "魂・クワン",
-          "pronunciation_kana": "クワン",
+          "text": "ของขวัญ",
+          "meaning": "プレゼント、贈り物",
+          "pronunciation_kana": "コーン・クワン",
           "pos": "noun",
-          "components": [],
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜のもの"
+            },
+            {
+              "text": "ขวัญ",
+              "meaning": "魂、守護霊"
+            }
+          ],
           "tone": "low",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「ของ（〜のもの）」＋「ขวัญ（魂・生命力）」で、相手の幸福を祈る贈り物＝プレゼントを意味します。"
         },
         {
           "text": "หรือ",
@@ -12023,8 +12019,8 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "รอ",
-          "meaning": "待つ",
+          "text": "ลอ",
+          "meaning": "試す（ลองの省略）",
           "pronunciation_kana": "ロー",
           "pos": "verb",
           "components": [],
@@ -12041,6 +12037,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "ล",
+          "meaning": "ライン（短縮形）",
+          "pronunciation_kana": "ロー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "เล่น",
           "meaning": "遊ぶ・プレイする",
           "pronunciation_kana": "レン",
@@ -12050,12 +12055,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ้อ",
-          "meaning": "あぁ（なるほど）",
+          "text": "ออ",
+          "meaning": "ああ、なるほど",
           "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
-          "tone": "falling",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -12068,40 +12073,40 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "คุณพ่อ",
-          "meaning": "お父さん",
-          "pronunciation_kana": "クン・ポー",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "คุณ",
-              "meaning": "尊称"
-            },
-            {
-              "text": "พ่อ",
-              "meaning": "父"
-            }
-          ],
-          "tone": "falling",
-          "breakdown_explanation": "「คุณ（敬称）」＋「พ่อ（父）」でお父さんを意味します。"
+          "text": "คุณ",
+          "meaning": "あなた",
+          "pronunciation_kana": "クン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
         },
         {
-          "text": "คุณแม่",
-          "meaning": "お母さん",
-          "pronunciation_kana": "クン・マエ",
+          "text": "พ่อ",
+          "meaning": "父親",
+          "pronunciation_kana": "ポー",
           "pos": "noun",
-          "components": [
-            {
-              "text": "คุณ",
-              "meaning": "敬称"
-            },
-            {
-              "text": "แม่",
-              "meaning": "母"
-            }
-          ],
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「คุณ（敬称）」＋「แม่（母）」でお母さんを意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คุณ",
+          "meaning": "あなた",
+          "pronunciation_kana": "クン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "แม่",
+          "meaning": "お母さん、母",
+          "pronunciation_kana": "メー",
+          "pos": "noun",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
         },
         {
           "text": "ล่ะ",
@@ -12168,26 +12173,31 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ก่อนหน้านี้",
-          "meaning": "以前に・この前に",
-          "pronunciation_kana": "コーン・ナー・ニー",
-          "pos": "adverb",
-          "components": [
-            {
-              "text": "ก่อน",
-              "meaning": "前"
-            },
-            {
-              "text": "หน้า",
-              "meaning": "顔・面"
-            },
-            {
-              "text": "นี้",
-              "meaning": "この"
-            }
-          ],
+          "text": "ก่อน",
+          "meaning": "前に",
+          "pronunciation_kana": "ゴーン",
+          "pos": "preposition",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หน้า",
+          "meaning": "顔",
+          "pronunciation_kana": "ナー",
+          "pos": "noun",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "นี้",
+          "meaning": "この、ここ",
+          "pronunciation_kana": "ニー",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ก่อน（前）」＋「หน้า（面）」＋「นี้（この）」で「以前に、この前に」を意味します。"
+          "breakdown_explanation": ""
         },
         {
           "text": "แบบ",
@@ -12226,22 +12236,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "วันเกิด",
-          "meaning": "誕生日",
-          "pronunciation_kana": "ワン・グート",
+          "text": "วัน",
+          "meaning": "日",
+          "pronunciation_kana": "ワン",
           "pos": "noun",
-          "components": [
-            {
-              "text": "วัน",
-              "meaning": "日"
-            },
-            {
-              "text": "เกิด",
-              "meaning": "生まれる"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「วัน（日）」＋「เกิด（生まれる）」で誕生日を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เกิด",
+          "meaning": "生まれる",
+          "pronunciation_kana": "ゴート",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "ก็",
@@ -12298,6 +12308,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "หญ้า",
+          "meaning": "草",
+          "pronunciation_kana": "ヤー",
+          "pos": "noun",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "แล้ว",
           "meaning": "それから・すでに",
           "pronunciation_kana": "レーオ",
@@ -12313,6 +12332,15 @@
           "pos": "adverb",
           "components": [],
           "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "แ",
+          "meaning": "（文字の切れ端）",
+          "pronunciation_kana": "エ",
+          "pos": "other",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -12424,6 +12452,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "พี",
+          "meaning": "P'（年上の人に対する呼称・またはファン名PERSESの愛称）",
+          "pronunciation_kana": "ピー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "Happy",
           "meaning": "ハッピー・幸せ",
           "pronunciation_kana": "ハッピー",
@@ -12447,22 +12484,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ล่วงหน้า",
-          "meaning": "前もって・前払い",
-          "pronunciation_kana": "ルアン・ナート",
-          "pos": "adverb",
-          "components": [
-            {
-              "text": "ล่วง",
-              "meaning": "通り過ぎる・先行する"
-            },
-            {
-              "text": "หน้า",
-              "meaning": "前"
-            }
-          ],
+          "text": "ล่วง",
+          "meaning": "過ぎる、進む",
+          "pronunciation_kana": "ルアン",
+          "pos": "verb",
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「ล่วง（先行する）」＋「หน้า（前）」で、前もって・事前になどを意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หน้า",
+          "meaning": "顔",
+          "pronunciation_kana": "ナー",
+          "pos": "noun",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
         },
         {
           "text": "ก็",
@@ -12519,9 +12556,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "่ะ",
-          "meaning": "〜ね（語気助詞）",
-          "pronunciation_kana": "ッチャ",
+          "text": "อ่",
+          "meaning": "あ",
+          "pronunciation_kana": "ア",
+          "pos": "interjection",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ะ",
+          "meaning": "（タイ文字の母音記号・単体では出現しないがテキスト分割の都合上調整）",
+          "pronunciation_kana": "",
           "pos": "particle",
           "components": [],
           "tone": "low",
@@ -12555,6 +12601,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "6",
+          "meaning": "6",
+          "pronunciation_kana": "ホック",
+          "pos": "number",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "แล้ว",
           "meaning": "それから・すでに",
           "pronunciation_kana": "レーオ",
@@ -12582,22 +12637,31 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ความคาดหวัง",
-          "meaning": "期待",
-          "pronunciation_kana": "クワーム・カード・ワン",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "ความ",
-              "meaning": "抽象名詞化辞"
-            },
-            {
-              "text": "คาดหวัง",
-              "meaning": "期待する"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「ความ（状態を表す接頭辞）」＋「คาดหวัง（期待する）」で「期待」という名詞になります。"
+          "text": "ความ",
+          "meaning": "〜さ（名詞化辞）",
+          "pronunciation_kana": "クﾜム",
+          "pos": "prefix",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คาด",
+          "meaning": "予想する・推測する",
+          "pronunciation_kana": "カード",
+          "pos": "verb",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หวัง",
+          "meaning": "望む、期待する",
+          "pronunciation_kana": "ワン",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "อะไร",
@@ -12645,39 +12709,30 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
+          "text": "ของเรา",
+          "meaning": "私たちの",
+          "pronunciation_kana": "コーンラオ",
+          "pos": "pronoun",
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜の"
+            },
+            {
+              "text": "เรา",
+              "meaning": "私たち"
+            }
+          ],
+          "tone": "rising",
+          "breakdown_explanation": "「ของ（〜の）」＋「เรา（私たち）」で、私たちの所有を表します。"
+        },
+        {
+          "text": "ที่จะ",
+          "meaning": "～するための",
+          "pronunciation_kana": "ティー・ジャ",
           "pos": "preposition",
           "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "เรา",
-          "meaning": "私たち",
-          "pronunciation_kana": "ラオ",
-          "pos": "pronoun",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ที่",
-          "meaning": "〜という場所・こと",
-          "pronunciation_kana": "ティー",
-          "pos": "conjunction",
-          "components": [],
           "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "จะ",
-          "meaning": "〜だろう・〜する予定だ",
-          "pronunciation_kana": "チャ",
-          "pos": "auxiliary verb",
-          "components": [],
-          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -12699,22 +12754,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
-          "pos": "preposition",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "เรา",
-          "meaning": "私たち",
-          "pronunciation_kana": "ラオ",
+          "text": "ของเรา",
+          "meaning": "私たちの",
+          "pronunciation_kana": "コーンラオ",
           "pos": "pronoun",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜の"
+            },
+            {
+              "text": "เรา",
+              "meaning": "私たち"
+            }
+          ],
+          "tone": "rising",
+          "breakdown_explanation": "「ของ（〜の）」＋「เรา（私たち）」で、私たちの所有を表します。"
         }
       ]
     },
@@ -12740,30 +12795,30 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ข้างหน้า",
-          "meaning": "前方・前・将来",
-          "pronunciation_kana": "カング・ナー",
+          "text": "ข้าง",
+          "meaning": "傍・側",
+          "pronunciation_kana": "カーン",
           "pos": "noun",
-          "components": [
-            {
-              "text": "ข้าง",
-              "meaning": "側・方"
-            },
-            {
-              "text": "หน้า",
-              "meaning": "顔・前"
-            }
-          ],
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「ข้าง（側）」＋「หน้า（前）」で、「前方」「前の方」を意味します。"
+          "breakdown_explanation": ""
         },
         {
-          "text": "นะ",
-          "meaning": "〜ね（文末詞）",
+          "text": "หน้า",
+          "meaning": "顔",
+          "pronunciation_kana": "ナー",
+          "pos": "noun",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "น่ะ",
+          "meaning": "~ね（強調の終助詞）",
           "pronunciation_kana": "ナ",
           "pos": "particle",
           "components": [],
-          "tone": "high",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -12812,12 +12867,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อื้ม",
-          "meaning": "うん（相槌）",
-          "pronunciation_kana": "ウム",
-          "pos": "interjection",
+          "text": "อื",
+          "meaning": "（途中切れ）",
+          "pronunciation_kana": "ウー",
+          "pos": "unknown",
           "components": [],
-          "tone": "falling",
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -12830,22 +12885,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ส่วนตัว",
-          "meaning": "個人的な",
-          "pronunciation_kana": "スアン・トゥア",
-          "pos": "adjective",
-          "components": [
-            {
-              "text": "ส่วน",
-              "meaning": "部分"
-            },
-            {
-              "text": "ตัว",
-              "meaning": "自分・身体"
-            }
-          ],
+          "text": "ส่วน",
+          "meaning": "部分、〜に関しては",
+          "pronunciation_kana": "スアン",
+          "pos": "preposition",
+          "components": [],
           "tone": "low",
-          "breakdown_explanation": "「ส่วน（部分）」＋「ตัว（自分）」で「個人的な、プライベートな」という意味になります。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ตัว",
+          "meaning": "体、自分",
+          "pronunciation_kana": "トゥア",
+          "pos": "noun",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "เลย",
@@ -13132,22 +13187,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ทุกคน",
-          "meaning": "全員、みんな",
-          "pronunciation_kana": "トゥク・コン",
-          "pos": "pronoun",
-          "components": [
-            {
-              "text": "ทุก",
-              "meaning": "すべての"
-            },
-            {
-              "text": "คน",
-              "meaning": "人"
-            }
-          ],
+          "text": "ทุก",
+          "meaning": "すべての、毎〜",
+          "pronunciation_kana": "トゥック",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คน",
+          "meaning": "人",
+          "pronunciation_kana": "コン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "ให้",
@@ -13227,22 +13282,31 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ความคาดหวัง",
-          "meaning": "期待",
-          "pronunciation_kana": "クワーム・カード・ワン",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "ความ",
-              "meaning": "抽象名詞化辞"
-            },
-            {
-              "text": "คาดหวัง",
-              "meaning": "期待する"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「ความ（状態を表す接頭辞）」＋「คาดหวัง（期待する）」で「期待」という名詞になります。"
+          "text": "ความ",
+          "meaning": "〜さ（名詞化辞）",
+          "pronunciation_kana": "クﾜム",
+          "pos": "prefix",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คาด",
+          "meaning": "予想する・推測する",
+          "pronunciation_kana": "カード",
+          "pos": "verb",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หวัง",
+          "meaning": "望む、期待する",
+          "pronunciation_kana": "ワン",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "ของ",
@@ -13317,22 +13381,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ทุกคน",
-          "meaning": "全員、みんな",
-          "pronunciation_kana": "トゥク・コン",
-          "pos": "pronoun",
-          "components": [
-            {
-              "text": "ทุก",
-              "meaning": "すべての"
-            },
-            {
-              "text": "คน",
-              "meaning": "人"
-            }
-          ],
+          "text": "ทุก",
+          "meaning": "すべての、毎〜",
+          "pronunciation_kana": "トゥック",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คน",
+          "meaning": "人",
+          "pronunciation_kana": "コン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "มี",
@@ -13344,22 +13408,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ความสุข",
-          "meaning": "幸せ",
-          "pronunciation_kana": "クワーム・ソック",
+          "text": "ความ",
+          "meaning": "〜さ（名詞化辞）",
+          "pronunciation_kana": "クﾜム",
+          "pos": "prefix",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "สุข",
+          "meaning": "幸福、幸せ",
+          "pronunciation_kana": "スック",
           "pos": "noun",
-          "components": [
-            {
-              "text": "ความ",
-              "meaning": "抽象名詞化接頭辞"
-            },
-            {
-              "text": "สุข",
-              "meaning": "幸福な"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「ความ（接頭辞）」＋「สุข（幸福）」で「幸せ」という抽象名詞を作ります。"
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "ทุก",
@@ -13504,7 +13568,12 @@
           "components": [],
           "tone": "high",
           "breakdown_explanation": ""
-        },
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "words": [
         {
           "text": "ครั้ง",
           "meaning": "回",
@@ -13513,12 +13582,7 @@
           "components": [],
           "tone": "high",
           "breakdown_explanation": ""
-        }
-      ]
-    },
-    {
-      "id": 47,
-      "words": [
+        },
         {
           "text": "ครับ",
           "meaning": "（男性の）～です・ます（丁寧語の語尾）",
@@ -13547,6 +13611,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "เน",
+          "meaning": "ネー（人名）",
+          "pronunciation_kana": "ネー",
+          "pos": "proper noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "มี",
           "meaning": "ある、持つ",
           "pronunciation_kana": "ミー",
@@ -13556,22 +13629,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เป้าหมาย",
-          "meaning": "目標",
-          "pronunciation_kana": "パオマイ",
+          "text": "เป้า",
+          "meaning": "目標・ターゲット",
+          "pronunciation_kana": "パオ",
           "pos": "noun",
-          "components": [
-            {
-              "text": "เป้า",
-              "meaning": "的"
-            },
-            {
-              "text": "หมาย",
-              "meaning": "意味・目標"
-            }
-          ],
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「เป้า（的）」＋「หมาย（意味・目印）」で、目標を意味する複合語です。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หมาย",
+          "meaning": "意味する・目印",
+          "pronunciation_kana": "マアイ",
+          "pos": "verb",
+          "components": [],
+          "tone": "rising",
+          "breakdown_explanation": ""
         },
         {
           "text": "อะไร",
@@ -13589,6 +13662,15 @@
           "pos": "particle",
           "components": [],
           "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ม",
+          "meaning": "（音声の途切れ）",
+          "pronunciation_kana": "ム",
+          "pos": "other",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -13637,9 +13719,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -13664,30 +13755,30 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "วางแผน",
-          "meaning": "計画を立てる、作戦を練る",
-          "pronunciation_kana": "ワーン・ペーン",
+          "text": "วาง",
+          "meaning": "置く",
+          "pronunciation_kana": "ワーン",
           "pos": "verb",
-          "components": [
-            {
-              "text": "วาง",
-              "meaning": "置く"
-            },
-            {
-              "text": "แผน",
-              "meaning": "計画"
-            }
-          ],
+          "components": [],
           "tone": "mid",
-          "breakdown_explanation": "「วาง（置く）」＋「แผน（計画）」で、計画を立てることを意味します。"
+          "breakdown_explanation": ""
         },
         {
-          "text": "ไว้",
-          "meaning": "〜ておく",
-          "pronunciation_kana": "ワイ",
-          "pos": "auxiliary",
+          "text": "แผน",
+          "meaning": "計画・プラン",
+          "pronunciation_kana": "ペーン",
+          "pos": "noun",
           "components": [],
-          "tone": "high",
+          "tone": "rising",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ไ",
+          "meaning": "（文字・パーツ）",
+          "pronunciation_kana": "タイ",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -13700,9 +13791,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -13763,6 +13863,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "30",
+          "meaning": "30",
+          "pronunciation_kana": "サーンプシプ",
+          "pos": "number",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "อะไร",
           "meaning": "何",
           "pronunciation_kana": "アライ",
@@ -13778,6 +13887,15 @@
           "pos": "preposition",
           "components": [],
           "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "30",
+          "meaning": "30",
+          "pronunciation_kana": "サーンプシプ",
+          "pos": "number",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -13822,9 +13940,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ่ะ",
-          "meaning": "〜さ・まあ（感嘆詞・語尾）",
+          "text": "อ่",
+          "meaning": "あ",
           "pronunciation_kana": "ア",
+          "pos": "interjection",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ะ",
+          "meaning": "（タイ文字の母音記号・単体では出現しないがテキスト分割の都合上調整）",
+          "pronunciation_kana": "",
           "pos": "particle",
           "components": [],
           "tone": "low",
@@ -13858,26 +13985,31 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เป็นไปได้",
-          "meaning": "可能である",
-          "pronunciation_kana": "ペン・パイ・ダイ",
+          "text": "เป็น",
+          "meaning": "〜である、なる",
+          "pronunciation_kana": "ペン",
           "pos": "verb",
-          "components": [
-            {
-              "text": "เป็น",
-              "meaning": "～である"
-            },
-            {
-              "text": "ไป",
-              "meaning": "行く"
-            },
-            {
-              "text": "ได้",
-              "meaning": "できる"
-            }
-          ],
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ไป",
+          "meaning": "行く",
+          "pronunciation_kana": "パイ",
+          "pos": "verb",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ได้",
+          "meaning": "〜できる、得る",
+          "pronunciation_kana": "ダイ",
+          "pos": "auxiliary",
+          "components": [],
           "tone": "falling",
-          "breakdown_explanation": "「เป็น（～である）」＋「ไป（行く）」＋「ได้（できる）」で、可能であることを表す慣用表現です。"
+          "breakdown_explanation": ""
         },
         {
           "text": "ก็",
@@ -13934,9 +14066,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -13958,6 +14099,15 @@
           "pos": "preposition",
           "components": [],
           "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "30",
+          "meaning": "30",
+          "pronunciation_kana": "サーンプシプ",
+          "pos": "number",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -13985,6 +14135,15 @@
           "pos": "auxiliary",
           "components": [],
           "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ค",
+          "meaning": "（タイ文字の一部または誤記）",
+          "pronunciation_kana": "コー",
+          "pos": "noun",
+          "components": [],
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -14137,22 +14296,49 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ความคาดหวัง",
-          "meaning": "期待",
-          "pronunciation_kana": "クワーム・カード・ワン",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "ความ",
-              "meaning": "抽象名詞化辞"
-            },
-            {
-              "text": "คาดหวัง",
-              "meaning": "期待する"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「ความ（状態を表す接頭辞）」＋「คาดหวัง（期待する）」で「期待」という名詞になります。"
+          "text": "เป็น",
+          "meaning": "〜である、なる",
+          "pronunciation_kana": "ペン",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เป็น",
+          "meaning": "〜である、なる",
+          "pronunciation_kana": "ペン",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ความ",
+          "meaning": "〜さ（名詞化辞）",
+          "pronunciation_kana": "クﾜム",
+          "pos": "prefix",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คาด",
+          "meaning": "予想する・推測する",
+          "pronunciation_kana": "カード",
+          "pos": "verb",
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หวัง",
+          "meaning": "望む、期待する",
+          "pronunciation_kana": "ワン",
+          "pos": "verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "ตอนนี้",
@@ -14191,19 +14377,19 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
-          "pos": "interjection",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
         },
         {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
+          "pos": "interjection",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -14227,23 +14413,28 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อย่างน้อย",
-          "meaning": "少なくとも",
-          "pronunciation_kana": "ヤーン・ノイ",
-          "pos": "adverb",
-          "components": [
-            {
-              "text": "อย่าง",
-              "meaning": "〜の種類"
-            },
-            {
-              "text": "น้อย",
-              "meaning": "少ない"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「อย่าง（〜の様子）」＋「น้อย（少ない）」で、少なくともという意味の慣用表現です。"
+          "text": "อย่าง",
+          "meaning": "〜のような",
+          "pronunciation_kana": "ヤāng",
+          "pos": "preposition",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
+        {
+          "text": "น้อย",
+          "meaning": "少ない",
+          "pronunciation_kana": "ノイ",
+          "pos": "adjective",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "words": [
         {
           "text": "ก็",
           "meaning": "〜もまた・それなら",
@@ -14300,9 +14491,11 @@
         },
         {
           "text": "ก็น่า",
-          "pos": "unknown",
+          "meaning": "〜らしい、〜のようだ",
+          "pronunciation_kana": "ゴー・ナー",
+          "pos": "particle",
           "components": [],
-          "tone": "",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -14324,6 +14517,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
+          "pos": "interjection",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "ครับ",
           "meaning": "（男性の）～です・ます（丁寧語の語尾）",
           "pronunciation_kana": "クラップ",
@@ -14331,12 +14533,7 @@
           "components": [],
           "tone": "high",
           "breakdown_explanation": ""
-        }
-      ]
-    },
-    {
-      "id": 50,
-      "words": [
+        },
         {
           "text": "ถ้า",
           "meaning": "もし〜なら",
@@ -14356,10 +14553,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "นั้น",
-          "meaning": "その、あの",
-          "pronunciation_kana": "ナン",
-          "pos": "determiner",
+          "text": "งั้น",
+          "meaning": "それなら",
+          "pronunciation_kana": "ガン",
+          "pos": "particle",
           "components": [],
           "tone": "high",
           "breakdown_explanation": ""
@@ -14419,57 +14616,75 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "โซโล่",
+          "text": "โซโล",
           "meaning": "ソロ",
-          "pronunciation_kana": "ソロー",
+          "pronunciation_kana": "ソロ",
           "pos": "noun",
-          "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "สเตจ",
-          "meaning": "ステージ",
-          "pronunciation_kana": "ステージ",
-          "pos": "noun",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ของ",
-          "meaning": "〜の",
-          "pronunciation_kana": "コン",
-          "pos": "preposition",
-          "components": [],
-          "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "เรา",
-          "meaning": "私たち",
-          "pronunciation_kana": "ラオ",
-          "pos": "pronoun",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
         },
         {
-          "text": "โซโล่",
-          "meaning": "ソロ",
-          "pronunciation_kana": "ソロー",
-          "pos": "noun",
+          "text": "ส",
+          "meaning": "文字の途中で切れたパーツ",
+          "pronunciation_kana": "ソー",
+          "pos": "unknown",
           "components": [],
-          "tone": "falling",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
-          "text": "สเตจ",
-          "meaning": "ステージ",
-          "pronunciation_kana": "ステージ",
+          "text": "จ",
+          "meaning": "（略語または文字の一部）",
+          "pronunciation_kana": "ジャ",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ของเรา",
+          "meaning": "私たちの",
+          "pronunciation_kana": "コーンラオ",
+          "pos": "pronoun",
+          "components": [
+            {
+              "text": "ของ",
+              "meaning": "〜の"
+            },
+            {
+              "text": "เรา",
+              "meaning": "私たち"
+            }
+          ],
+          "tone": "rising",
+          "breakdown_explanation": "「ของ（〜の）」＋「เรา（私たち）」で、私たちの所有を表します。"
+        },
+        {
+          "text": "โซโล",
+          "meaning": "ソロ",
+          "pronunciation_kana": "ソロ",
           "pos": "noun",
           "components": [],
-          "tone": "rising",
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ส",
+          "meaning": "文字の途中で切れたパーツ",
+          "pronunciation_kana": "ソー",
+          "pos": "unknown",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "จ",
+          "meaning": "（略語または文字の一部）",
+          "pronunciation_kana": "ジャ",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -14622,12 +14837,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "สเตจ",
-          "meaning": "ステージ",
-          "pronunciation_kana": "ステージ",
-          "pos": "noun",
+          "text": "ส",
+          "meaning": "文字の途中で切れたパーツ",
+          "pronunciation_kana": "ソー",
+          "pos": "unknown",
           "components": [],
-          "tone": "rising",
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "จ",
+          "meaning": "（略語または文字の一部）",
+          "pronunciation_kana": "ジャ",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -14640,22 +14864,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ทุกคน",
-          "meaning": "全員、みんな",
-          "pronunciation_kana": "トゥク・コン",
-          "pos": "pronoun",
-          "components": [
-            {
-              "text": "ทุก",
-              "meaning": "すべての"
-            },
-            {
-              "text": "คน",
-              "meaning": "人"
-            }
-          ],
+          "text": "ทุก",
+          "meaning": "すべての、毎〜",
+          "pronunciation_kana": "トゥック",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คน",
+          "meaning": "人",
+          "pronunciation_kana": "コン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "น่า",
@@ -14793,22 +15017,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ทุกคน",
-          "meaning": "全員、みんな",
-          "pronunciation_kana": "トゥク・コン",
-          "pos": "pronoun",
-          "components": [
-            {
-              "text": "ทุก",
-              "meaning": "すべての"
-            },
-            {
-              "text": "คน",
-              "meaning": "人"
-            }
-          ],
+          "text": "ทุก",
+          "meaning": "すべての、毎〜",
+          "pronunciation_kana": "トゥック",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คน",
+          "meaning": "人",
+          "pronunciation_kana": "コン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "เห็น",
@@ -14847,9 +15071,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -14969,12 +15202,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เพอร์เซส",
-          "meaning": "PERSES（グループ名）",
-          "pronunciation_kana": "パーセールス",
+          "text": "เพร",
+          "meaning": "プレ（パーセスのメンバー名の一部）",
+          "pronunciation_kana": "プレ",
           "pos": "noun",
           "components": [],
-          "tone": "falling",
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ซ",
+          "meaning": "（文字の断片）",
+          "pronunciation_kana": "ソー",
+          "pos": "unknown",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -15005,22 +15247,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แทบจะ",
-          "meaning": "ほとんど〜しそうである、ほぼ",
-          "pronunciation_kana": "テープ・チャ",
+          "text": "แทบ",
+          "meaning": "〜しそうになる、ほとんど",
+          "pronunciation_kana": "テーアップ",
           "pos": "adverb",
-          "components": [
-            {
-              "text": "แทบ",
-              "meaning": "危うく〜するところである"
-            },
-            {
-              "text": "จะ",
-              "meaning": "〜だろう"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「แทบ（危うく〜）」＋「จะ（助動詞）」で「ほとんど〜する」を意味します。"
+          "components": [],
+          "tone": "falling",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "จะ",
+          "meaning": "〜だろう・〜する予定だ",
+          "pronunciation_kana": "チャ",
+          "pos": "auxiliary verb",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
         },
         {
           "text": "ทุก",
@@ -15068,12 +15310,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
+          "text": "ฟ",
+          "meaning": "（brief の後半のタイポ）",
+          "pronunciation_kana": "フォー",
+          "pos": "unknown",
           "components": [],
-          "tone": "mid",
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -15113,22 +15355,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "กำลังใจ",
-          "meaning": "励まし・応援・気力",
-          "pronunciation_kana": "ガラン・ジャイ",
-          "pos": "noun",
-          "components": [
-            {
-              "text": "กำลัง",
-              "meaning": "力"
-            },
-            {
-              "text": "ใจ",
-              "meaning": "心"
-            }
-          ],
+          "text": "กำลัง",
+          "meaning": "〜しているところだ",
+          "pronunciation_kana": "ガラン",
+          "pos": "auxiliary verb",
+          "components": [],
           "tone": "mid",
-          "breakdown_explanation": "「กำลัง（力）」＋「ใจ（心）」で、精神的な力や「応援・励まし」を意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ใจ",
+          "meaning": "心",
+          "pronunciation_kana": "ジャイ",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "แบบ",
@@ -15280,12 +15522,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "คุณ",
-          "meaning": "あなた",
-          "pronunciation_kana": "クン",
-          "pos": "pronoun",
+          "text": "คณ",
+          "pos": "unknown",
           "components": [],
-          "tone": "high",
+          "tone": "",
           "breakdown_explanation": ""
         },
         {
@@ -15334,6 +15574,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "มัน",
+          "meaning": "それ・あいつ",
+          "pronunciation_kana": "マン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "อิ่ม",
           "meaning": "お腹いっぱい",
           "pronunciation_kana": "イム",
@@ -15343,9 +15592,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ่ะ",
-          "meaning": "〜さ・まあ（感嘆詞・語尾）",
+          "text": "อ่",
+          "meaning": "あ",
           "pronunciation_kana": "ア",
+          "pos": "interjection",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ะ",
+          "meaning": "（タイ文字の母音記号・単体では出現しないがテキスト分割の都合上調整）",
+          "pronunciation_kana": "",
           "pos": "particle",
           "components": [],
           "tone": "low",
@@ -15501,6 +15759,15 @@
           "breakdown_explanation": ""
         },
         {
+          "text": "พ",
+          "meaning": "ポ（文字の断片）",
+          "pronunciation_kana": "ポー",
+          "pos": "particle",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
           "text": "มา",
           "meaning": "来る",
           "pronunciation_kana": "マー",
@@ -15600,9 +15867,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -15650,12 +15926,48 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "อ่ะ",
-          "meaning": "〜さ・まあ（感嘆詞・語尾）",
+          "text": "อ่",
+          "meaning": "あ",
           "pronunciation_kana": "ア",
+          "pos": "interjection",
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ะ",
+          "meaning": "（タイ文字の母音記号・単体では出現しないがテキスト分割の都合上調整）",
+          "pronunciation_kana": "",
           "pos": "particle",
           "components": [],
           "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มัน",
+          "meaning": "それ・あいつ",
+          "pronunciation_kana": "マン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มัน",
+          "meaning": "それ・あいつ",
+          "pronunciation_kana": "マン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มัน",
+          "meaning": "それ・あいつ",
+          "pronunciation_kana": "マン",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -15794,22 +16106,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ทุกคน",
-          "meaning": "全員、みんな",
-          "pronunciation_kana": "トゥク・コン",
-          "pos": "pronoun",
-          "components": [
-            {
-              "text": "ทุก",
-              "meaning": "すべての"
-            },
-            {
-              "text": "คน",
-              "meaning": "人"
-            }
-          ],
+          "text": "ทุก",
+          "meaning": "すべての、毎〜",
+          "pronunciation_kana": "トゥック",
+          "pos": "determiner",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ทุก（すべての）」＋「คน（人）」で、全員を表します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "คน",
+          "meaning": "人",
+          "pronunciation_kana": "コン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         },
         {
           "text": "ใน",
@@ -16042,9 +16354,9 @@
           "breakdown_explanation": "「เพิ่ม（増やす）」＋「เติม（加える）」で、追加することを意味します。"
         },
         {
-          "text": "เหรอ",
-          "meaning": "～なの？（疑問の語尾）",
-          "pronunciation_kana": "ルア",
+          "text": "หรอ",
+          "meaning": "～なの？",
+          "pronunciation_kana": "ロー",
           "pos": "particle",
           "components": [],
           "tone": "rising",
@@ -16114,21 +16426,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ยังมี",
-          "meaning": "まだある",
-          "pronunciation_kana": "ヤン・ミー",
-          "pos": "verb",
-          "components": [
-            {
-              "text": "ยัง",
-              "meaning": "まだ"
-            },
-            {
-              "text": "มี",
-              "meaning": "ある"
-            }
-          ],
+          "text": "ยัง",
+          "meaning": "まだ",
+          "pronunciation_kana": "ヤン",
+          "pos": "adverb",
+          "components": [],
           "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "มี",
+          "meaning": "ある、持つ",
+          "pronunciation_kana": "ミー",
+          "pos": "verb",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -16159,28 +16471,37 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ค้นหา",
-          "meaning": "探す、捜索する",
-          "pronunciation_kana": "コンハー",
-          "pos": "verb",
-          "components": [
-            {
-              "text": "ค้น",
-              "meaning": "探る"
-            },
-            {
-              "text": "หา",
-              "meaning": "探す"
-            }
-          ],
-          "tone": "high",
-          "breakdown_explanation": "「ค้น（探る）」＋「หา（探す）」で、探す・捜索する（น่าค้นหาでミステリアスな魅力）という意味になります。"
+          "text": "เรา",
+          "meaning": "私たち",
+          "pronunciation_kana": "ラオ",
+          "pos": "pronoun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
         }
       ]
     },
     {
       "id": 57,
       "words": [
+        {
+          "text": "ค้น",
+          "meaning": "探す",
+          "pronunciation_kana": "コン",
+          "pos": "verb",
+          "components": [],
+          "tone": "high",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หา",
+          "meaning": "探す",
+          "pronunciation_kana": "ハー",
+          "pos": "verb",
+          "components": [],
+          "tone": "rising",
+          "breakdown_explanation": ""
+        },
         {
           "text": "ต่อ",
           "meaning": "〜に対して・続ける",
@@ -16480,22 +16801,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ลายเซ็น",
-          "meaning": "サイン",
-          "pronunciation_kana": "ライ・セン",
+          "text": "ไล",
+          "meaning": "追う（ไล่の変形）",
+          "pronunciation_kana": "ライ",
+          "pos": "verb",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เซ็น",
+          "meaning": "センチ（cmの略）",
+          "pronunciation_kana": "セン",
           "pos": "noun",
-          "components": [
-            {
-              "text": "ลาย",
-              "meaning": "模様、線"
-            },
-            {
-              "text": "เซ็น",
-              "meaning": "署名する"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「ลาย（線・模様）」＋「เซ็น（署名する）」で、サイン（直筆署名）を意味します。"
+          "breakdown_explanation": ""
         },
         {
           "text": "ใน",
@@ -16543,18 +16864,27 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เงี้ย",
-          "meaning": "こんな風に、みたいに（อย่างนี้の短縮・スラング）",
-          "pronunciation_kana": "ギア",
+          "text": "งี้",
+          "meaning": "このように・こんなふうに",
+          "pronunciation_kana": "ングィー",
           "pos": "particle",
           "components": [],
           "tone": "high",
-          "breakdown_explanation": "「อย่างนี้（このように）」の口語的な短縮形で、カジュアルに「〜みたいな感じ」を表します。"
+          "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -16678,12 +17008,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เหตุการณ์",
-          "meaning": "状況・出来事",
-          "pronunciation_kana": "ヘート・カーン",
+          "text": "เหตุ",
+          "meaning": "出来事、事件、理由",
+          "pronunciation_kana": "ヘート",
           "pos": "noun",
           "components": [],
           "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "การณ์",
+          "meaning": "出来事・事柄",
+          "pronunciation_kana": "ガーン",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -16764,10 +17103,10 @@
           "breakdown_explanation": "「หนังสือ（本）」は歴史的に動物の皮に文字を書いていたことに由来します。"
         },
         {
-          "text": "เล่ม",
-          "meaning": "冊（本の単位）",
-          "pronunciation_kana": "レーム",
-          "pos": "noun",
+          "text": "เล่น",
+          "meaning": "遊ぶ・プレイする",
+          "pronunciation_kana": "レン",
+          "pos": "verb",
           "components": [],
           "tone": "falling",
           "breakdown_explanation": ""
@@ -16832,12 +17171,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "from",
-          "meaning": "〜から（英語）",
-          "pronunciation_kana": "フロム",
+          "text": "จาก",
+          "meaning": "〜から",
+          "pronunciation_kana": "ジャーク",
           "pos": "preposition",
           "components": [],
-          "tone": "mid",
+          "tone": "low",
           "breakdown_explanation": ""
         },
         {
@@ -16931,7 +17270,7 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "โวคาโด",
+          "text": "โวคาโดุค",
           "pos": "unknown",
           "components": [],
           "tone": "",
@@ -17078,9 +17417,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -17132,10 +17480,19 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เอ้ย",
-          "meaning": "おい・おっと（感嘆詞）",
-          "pronunciation_kana": "エッ",
-          "pos": "interjection",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "้ย",
+          "meaning": "（文字の断片）",
+          "pronunciation_kana": "ー",
+          "pos": "unknown",
           "components": [],
           "tone": "falling",
           "breakdown_explanation": ""
@@ -17213,9 +17570,18 @@
           "breakdown_explanation": "「อย่างนี้（このように）」の口語的な短縮形で、カジュアルに「〜みたいな感じ」を表します。"
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -17249,9 +17615,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เออ",
-          "meaning": "うん、ええ",
-          "pronunciation_kana": "アール",
+          "text": "เอ",
+          "meaning": "A（英語のアルファベット読み）",
+          "pronunciation_kana": "エー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "อ",
+          "meaning": "あー、えー",
+          "pronunciation_kana": "オー",
           "pos": "interjection",
           "components": [],
           "tone": "mid",
@@ -17326,19 +17701,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "งง",
-          "meaning": "混乱する・意味がわからない",
-          "pronunciation_kana": "ゴン",
-          "pos": "verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
+          "text": "งงๆ",
+          "meaning": "よく分からない・混乱した",
+          "pronunciation_kana": "ゴン・ゴン",
+          "pos": "adjective",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -17380,19 +17746,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เค",
-          "meaning": "OK（短縮形）",
-          "pronunciation_kana": "ケー",
-          "pos": "interjection",
-          "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ือ",
-          "meaning": "うーん（間投詞の一部）",
-          "pronunciation_kana": "ウー",
-          "pos": "interjection",
+          "text": "เคือ",
+          "meaning": "〜である（語りの表現）",
+          "pronunciation_kana": "キア",
+          "pos": "verb",
           "components": [],
           "tone": "mid",
           "breakdown_explanation": ""
@@ -17524,21 +17881,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เฉย",
-          "meaning": "平然と・なんとなく",
-          "pronunciation_kana": "チェーイ",
+          "text": "เฉยๆ",
+          "meaning": "ただ〜するだけ・何でもない",
+          "pronunciation_kana": "チェイ・チェイ",
           "pos": "adverb",
           "components": [],
           "tone": "rising",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -17821,22 +18169,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เรื่อย",
+          "text": "เรื่อยๆ",
           "meaning": "ずっと・継続して",
-          "pronunciation_kana": "ルアイ",
+          "pronunciation_kana": "ルアイ・ルアイ",
           "pos": "adverb",
-          "components": [],
+          "components": [
+            {
+              "text": "เรื่อย",
+              "meaning": "次々と・絶えず"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「เรื่อย」を重ねて、その状態がずっと長く続く様子を表します。"
         },
         {
           "text": "แต่",
@@ -18770,21 +19114,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เลือก",
-          "meaning": "選ぶ",
-          "pronunciation_kana": "ルアック",
-          "pos": "verb",
+          "text": "เลือกๆ",
+          "pos": "unknown",
           "components": [],
-          "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
+          "tone": "",
           "breakdown_explanation": ""
         },
         {
@@ -18842,22 +19175,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "รู้",
-          "meaning": "知る、分かる",
-          "pronunciation_kana": "ルー",
+          "text": "รู้สึก",
+          "meaning": "感じる",
+          "pronunciation_kana": "ルースック",
           "pos": "verb",
-          "components": [],
+          "components": [
+            {
+              "text": "รู้",
+              "meaning": "知る"
+            },
+            {
+              "text": "สึก",
+              "meaning": "感覚する"
+            }
+          ],
           "tone": "high",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "สึก",
-          "meaning": "（感じるの構成要素）",
-          "pronunciation_kana": "スック",
-          "pos": "verb",
-          "components": [],
-          "tone": "low",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「รู้（知る）」＋「สึก（感覚する）」で、感じるという意味になります。"
         },
         {
           "text": "ว่า",
@@ -19850,22 +20183,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เนื้อหา",
-          "meaning": "内容・歌詞の内容",
-          "pronunciation_kana": "ヌア・ハー",
+          "text": "เนื้อ",
+          "meaning": "肉・中身・ストーリー",
+          "pronunciation_kana": "ヌア",
           "pos": "noun",
-          "components": [
-            {
-              "text": "เนื้อ",
-              "meaning": "肉・中身"
-            },
-            {
-              "text": "หา",
-              "meaning": "探す"
-            }
-          ],
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「เนื้อ（中身）」＋「หา（探す・得る）」から成り立ち、文章や歌などの「内容」を意味します。"
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "หา",
+          "meaning": "探す",
+          "pronunciation_kana": "ハー",
+          "pos": "verb",
+          "components": [],
+          "tone": "rising",
+          "breakdown_explanation": ""
         },
         {
           "text": "ที่",
@@ -19886,10 +20219,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เรือม",
-          "pos": "unknown",
+          "text": "เรือ",
+          "meaning": "船",
+          "pronunciation_kana": "ルア",
+          "pos": "noun",
           "components": [],
-          "tone": "",
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ม",
+          "meaning": "（音声の途切れ）",
+          "pronunciation_kana": "ム",
+          "pos": "other",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -20069,21 +20413,10 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "แน",
-          "meaning": "ねぇ（呼びかけ・強調）",
-          "pronunciation_kana": "ナエ",
-          "pos": "particle",
+          "text": "แนๆ",
+          "pos": "unknown",
           "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
+          "tone": "",
           "breakdown_explanation": ""
         },
         {
@@ -20186,10 +20519,30 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "ไลเซน",
-          "pos": "unknown",
+          "text": "ไล",
+          "meaning": "追う（ไล่の変形）",
+          "pronunciation_kana": "ライ",
+          "pos": "verb",
           "components": [],
-          "tone": "",
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "เซ",
+          "meaning": "セ（愛称・名前の一部など）",
+          "pronunciation_kana": "セー",
+          "pos": "noun",
+          "components": [],
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "น",
+          "meaning": "〜たち（英語の複数形sに相当する音写等の一部）",
+          "pronunciation_kana": "ヌ",
+          "pos": "particle",
+          "components": [],
+          "tone": "mid",
           "breakdown_explanation": ""
         },
         {
@@ -20617,22 +20970,18 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เรื่อย",
+          "text": "เรื่อยๆ",
           "meaning": "ずっと・継続して",
-          "pronunciation_kana": "ルアイ",
+          "pronunciation_kana": "ルアイ・ルアイ",
           "pos": "adverb",
-          "components": [],
+          "components": [
+            {
+              "text": "เรื่อย",
+              "meaning": "次々と・絶えず"
+            }
+          ],
           "tone": "falling",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ๆ",
-          "meaning": "（畳語の繰り返し記号）",
-          "pronunciation_kana": "（直前の言葉を繰り返す）",
-          "pos": "particle",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「เรื่อย」を重ねて、その状態がずっと長く続く様子を表します。"
         },
         {
           "text": "แหละ",
@@ -20820,12 +21169,12 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "นั้น",
-          "meaning": "その、あの",
+          "text": "นั่น",
+          "meaning": "それ・あれ",
           "pronunciation_kana": "ナン",
-          "pos": "determiner",
+          "pos": "pronoun",
           "components": [],
-          "tone": "high",
+          "tone": "falling",
           "breakdown_explanation": ""
         },
         {
@@ -21095,12 +21444,21 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "เเซฟ",
-          "meaning": "セーフ（固有名詞の一部）",
-          "pronunciation_kana": "セーフ",
+          "text": "เเซ",
+          "meaning": "ジーネスト（レーベル名等）",
+          "pronunciation_kana": "ゼー",
           "pos": "noun",
           "components": [],
-          "tone": "falling",
+          "tone": "mid",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ฟ",
+          "meaning": "（brief の後半のタイポ）",
+          "pronunciation_kana": "フォー",
+          "pos": "unknown",
+          "components": [],
+          "tone": "high",
           "breakdown_explanation": ""
         },
         {
@@ -21203,22 +21561,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "รอ",
-          "meaning": "待つ",
-          "pronunciation_kana": "ロー",
+          "text": "รอดู",
+          "meaning": "楽しみに待つ・様子を見る",
+          "pronunciation_kana": "ロー・ドゥー",
           "pos": "verb",
-          "components": [],
+          "components": [
+            {
+              "text": "รอ",
+              "meaning": "待つ"
+            },
+            {
+              "text": "ดู",
+              "meaning": "見る"
+            }
+          ],
           "tone": "mid",
-          "breakdown_explanation": ""
-        },
-        {
-          "text": "ดู",
-          "meaning": "見る",
-          "pronunciation_kana": "ドゥー",
-          "pos": "verb",
-          "components": [],
-          "tone": "mid",
-          "breakdown_explanation": ""
+          "breakdown_explanation": "「รอ（待つ）」＋「ดู（見る）」で、楽しみに待つ、様子を伺うという意味になります。"
         },
         {
           "text": "ว่า",
@@ -21352,22 +21710,22 @@
           "breakdown_explanation": ""
         },
         {
-          "text": "สุดท้าย",
-          "meaning": "最後",
-          "pronunciation_kana": "スッ・タイ",
+          "text": "สุด",
+          "meaning": "限界、一番",
+          "pronunciation_kana": "スット",
           "pos": "adjective",
-          "components": [
-            {
-              "text": "สุด",
-              "meaning": "極み・一番端"
-            },
-            {
-              "text": "ท้าย",
-              "meaning": "後ろ・末尾"
-            }
-          ],
+          "components": [],
+          "tone": "low",
+          "breakdown_explanation": ""
+        },
+        {
+          "text": "ท้าย",
+          "meaning": "最後、末尾",
+          "pronunciation_kana": "タイ",
+          "pos": "noun",
+          "components": [],
           "tone": "high",
-          "breakdown_explanation": "「สุด（一番端）」＋「ท้าย（後ろ）」で、最後を意味します。"
+          "breakdown_explanation": ""
         },
         {
           "text": "พี่",
