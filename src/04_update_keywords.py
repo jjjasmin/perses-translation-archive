@@ -30,13 +30,12 @@ def load_allowed_tag_map():
 
 def extract_keywords_from_titles(
     original_title: str,
-    translated_title: str,
     allowed_tag_map: dict,
     published_at: str = "",
 ) -> list:
     """タイトルテキストおよび公開年からタグ定義マップに基づいてキーワードを抽出する"""
     extracted_tags = []
-    search_target_text = f"{original_title} {translated_title}".lower()
+    search_target_text = f"{original_title}".lower()
 
     def extract_matching_tags(tag_data):
         for key, value in tag_data.items():
@@ -103,7 +102,6 @@ def update_all_video_keywords():
         video_id = item.get("id") or item.get("video_id")
         original_title = item.get("original_title", "")
         title_obj = item.get("title", {})
-        translated_title = title_obj.get("ja", "") if isinstance(title_obj, dict) else title_obj
         published_at = item.get("published_at", "")
 
         # #NEED_FIX フラグが既存キーワードにあれば保持する
@@ -112,7 +110,7 @@ def update_all_video_keywords():
 
         # キーワードの再抽出（published_atを追加）
         new_keywords = extract_keywords_from_titles(
-            original_title, translated_title, allowed_tag_map, published_at
+            original_title, allowed_tag_map, published_at
         )
 
         # #HIDDEN がある場合はステータスタグ等も含めて何も追加せず #HIDDEN のみに確定する
