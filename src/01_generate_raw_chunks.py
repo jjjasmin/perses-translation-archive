@@ -366,8 +366,9 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                 # sleep_time = base_backoff * (2 ** (attempt - 1))
                 # print(f"⚠️ [503 サーバー混雑] {sleep_time}秒待機して再試行します (試行 {attempt}/{max_retries})...")
                 # time.sleep(sleep_time)
-                print(f"⚠️ [503 サーバー混雑] 14秒待機して再試行します (試行 {attempt}/{max_retries})...")
-                time.sleep(14)
+                # 14秒ではRPMを越える
+                print(f"⚠️ [503 サーバー混雑] 18秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                time.sleep(18)
             else:
                 print(f"❌ 予期せぬAPIエラー: {e}")
                 time.sleep(5)
