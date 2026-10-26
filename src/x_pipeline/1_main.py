@@ -14,11 +14,13 @@ load_dotenv(dotenv_path=os.path.join(BASE_DIR, ".env"))
 # パス設定
 X_POSTS_DIR = os.path.join(BASE_DIR, "data", "x_posts")
 TIKTOK_POSTS_DIR = os.path.join(BASE_DIR, "data", "tiktok_posts")
+YOUTUBE_POSTS_DIR = os.path.join(BASE_DIR, "data", "youtube_posts")
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 STATUS_FILE_PATH = os.path.join(BASE_DIR, "data", "status_management.json")
 
 os.makedirs(X_POSTS_DIR, exist_ok=True)
 os.makedirs(TIKTOK_POSTS_DIR, exist_ok=True)
+os.makedirs(YOUTUBE_POSTS_DIR, exist_ok=True)
 
 # ==========================================
 # 埋め込み用テキスト（元 prompt.txt / translation_rules.txt）
@@ -244,7 +246,13 @@ def load_urls_from_file() -> list:
 
 
 def extract_status_id(url: str) -> str:
-    # X/Twitter の status/ID と TikTok の video/ID の両方に対応
+    # YouTube (watch?v=, shorts/, youtu.be/) の ID 抽出
+    if "youtube.com" in url.lower() or "youtu.be" in url.lower():
+        match = re.search(r"(?:v=|shorts/|youtu\.be/)([a-zA-Z0-9_-]+)", url)
+        if match:
+            return match.group(1)
+    
+    # X/Twitter の status/ID と TikTok の video/ID
     match = re.search(r"(?:status|video)/(\d+)", url)
     return match.group(1) if match else str(int(time.time()))
 
@@ -253,8 +261,22 @@ def download_x_video(url: str, output_path: str) -> str | None:
     if os.path.exists(output_path):
         os.remove(output_path)
 
-    cmd = f'yt-dlp --no-warnings --no-check-certificate -f "b[ext=mp4]/best" -o "{output_path}" "{url}"'
-    os.system(cmd)
+    # 映像と音声を自動で選択し、MP4形式にマージして保存するコマンド
+    cmd = [
+        "yt-dlp",
+        "--no-warnings",
+        "--no-check-certificate",
+        "-f", "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/bestvideo+bestaudio/best",
+        "--merge-output-format", "mp4",
+        "-o", output_path,
+        url
+    ]
+
+    try:
+        subprocess.run(cmd, check=True)
+    except Exception as e:
+        print(f"⚠️ ダウンロードコマンドの実行中にエラーが発生しました: {e}")
+        return None
 
     if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
         return None
@@ -549,6 +571,107 @@ def analyze_video_with_gemini(
     return result_data
 
 
+def split_video_into_chunks(video_path: str, chunk_duration: int = 180) -> list[str]:
+    """ffmpeg を使用して動画を指定秒数（デフォルト3分）ごとに分割する"""
+    base_name, ext = os.path.splitext(video_path)
+    output_pattern = f"{base_name}_chunk_%03d{ext}"
+    
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", video_path,
+        "-c", "copy",
+        "-f", "segment",
+        "-segment_time", str(chunk_duration),
+        "-reset_timestamps", "1",
+        output_pattern
+    ]
+    try:
+        subprocess.run(cmd, capture_output=True, check=True)
+    except Exception as e:
+        print(f"⚠️ 動画の分割に失敗しました（単一ファイルとして処理します）: {e}")
+        return [video_path]
+
+    dirname = os.path.dirname(video_path)
+    prefix = os.path.basename(base_name) + "_chunk_"
+    chunk_files = sorted([
+        os.path.join(dirname, f) for f in os.listdir(dirname)
+        if f.startswith(prefix) and f.endswith(ext)
+    ])
+    
+    return chunk_files if chunk_files else [video_path]
+
+
+def analyze_long_video_with_chunks(
+    key_mgr: KeyManager,
+    video_path: str,
+    base_prompt: str,
+    translation_rules: str,
+    member_photo_paths: dict,
+    config: dict,
+    chunk_duration: int = 180,
+    off_screen_speaker: str = "",
+) -> dict:
+    """長尺動画を自動分割して順次解析し、1つのJSONに結合する"""
+    chunk_files = split_video_into_chunks(video_path, chunk_duration=chunk_duration)
+    
+    if len(chunk_files) == 1:
+        return analyze_video_with_gemini(
+            key_mgr, video_path, base_prompt, translation_rules,
+            member_photo_paths, config, off_screen_speaker
+        )
+
+    print(f"✂️ 動画を {len(chunk_files)} 個のパート（各 {chunk_duration} 秒）に分割して解析します...")
+    
+    combined_transcript = []
+    first_parsed_data = None
+
+    for i, chunk_file in enumerate(chunk_files):
+        offset_seconds = i * chunk_duration
+        print(f"\n🧩 パート [{i + 1}/{len(chunk_files)}] 解析中 (タイムオフセット: +{offset_seconds}秒)...")
+        
+        try:
+            parsed_chunk = analyze_video_with_gemini(
+                key_mgr=key_mgr,
+                video_path=chunk_file,
+                base_prompt=base_prompt,
+                translation_rules=translation_rules,
+                member_photo_paths=member_photo_paths,
+                config=config,
+                off_screen_speaker=off_screen_speaker,
+            )
+            
+            if i == 0:
+                first_parsed_data = parsed_chunk
+
+            # 各発言の開始・終了時刻に経過秒数を加算
+            chunk_transcript = parsed_chunk.get("transcript", [])
+            for item in chunk_transcript:
+                if "start" in item and isinstance(item["start"], (int, float)):
+                    item["start"] = round(item["start"] + offset_seconds, 2)
+                if "end" in item and isinstance(item["end"], (int, float)):
+                    item["end"] = round(item["end"] + offset_seconds, 2)
+                combined_transcript.append(item)
+                
+        finally:
+            if os.path.exists(chunk_file) and chunk_file != video_path:
+                os.remove(chunk_file)
+
+    if not first_parsed_data:
+        raise RuntimeError("全チャンクの解析に失敗しました。")
+
+    # 全パートの transcript を統合し、IDを順に再採番
+    for idx, item in enumerate(combined_transcript):
+        item["id"] = idx + 1
+
+    return {
+        "title": first_parsed_data.get("title", {}),
+        "summary": first_parsed_data.get("summary", {}),
+        "caption": first_parsed_data.get("caption", {}),
+        "transcript": combined_transcript
+    }
+
+
 def update_status_management_file(item_data: dict, relative_json_path: str):
     """
     既存のステータス管理JSONを読み込み、新規または更新データを反映して保存する。
@@ -601,12 +724,22 @@ def main():
 
     for idx, video_url in enumerate(urls):
         # プラットフォームの判定
-        is_tiktok = "tiktok.com" in video_url.lower()
-        platform_prefix = "tiktok" if is_tiktok else "x"
-        
-        # 出力先ディレクトリ・相対パス・絶対パスの設定
-        target_dir = TIKTOK_POSTS_DIR if is_tiktok else X_POSTS_DIR
-        dir_name = "tiktok_posts" if is_tiktok else "x_posts"
+        url_lower = video_url.lower()
+        is_youtube = "youtube.com" in url_lower or "youtu.be" in url_lower
+        is_tiktok = "tiktok.com" in url_lower
+
+        if is_youtube:
+            platform_prefix = "youtube"
+            target_dir = YOUTUBE_POSTS_DIR
+            dir_name = "youtube_posts"
+        elif is_tiktok:
+            platform_prefix = "tiktok"
+            target_dir = TIKTOK_POSTS_DIR
+            dir_name = "tiktok_posts"
+        else:
+            platform_prefix = "x"
+            target_dir = X_POSTS_DIR
+            dir_name = "x_posts"
         
         status_id = extract_status_id(video_url)
         json_filename = f"{platform_prefix}_{status_id}.json"
@@ -655,13 +788,14 @@ def main():
                     continue
 
                 print("🤖 動画から日本語・タイ語データを解析中...")
-                parsed_data = analyze_video_with_gemini(
+                parsed_data = analyze_long_video_with_chunks(
                     key_mgr=key_mgr,
                     video_path=downloaded_file,
                     base_prompt=base_prompt,
                     translation_rules=translation_rules,
                     member_photo_paths=cfg["member_photos"],
                     config=cfg,
+                    chunk_duration=180,  # 3分（180秒）ごとに自動分割
                     off_screen_speaker="",
                 )
                 
