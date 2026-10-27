@@ -1959,10 +1959,10 @@ document.addEventListener('click', (e) => {
         clearTimeout(hideControlsTimer);
       }
 
-      // 3秒間無操作状態が続いたら非表示にする
+      // 0.5秒間無操作状態が続いたら非表示にする
       hideControlsTimer = setTimeout(() => {
         iframeWrapper.classList.remove('user-active');
-      }, 3000);
+      }, 500);
     }
 
     // PC用：動画領域内でカーソルが動いた時
