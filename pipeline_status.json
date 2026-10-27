@@ -6787,9 +6787,9 @@
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "in_progress",
+        "generate": "completed",
         "mode": "standard",
-        "last_processed_chunk": 1,
+        "last_processed_chunk": 16,
         "total_chunks": 16
       }
     }
@@ -7536,9 +7536,9 @@
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "in_progress",
+        "generate": "completed",
         "mode": "standard",
-        "last_processed_chunk": 2,
+        "last_processed_chunk": 10,
         "total_chunks": 10
       }
     }
@@ -9864,14 +9864,16 @@
     }
   },
   "NkecC1I1ZZA": {
-    "title": "ท้า..ร้องท่อนฮุก x PERSES @perses_official  (บอดีการ์ดเซตนี้ร้องเพลงเพราะฝุดๆ 😎 ) | ตู้ซ่อนหมี",
+    "title": {
+      "ja": "ท้า..ร้องท่อนฮุก x PERSES @perses_official  (บอดีการ์ดเซตนี้ร้องเพลงเพราะฝุดๆ 😎 ) | ตู้ซ่อนหมี"
+    },
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "completed",
-        "mode": "lite",
-        "last_processed_chunk": 6,
-        "total_chunks": 6
+        "generate": "in_progress",
+        "mode": "standard",
+        "last_processed_chunk": 1,
+        "total_chunks": 14
       }
     }
   },
@@ -20640,11 +20642,10 @@
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "in_progress",
+        "generate": "completed",
         "mode": "standard",
-        "last_processed_chunk": 2,
-        "total_chunks": 17,
-        "english_sub": true
+        "last_processed_chunk": 17,
+        "total_chunks": 17
       }
     }
   },
@@ -27901,9 +27902,9 @@
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "in_progress",
+        "generate": "completed",
         "mode": "standard",
-        "last_processed_chunk": 10,
+        "last_processed_chunk": 12,
         "total_chunks": 12
       }
     }
@@ -30496,7 +30497,8 @@
         "last_processed_chunk": 15,
         "total_chunks": 15
       }
-    }
+    },
+    "words_extracted": "completed"
   },
   "3S9fdewejDI": {
     "title": {
@@ -30505,9 +30507,9 @@
     "priority": 1,
     "status": {
       "ja": {
-        "generate": "in_progress",
+        "generate": "completed",
         "mode": "standard",
-        "last_processed_chunk": 8,
+        "last_processed_chunk": 17,
         "total_chunks": 17
       }
     }
@@ -30524,7 +30526,8 @@
         "last_processed_chunk": 4,
         "total_chunks": 21
       }
-    }
+    },
+    "words_extracted": "completed"
   },
   "i4v8FOHNq1Y": {
     "title": {
@@ -36903,7 +36906,8 @@
         "last_processed_chunk": 18,
         "total_chunks": 18
       }
-    }
+    },
+    "words_extracted": "completed"
   },
   "NszIy7GKoEs": {
     "title": {
@@ -37131,7 +37135,8 @@
       "pt": {
         "generate": "completed"
       }
-    }
+    },
+    "words_extracted": "completed"
   },
   "5C69kfo_r_k": {
     "title": {
@@ -37158,6 +37163,13 @@
         "mode": "lite",
         "last_processed_chunk": 2,
         "total_chunks": 2
+      }
+    }
+  },
+  "pXs1qmcen9U": {
+    "status": {
+      "ja": {
+        "english_sub": true
       }
     }
   }
