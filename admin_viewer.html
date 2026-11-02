@@ -429,6 +429,15 @@
   <!-- メイン表示エリア -->
   <div class="display-layout">
 
+    <!-- ▼ 追加: 0. combined (タイ語原文 + カナ + 日本語訳セット) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #fef08a; color: #854d0e;">0. セット表示 (タイ語 / カナ / 和訳)</span>
+        <button class="copy-btn" onclick="copyText('out-combined')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-combined" class="output-textarea" style="height: 240px;" readonly placeholder="動画を選択するとここにID順で出力されます..."></textarea>
+    </div>
+
     <!-- 1. text (タイ語原文) -->
     <div class="section-card">
       <div class="section-title">
@@ -481,6 +490,52 @@
         <button class="copy-btn" onclick="copyText('out-end')">📋 一括コピー</button>
       </div>
       <textarea id="out-end" class="output-textarea" readonly placeholder="動画を選択するとここにID順で出力されます..."></textarea>
+    </div>
+
+    <!-- ▼ 追加: translations (各言語翻訳) -->
+    <!-- en (英語) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #e0f2fe; color: #0369a1;">7. translation: en (英語)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-en')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-en" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
+    </div>
+
+    <!-- ko (韓国語) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #fce7f3; color: #9d174d;">8. translation: ko (韓国語)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-ko')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-ko" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
+    </div>
+
+    <!-- zh-TW (繁体字中国語) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #ffedd5; color: #c2410c;">9. translation: zh-TW (繁体字中国語)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-zh-tw')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-zh-tw" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
+    </div>
+
+    <!-- id (インドネシア語) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #ccfbf1; color: #0f766e;">10. translation: id (インドネシア語)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-id')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-id" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
+    </div>
+
+    <!-- pt (ポルトガル語) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #f1f5f9; color: #475569;">11. translation: pt (ポルトガル語)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-pt')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-pt" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
     </div>
 
   </div>
@@ -596,25 +651,44 @@
         return idA - idB;
       });
 
+      // ▼ 追加: 0. タイ語原文 / カナ / 日本語訳 のセット作成 (ID間は空改行)
+      const combined = sortedList.map(item => {
+        const text = item.text ?? '';
+        const kana = item.pronunciation_kana ?? '';
+        const ja = item.translations?.ja ?? item.translation ?? '';
+        return `${text} ${kana} ${ja}`;
+      }).join('\n');
+
       // 各プロパティごとに抽出して改行結合
       const texts = sortedList.map(item => item.text ?? '').join('\n');
       const kanas = sortedList.map(item => item.pronunciation_kana ?? '').join('\n');
       const romans = sortedList.map(item => item.pronunciation_roman ?? '').join('\n');
       const translations = sortedList.map(item => item.translations?.ja ?? item.translation ?? '').join('\n');
-      
-      // ▼ 追加: start と end の抽出
       const starts = sortedList.map(item => item.start ?? '').join('\n');
       const ends = sortedList.map(item => item.end ?? '').join('\n');
 
+      // ▼ 追加: translations の各言語抽出
+      const transEn = sortedList.map(item => item.translations?.en ?? '').join('\n');
+      const transKo = sortedList.map(item => item.translations?.ko ?? '').join('\n');
+      const transZhTw = sortedList.map(item => item.translations?.['zh-TW'] ?? '').join('\n');
+      const transId = sortedList.map(item => item.translations?.id ?? '').join('\n');
+      const transPt = sortedList.map(item => item.translations?.pt ?? '').join('\n');
+
       // 出力エリアへ書き込み
+      document.getElementById('out-combined').value = combined;
       document.getElementById('out-text').value = texts;
       document.getElementById('out-kana').value = kanas;
       document.getElementById('out-roman').value = romans;
       document.getElementById('out-translation').value = translations;
-      
-      // ▼ 追加: テキストエリアへのセット
       document.getElementById('out-start').value = starts;
       document.getElementById('out-end').value = ends;
+
+      // ▼ 追加: 各言語テキストエリアへのセット
+      document.getElementById('out-trans-en').value = transEn;
+      document.getElementById('out-trans-ko').value = transKo;
+      document.getElementById('out-trans-zh-tw').value = transZhTw;
+      document.getElementById('out-trans-id').value = transId;
+      document.getElementById('out-trans-pt').value = transPt;
     }
 
     // 一括コピー用関数
