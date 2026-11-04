@@ -29,6 +29,13 @@
       text-size-adjust: none !important;
     }
 
+    /* Silkブラウザの仮想カーソル非表示 ＆ マウス操作無効化 */
+    html, body {
+      cursor: none !important;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
     /* PC環境判定（マウス操作・広画面）：20pxへ上書き */
     @media (hover: hover) and (pointer: fine) and (min-width: 960px) {
       html, body {
@@ -528,6 +535,30 @@
       setupSpatialNavigation();
     });
 
+    // --- マウス・ポインター操作を遮断し、Silkのカーソルモード移行を防止 ---
+    const blockMouseEvents = (e) => {
+      // リモコン決定キーによるクリック（座標が0等）以外はすべて無効化
+      if (e.type !== 'click' || (e.clientX !== 0 || e.clientY !== 0)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    ['mousemove', 'mousedown', 'mouseup', 'mouseover', 'contextmenu'].forEach(eventType => {
+      window.addEventListener(eventType, blockMouseEvents, { capture: true, passive: false });
+    });
+
+    // --- フォーカスが外れて body に落ちた場合、自動で近くの要素に復帰させる ---
+    window.addEventListener('focusout', () => {
+      setTimeout(() => {
+        if (!document.activeElement || document.activeElement === document.body) {
+          const target = lastSelectedTagElement || document.querySelector('.focusable');
+          if (target) target.focus();
+        }
+      }, 50);
+    });
+
     function setupHistoryState() {
       history.pushState({ page: 'main' }, '', location.href);
       
@@ -858,10 +889,17 @@
     }
 
     function setupSpatialNavigation() {
-      setTimeout(() => {
-        const firstTag = document.querySelector('.tag-btn');
-        if (firstTag) firstTag.focus();
-      }, 500);
+      // ページ表示時に即座に最初の要素へフォーカスを当ててリモコンモードに固定
+        const initFocus = () => {
+          const firstTag = document.querySelector('.tag-btn') || document.querySelector('.focusable');
+          if (firstTag) {
+            firstTag.focus();
+          }
+        };
+
+        // 即時実行および少し遅延させた実行の両方で確実にフォーカスを奪う
+        initFocus();
+        setTimeout(initFocus, 300);
 
       // --- keydown イベント（長押しタイマーのセット） ---
       document.addEventListener('keydown', (e) => {
