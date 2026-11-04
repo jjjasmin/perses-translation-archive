@@ -1076,10 +1076,11 @@ document.addEventListener('click', (e) => {
         player = new YT.Player('youtube-player', {
           videoId: videoId,
           playerVars: {
-            'autoplay': 0,　//自動再生しない
-            'mute': 0,　//ミュートしない
-            'playsinline': 1, //強制的に全画面表示（フルスクリーン）にしない
-            'cc_load_policy': 0 //字幕表示しない
+            'autoplay': 0,　//0自動再生しない
+            'mute': 0,　//0ミュートしない
+            'playsinline': 1, //1強制的に全画面表示（フルスクリーン）にしない
+            'cc_load_policy': 0, //0字幕表示しない
+            'controls': 1 // ★ 0 に設定するとYouTube公式の操作UIシークバーが非表示になります
           },
           events: {
             'onStateChange': onPlayerStateChange
