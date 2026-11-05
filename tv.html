@@ -2,27 +2,82 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <title>Silk D-Pad テスト</title>
   <style>
-    body { background: #111; color: #fff; font-size: 24px; padding: 50px; }
-    .btn { padding: 20px; margin: 10px; background: #333; display: inline-block; }
-    .btn:focus { outline: 5px solid #00d2ff; background: #005b82; }
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: sans-serif;
+      padding: 40px;
+      text-align: center;
+      cursor: none !important; /* マウスカーソル非表示 */
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .log {
+      font-size: 18px;
+      color: #00d2ff;
+      margin-bottom: 30px;
+      min-height: 1.5em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 160px);
+      gap: 20px;
+      justify-content: center;
+    }
+
+    button {
+      padding: 20px;
+      font-size: 18px;
+      background-color: #222;
+      color: white;
+      border: 2px solid #444;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    /* D-Padフォーカス時のハイライト */
+    button:focus {
+      outline: 4px solid #00d2ff !important;
+      background-color: #005b82;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
-  <h2>Fire TV Silk リモコンテスト</h2>
-  <div class="btn" tabindex="0">ボタン 1</div>
-  <div class="btn" tabindex="0">ボタン 2</div>
-  <div class="btn" tabindex="0">ボタン 3</div>
+
+  <h1>Silk D-Pad 動作確認</h1>
+  <div id="log" class="log">リモコンの矢印キーを押してください</div>
+
+  <div class="grid">
+    <button autofocus onclick="logAction('ボタン 1')">ボタン 1</button>
+    <button onclick="logAction('ボタン 2')">ボタン 2</button>
+    <button onclick="logAction('button 3')">ボタン 3</button>
+    <button onclick="logAction('ボタン 4')">ボタン 4</button>
+  </div>
 
   <script>
-    // キャプチャフェーズ(true)でキーを監視
+    const logEl = document.getElementById('log');
+
+    function logAction(name) {
+      logEl.innerText = `${name} が決定されました！`;
+    }
+
+    // 押されたキーの名称とコードを表示
     window.addEventListener('keydown', (e) => {
-      console.log('押されたキー:', e.key, e.keyCode);
+      logEl.innerText = `Key: ${e.key} | Code: ${e.keyCode || e.which}`;
     }, true);
 
-    // 画面クリック/決定で最初の要素にフォーカス
+    // 読み込み直後に最初のボタンにフォーカスを当てる
     window.onload = () => {
-      document.querySelector('.btn').focus();
+      const firstBtn = document.querySelector('button');
+      if (firstBtn) firstBtn.focus();
     };
   </script>
 </body>
