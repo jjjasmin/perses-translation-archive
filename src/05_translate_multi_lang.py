@@ -133,7 +133,7 @@ def validate_chunk_data(data, expected_ids: set) -> bool:
 
 def call_gemini_api_with_retry(prompt: str, chunk_info: str = ""):
     global current_key_index, current_model_index, client
-    max_retries = 5
+    max_retries = 20
 
     for attempt in range(1, max_retries + 1):
         print("✨ 処理中:gemini呼び出し　4秒待機 ✨")
