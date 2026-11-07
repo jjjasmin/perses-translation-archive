@@ -338,28 +338,28 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                     current_key_index += 1
                     print(f"🔄 APIキーを Index {current_key_index} に切り替えて再試行します...")
                     client = get_client(current_key_index)
-                    time.sleep(5)  # 念のため2秒待機
+                    time.sleep(5)  # 念のため待機
                     # 💡 【重要】キーを切り替えたら、リトライ上限で落ちないようにこのループをやり直す
                     # forループの外で while や再帰を使うか、一時的にループ上限を回避する
                     return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
                 
-                # ② 全キー使い切り ＆ まだ次のモデルがある場合 ➔ モデルを変更してキーをIndex 0に戻す
+                # ② 全キー使い切り ＆ まだ次のモデルがある場合 ➔ 次のモデル（1, 2...）へ変更してキーをIndex 0に戻す
                 elif model_idx + 1 < len(AVAILABLE_MODELS):
-                    model_idx += 1
-                    current_model_index = model_idx
+                    current_model_index = model_idx + 1
                     current_key_index = 0
                     client = get_client(current_key_index)
-                    print(f"🔀 【モデル切り替え】 次のモデル 『{AVAILABLE_MODELS[model_idx]}』 (キーIndex: 0) へ切替えて続行します！")
+                    print(f"🔀 【モデル切り替え】 次のモデル 『{AVAILABLE_MODELS[current_model_index]}』 (キーIndex: 0) へ切替えて続行します！")
                     time.sleep(5)
-                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
+                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx=None, model_name=model_name)
                 
-                # ③ 全モデル ＆ 全キーを使い切った場合 ➔ 60秒待機して再試行（または中断）
+                # ③ 全モデル ＆ 全キーを使い切った場合 ➔ 60秒待機してモデルを「0」に戻し、キーもIndex 0に戻してループ
                 else:
-                    print("⏳ 全キー・全モデルが制限に達しました。60秒待機して再試行します...")
+                    print("⏳ 全キー・全モデルが制限に達しました。60秒待機後、モデル0・キー0に戻って再試行します...")
                     time.sleep(60)
-                    current_key_index = 0
+                    current_model_index = 0  # 💡 モデルを 0 にループバック
+                    current_key_index = 0    # 💡 キーも 0 にリセット
                     client = get_client(current_key_index)
-                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx, model_name)
+                    return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx=None, model_name=model_name)
 
             if is_503:
                 # 503は指数バックオフで長めに待機 (5秒、10秒、20秒...)

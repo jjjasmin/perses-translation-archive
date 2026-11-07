@@ -302,6 +302,17 @@
               <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.61 0-.43-.17-.83-.44-1.12-.27-.29-.44-.69-.44-1.14 0-.89.72-1.61 1.61-1.61H16c3.31 0 6-2.69 6-6 0-5.52-4.5-9.5-10-9.5Z"/>
             </svg>
           </button>
+          <!-- 4. 字幕モード切替（翻訳 / 読み） -->
+          <button type="button" class="sub-ctrl-btn" id="seek-sub-mode-btn" title="字幕表示切替（翻訳 / 読み）">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 8 6 6"/>
+              <path d="m4 14 6-6 2-3"/>
+              <path d="M2 5h12"/>
+              <path d="M7 2h1"/>
+              <path d="m22 22-5-10-5 10"/>
+              <path d="M14 18h6"/>
+            </svg>
+          </button>
 
         <!-- ★ コマ送り・微調整フローティングボタン群 -->
         <div class="frame-seek-controls">
@@ -474,6 +485,8 @@
     const seekSubSizeBtn = document.getElementById('seek-sub-size-btn');
     const seekSubStyleBtn = document.getElementById('seek-sub-style-btn');
     const subToggleBtn = document.getElementById('sub-toggle-btn');
+    const subSubModeBtn = document.getElementById('sub-submode-btn'); // ★ 追加
+    const seekSubModeBtn = document.getElementById('seek-sub-mode-btn'); // ★ 追加
     const sortOrderBtn = document.getElementById('sort-order-btn');
     const sortOrderLabel = document.getElementById('sort-order-label');
     // JavaScript 冒頭の DOM 要素取得箇所
@@ -502,6 +515,7 @@
     let pendingVideoId = null;
     // 字幕表示フラグ（初期状態：通常画面なので OFF）
     let isSubtitleVisible = false;
+    let subtitleDisplayMode = 'trans'; // ★ 追加: 'trans' (翻訳) または 'phonetic' (読み)
     let hideControlsTimer = null;
     let currentSortOrder = 'desc';
     let allVideos = [];
@@ -1172,8 +1186,20 @@ document.addEventListener('click', (e) => {
         // ★ 変更点2: 有効な字幕（範囲内）がある場合のみオーバーレイ字幕を表示し、無音区間（-1）では消す
         if (activeIndex !== -1) {
           const currentData = transcriptData[activeIndex];
-          const translationText = currentData?.translations ? getI18nText(currentData.translations) : currentData?.translation;
-          if (currentData && translationText) {
+          
+          // ★ 追加: 表示テキスト（翻訳 or 発音表記）の決定ロジック
+          let displayContent = '';
+          if (subtitleDisplayMode === 'phonetic') {
+            displayContent = (currentLang === 'ja')
+              ? (currentData?.pronunciation_kana || '')
+              : (currentData?.pronunciation_roman || '');
+          } else {
+            displayContent = currentData?.translations 
+              ? getI18nText(currentData.translations) 
+              : (currentData?.translation || '');
+          }
+
+          if (currentData && displayContent) {
             if (currentData.speaker) {
               overlaySpeaker.textContent = `[ ${currentData.speaker} ]`;
               overlaySpeaker.style.display = 'inline';
@@ -1181,7 +1207,7 @@ document.addEventListener('click', (e) => {
               overlaySpeaker.textContent = '';
               overlaySpeaker.style.display = 'none';
             }
-            overlayText.textContent = translationText;
+            overlayText.textContent = displayContent;
             overlaySubtitleBox.style.display = 'block';
           } else {
             overlayText.textContent = '';
@@ -1195,6 +1221,38 @@ document.addEventListener('click', (e) => {
           overlaySubtitleBox.style.display = 'none';
         }
       }
+    }
+
+    /**
+     * オーバーレイ字幕の表示モード切替（翻訳 / カタカナ・ローマ字読み）
+     */
+    function toggleSubtitleDisplayMode() {
+      subtitleDisplayMode = (subtitleDisplayMode === 'trans') ? 'phonetic' : 'trans';
+      
+      const modeText = (subtitleDisplayMode === 'trans') ? 'ph' : 'tra';
+      if (subSubModeBtn) subSubModeBtn.textContent = modeText;
+      if (seekSubModeBtn) seekSubModeBtn.textContent = modeText;
+
+      // 即時反映
+      if (typeof updateActiveTranscript === 'function') {
+        updateActiveTranscript();
+      }
+    }
+
+    // 字幕コントロールバー側：翻訳/読み切替ボタン
+    if (subSubModeBtn) {
+      subSubModeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSubtitleDisplayMode();
+      });
+    }
+
+    // ヘッダー側：翻訳/読み切替ボタン
+    if (seekSubModeBtn) {
+      seekSubModeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSubtitleDisplayMode();
+      });
     }
 
     function init() {
