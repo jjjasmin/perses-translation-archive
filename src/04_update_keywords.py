@@ -115,7 +115,7 @@ def update_all_video_keywords():
 
         # #HIDDEN がある場合はステータスタグ等も含めて何も追加せず #HIDDEN のみに確定する
         if "#HIDDEN" in new_keywords:
-            item["keywords"] = ["#HIDDEN","#NexT1de"]
+            item["keywords"] = ["#HIDDEN"]
             updated_count += 1
             continue
 

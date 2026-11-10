@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PERSES Video Catalog</title>
+  
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="menu.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Control Sections */
+    .control-section {
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .control-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    /* Buttons Styling */
+    .btn {
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .btn:hover {
+      background-color: #f0f0f0;
+    }
+    .btn.active {
+      background-color: #333;
+      color: #fff;
+      border-color: #333;
+    }
+    
+    /* Column Toggle Buttons Specific */
+    .btn-toggle {
+      border-color: #cbd5e1;
+      background-color: #f8fafc;
+      color: #64748b;
+    }
+    .btn-toggle.active {
+      background-color: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .loading {
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    /* Table Container (without max-height as requested) */
+    .table-container {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.72rem;
+      table-layout: fixed; /* ドラッグリサイズ用に必須 */
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      /* --- 文字重なり防止の設定を追加 --- */
+  overflow: hidden;            /* はみ出た文字を隠す */
+  white-space: nowrap;         /* 勝手に折り返さず1行にする */
+  text-overflow: ellipsis;     /* はみ出た部分を「…」にする */
+    }
+    th {
+      background-color: #333;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover {
+      background-color: #444;
+    }
+    th .sort-icon {
+      margin-left: 4px;
+      font-size: 0.65rem;
+      opacity: 0.6;
+    }
+    th.sorted .sort-icon {
+      opacity: 1;
+      color: #f59e0b;
+    }
+/* 行全体のポインターカーソルを解除（テキスト選択・コピペ可能化） */
+tr {
+  transition: background-color 0.15s ease;
+}
+tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* 遷移リンク用セル (Published Date) のスタイル */
+td.cell-link {
+  cursor: pointer;
+  color: #2563eb;
+  text-decoration: underline;
+}
+td.cell-link:hover {
+  color: #1d4ed8;
+  font-weight: bold;
+}
+    
+    /* 複数行表示用セル（キーワード等）の重なり防止 */
+.cell-multiline {
+  white-space: pre-wrap;       /* 折り返しを許可する場合 */
+  line-height: 1.4;            /* 行同士が重ならないよう行高を確保 */
+  word-break: break-word;
+}
+
+    /* PC Layout Adjustments */
+    @media screen and (min-width: 769px) {
+      .container {
+        margin-left: 60px;
+        transition: margin-left 0.3s ease;
+      }
+    }
+
+    /* テーブルの固定レイアウト化 */
+    table {
+      width: 100%;
+      table-layout: fixed; /* ドラッグ調整を有効にするため固定幅レイアウトに変更 */
+    }
+
+    /* ヘッダーのドラッグハンドル用の設定 */
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative; /* リサイズハンドルの基準位置 */
+    }
+
+    /* 列幅調整用ハンドル */
+    .resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 5px;
+      background: transparent;
+      cursor: col-resize;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .resizer:hover,
+    .resizer.resizing {
+      background: #2563eb; /* ホバー時・ドラッグ中に青線を表示 */
+    }
+  </style>
+</head>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DK62NQHXGB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DK62NQHXGB');
+</script>
+
+<script src="menu.js"></script>
+<body>
+
+<!-- PC Navigation Menu -->
+<nav class="pc-sidebar-menu" id="pcSidebar">
+    <ul class="menu-list">
+      <li class="menu-item">
+            <button class="menu-link"><span class="menu-icon"></span><span class="menu-label"></span></button>
+        </li>
+        <li class="menu-item">
+            <a href="index.html" class="menu-link"><span class="menu-icon">🏠</span><span class="menu-label">HOME</span></a>
+        </li>
+        <li class="menu-item">
+            <a href="sns.html" class="menu-link"><span class="menu-icon">🌐</span><span class="menu-label">SNS</span></a>
+        </li>
+        <li class="menu-item">
+            <button class="submenu-toggle" id="pcSubmenuBtn">
+                <span class="menu-icon">📂</span>
+                <span class="menu-label">SUBCONTENTS</span>
+                <span class="arrow">▼</span>
+            </button>
+            <ul class="submenu-list" id="pcSubmenu">
+                <li class="menu-item"><a href="links.html" class="menu-link"><span class="menu-icon">🏷️</span><span class="menu-label">XTAG</span></a></li>
+                <li><a href="tv.html" class="menu-link"><span class="menu-icon">📺</span><span class="menu-label">FIRETV</span></a></li>
+                <li><a href="admin.html" class="menu-link"><span class="menu-icon">⚙️</span><span class="menu-label">ADMIN</span></a></li>
+                <li><a href="admin_viewer.html" class="menu-link"><span class="menu-icon">👁️</span><span class="menu-label">VIEWER</span></a></li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<div class="sheet-overlay" id="menuOverlay"></div>
+
+<!-- Mobile Navigation Footer -->
+<nav class="sp-floating-footer" id="spFooter">
+    <ul class="sp-nav-list">
+        <li class="sp-nav-item"><button class="sp-nav-btn"><span class="sp-nav-icon"></span><span class="sp-nav-label"></span></button></li>
+        <li class="sp-nav-item"><a href="index.html" class="sp-nav-link"><span class="sp-nav-icon">🏠</span><span class="sp-nav-label">HOME</span></a></li>
+        <li class="sp-nav-item"><a href="sns.html" class="sp-nav-link"><span class="sp-nav-icon">🌐</span><span class="sp-nav-label">SNS</span></a></li>
+        <li class="sp-nav-item"><a href="links.html" class="sp-nav-link"><span class="sp-nav-icon">🏷️</span><span class="sp-nav-label">XTAG</span></a></li>
+        <li class="sp-nav-item"><button class="sp-nav-btn" id="spSubBtn"><span class="sp-nav-icon">☰</span><span class="sp-nav-label">SUB</span></button></li>
+    </ul>
+</nav>
+
+<div class="sp-bottom-sheet" id="spBottomSheet">
+    <ul class="menu-list">
+        <li class="menu-item"><a href="tv.html" class="menu-link">FIRETV</a></li>
+        <li class="menu-item"><a href="admin.html" class="menu-link">ADMIN</a></li>
+        <li class="menu-item"><a href="admin_viewer.html" class="menu-link">VIEWER</a></li>
+    </ul>
+</div>
+
+<div class="container">
+  <h1>PERSES All Video Catalog</h1>
+  
+  <!-- Category / Year Filter Buttons -->
+  <div class="control-section">
+    <div class="control-title">Categories & Years</div>
+    <div class="button-group" id="category-buttons">
+      <!-- JavaScriptにより動的生成されます -->
+    </div>
+  </div>
+
+  <!-- Column Visibility Buttons -->
+  <div class="control-section" id="column-visibility-section">
+    <div class="control-title">Column Display Settings</div>
+    <div class="button-group" id="column-buttons">
+      <!-- Generated dynamically by JS -->
+    </div>
+  </div>
+
+  <div id="status" class="loading">Loading video list...</div>
+  
+  <div class="table-container">
+    <table id="data-table" style="display: none;">
+      <thead>
+        <tr id="table-head"></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// Column Configuration Definition
+// ==========================================
+const COLUMN_DEFS = [
+  { key: 'published_at', label: 'Published Date', defaultVisible: true },
+  { key: 'original_title', label: 'Original Title', defaultVisible: true },
+  { key: 'title_ja', label: 'Title (JA)', defaultVisible: true },
+  { key: 'title_en', label: 'Title (EN)', defaultVisible: false },
+  { key: 'title_ko', label: 'Title (KO)', defaultVisible: false },
+  { key: 'title_zh_tw', label: 'Title (ZH-TW)', defaultVisible: false },
+  { key: 'title_id', label: 'Title (ID)', defaultVisible: false },
+  { key: 'title_pt', label: 'Title (PT)', defaultVisible: false },
+  { key: 'keywords_comma', label: 'Keywords (Comma)', defaultVisible: false },
+  { key: 'keywords_lines', label: 'Keywords (Multiline)', defaultVisible: false }
+];
+
+// State Variables
+let allVideos = [];
+let tagsData = {};
+let currentFilter = { type: 'ALL', value: 'ALL' };
+let activeColumns = {};
+let currentSortKey = 'published_at';
+let currentSortOrder = 'desc';
+
+// Initialize Default Column Visibility
+COLUMN_DEFS.forEach(col => {
+  activeColumns[col.key] = col.defaultVisible;
+});
+
+// ==========================================
+// Data Fetching & Processing
+// ==========================================
+async function loadVideoData() {
+  const statusEl = document.getElementById('status');
+  const tableEl = document.getElementById('data-table');
+  
+  try {
+    const [tagsResult, videoResult] = await Promise.allSettled([
+      fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+      fetch('data/videos.json')
+        .then(res => res.ok ? res.json() : fetch('data/pipeline_status.json').then(r => r.ok ? r.json() : null))
+    ]);
+
+    if (tagsResult.status === 'fulfilled' && tagsResult.value) {
+      tagsData = tagsResult.value;
+    } else {
+      tagsData = {};
+    }
+
+    let rawData = null;
+    if (videoResult.status === 'fulfilled' && videoResult.value) {
+      rawData = videoResult.value;
+    }
+
+    if (!rawData) {
+      throw new Error("Failed to load video dataset.");
+    }
+
+    allVideos = normalizeData(rawData);
+    
+    renderCategoryButtons();
+    renderColumnButtons();
+
+    if (statusEl) statusEl.style.display = 'none';
+    if (tableEl) tableEl.style.display = 'table';
+    
+    updateAndRender();
+
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      statusEl.textContent = 'Failed to load video data.';
+      statusEl.style.color = 'red';
+      statusEl.style.display = 'block';
+    }
+  }
+}
+
+function normalizeData(rawData) {
+  const list = [];
+  if (!rawData) return list;
+
+  const entries = Array.isArray(rawData) 
+    ? rawData 
+    : Object.entries(rawData).map(([id, val]) => ({ id, ...(typeof val === 'object' && val !== null ? val : {}) }));
+
+  entries.forEach(item => {
+    if (!item || typeof item !== 'object') return;
+
+    const id = item.id || item.video_id || '';
+    const titles = item.title || {};
+    const keywords = item.keywords || item.tags || [];
+    
+    let rawKeywordsArray = [];
+    if (Array.isArray(keywords)) {
+      rawKeywordsArray = keywords.map(k => String(k || '').trim()).filter(Boolean);
+    } else if (typeof keywords === 'string') {
+      rawKeywordsArray = keywords.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const cleanText = (str) => {
+      if (!str || typeof str !== 'string') return String(str || '');
+      return str.replace(/^\{\s*translation:\s*/, '').replace(/\s*\}$/, '').trim();
+    };
+
+    const pubDate = item.published_at || item.publishedAt || item.year || '';
+
+    list.push({
+      id: String(id),
+      original_title: String(item.original_title || (typeof item.title === 'string' ? item.title : (titles.original || titles.ja || ''))),
+      title_ja: cleanText(titles.ja || (typeof titles === 'string' ? titles : '')),
+      title_en: cleanText(titles.en),
+      title_ko: cleanText(titles.ko),
+      title_zh_tw: cleanText(titles['zh-TW'] || titles.zh_tw),
+      title_id: cleanText(titles.id),
+      title_pt: cleanText(titles.pt),
+      published_at: String(pubDate),
+      category: String(item.category || item.year || (pubDate ? String(pubDate).substring(0, 4) : 'Other')),
+      raw_keywords: rawKeywordsArray,
+      keywords_comma: rawKeywordsArray.join(', '),
+      keywords_lines: rawKeywordsArray.join('\n')
+    });
+  });
+
+  return list;
+}
+
+// ==========================================
+// UI Rendering & Controls (Column Toggle)
+// ==========================================
+function renderColumnButtons() {
+  const container = document.getElementById('column-buttons');
+  if (!container) return;
+  container.innerHTML = '';
+
+  COLUMN_DEFS.forEach(col => {
+    const btn = document.createElement('button');
+    btn.className = `btn btn-toggle ${activeColumns[col.key] ? 'active' : ''}`;
+    btn.textContent = col.label;
+    btn.onclick = () => toggleColumn(col.key, btn);
+    container.appendChild(btn);
+  });
+}
+
+function toggleColumn(key, btnEl) {
+  activeColumns[key] = !activeColumns[key];
+  if (btnEl) {
+    btnEl.classList.toggle('active', activeColumns[key]);
+  }
+  updateAndRender();
+}
+
+// ==========================================
+// Dynamic Category & Tag Buttons Generation
+// ==========================================
+function renderCategoryButtons() {
+  const container = document.getElementById('category-buttons');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // 1. ALL ボタン
+  createFilterButton(container, 'ALL', 'ALL', 'ALL', currentFilter.type === 'ALL');
+
+  // 2. データから「年」を自動抽出して降順ソート
+  const yearsSet = new Set();
+  allVideos.forEach(item => {
+    if (item.published_at) {
+      const match = String(item.published_at).match(/\b(20\d{2})\b/);
+      if (match) yearsSet.add(match[1]);
+    }
+  });
+  const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
+  
+  sortedYears.forEach(year => {
+    const isActive = currentFilter.type === 'YEAR' && currentFilter.value === year;
+    createFilterButton(container, year, 'YEAR', year, isActive);
+  });
+
+  // 3. tags.json から 大分類 と タグ ボタンを生成 (ネスト構造に対応)
+  if (tagsData && typeof tagsData === 'object' && !Array.isArray(tagsData)) {
+    Object.keys(tagsData).forEach(groupKey => {
+      // 大分類ボタン
+      const isGroupActive = currentFilter.type === 'GROUP' && currentFilter.value === groupKey;
+      createFilterButton(container, groupKey, 'GROUP', groupKey, isGroupActive);
+
+      const subGroup = tagsData[groupKey];
+      if (subGroup && typeof subGroup === 'object' && !Array.isArray(subGroup)) {
+        // オブジェクト構造の場合、キー（#PERSES MUSIC VIDEO など）をタグボタンにする
+        Object.keys(subGroup).forEach(tag => {
+          const isTagActive = currentFilter.type === 'TAG' && currentFilter.value === tag;
+          createFilterButton(container, tag, 'TAG', tag, isTagActive);
+        });
+      } else if (Array.isArray(subGroup)) {
+        // 配列構造の場合のフォールバック
+        subGroup.forEach(tag => {
+          const isTagActive = currentFilter.type === 'TAG' && currentFilter.value === tag;
+          createFilterButton(container, tag, 'TAG', tag, isTagActive);
+        });
+      }
+    });
+  }
+}
+
+function createFilterButton(container, label, type, value, isActive = false) {
+  const btn = document.createElement('button');
+  btn.className = `btn ${isActive ? 'active' : ''}`;
+  btn.textContent = label;
+  btn.dataset.filterType = type;
+  btn.dataset.filterValue = value;
+  btn.onclick = () => filterCategory(type, value, btn);
+  container.appendChild(btn);
+}
+
+function filterCategory(type, value, clickedBtn) {
+  currentFilter = { type, value };
+
+  const buttons = document.querySelectorAll('#category-buttons .btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+  }
+
+  updateAndRender();
+}
+
+// Sort Handler
+function sortBy(key) {
+  if (currentSortKey === key) {
+    currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSortKey = key;
+    currentSortOrder = 'asc';
+  }
+  updateAndRender();
+}
+
+// ==========================================
+// Render & Filter Logic
+// ==========================================
+function updateAndRender() {
+  // 1. Filter Data
+  let filtered = allVideos.filter(item => {
+    const { type, value } = currentFilter;
+
+    if (type === 'ALL') return true;
+
+    // 年判定
+    if (type === 'YEAR') {
+      return String(item.published_at || '').includes(String(value));
+    }
+
+    // tags.json 大分類判定 (グループ傘下の全タグキーワードのいずれかに合致)
+    if (type === 'GROUP') {
+      const groupObj = tagsData && tagsData[value];
+      if (!groupObj) return false;
+
+      let keywordsToMatch = [];
+      if (Array.isArray(groupObj)) {
+        keywordsToMatch = groupObj;
+      } else if (typeof groupObj === 'object') {
+        Object.values(groupObj).forEach(arr => {
+          if (Array.isArray(arr)) {
+            keywordsToMatch.push(...arr);
+          }
+        });
+      }
+
+      return matchesAnyKeyword(item, keywordsToMatch);
+    }
+
+    // 特定タグ判定 (#PERSES MUSIC VIDEO など)
+    if (type === 'TAG') {
+      let targetKeywords = [];
+      if (tagsData && typeof tagsData === 'object') {
+        Object.values(tagsData).forEach(groupObj => {
+          if (groupObj && typeof groupObj === 'object' && groupObj[value]) {
+            if (Array.isArray(groupObj[value])) {
+              targetKeywords = groupObj[value];
+            }
+          }
+        });
+      }
+
+      if (targetKeywords.length > 0) {
+        return matchesAnyKeyword(item, targetKeywords);
+      } else {
+        return matchesAnyKeyword(item, [value]);
+      }
+    }
+
+    return true;
+  });
+
+  // 2. Sort Data
+  filtered.sort((a, b) => {
+    let valA = a[currentSortKey] || '';
+    let valB = b[currentSortKey] || '';
+
+    const cmp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+    return currentSortOrder === 'asc' ? cmp : -cmp;
+  });
+
+  // 3. Render Table Header
+  const theadTr = document.getElementById('table-head');
+  if (theadTr) {
+    theadTr.innerHTML = '';
+
+    COLUMN_DEFS.forEach(col => {
+      if (activeColumns[col.key]) {
+        const th = document.createElement('th');
+        const isSorted = currentSortKey === col.key;
+        const icon = isSorted ? (currentSortOrder === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+        
+        th.innerHTML = `<span>${escapeHtml(col.label)}</span><span class="sort-icon">${icon}</span>`;
+        if (isSorted) th.classList.add('sorted');
+        th.onclick = (e) => {
+          // ドラッグ操作時はソートを発動させない
+          if (e.target.classList.contains('resizer')) return;
+          sortBy(col.key);
+        };
+
+        // リサイズ用ツマミ（Handle）を追加
+        const resizer = document.createElement('div');
+        resizer.className = 'resizer';
+        th.appendChild(resizer);
+
+        theadTr.appendChild(th);
+      }
+    });
+
+    // ヘッダー描画後にドラッグリサイズ機能を有効化
+    enableColumnResize();
+  }
+
+  // 4. Render Table Body
+  const tbody = document.getElementById('table-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+
+    filtered.forEach(video => {
+      const tr = document.createElement('tr');
+      // ※ tr.onclick は削除し、行全体のクリック遷移を無効化
+
+      COLUMN_DEFS.forEach(col => {
+        if (activeColumns[col.key]) {
+          const td = document.createElement('td');
+          const val = video[col.key] || '';
+          
+          if (col.key === 'keywords_lines') {
+            td.className = 'cell-multiline';
+          }
+          td.textContent = val;
+          td.title = val;
+
+          // ★ Published Date (published_at) セルのみにクリック遷移を設定
+          // ★ Published Date (published_at) セルをクリック時に新しいタブで開く
+          if (col.key === 'published_at') {
+            td.classList.add('cell-link');
+            td.onclick = (e) => {
+              e.stopPropagation();
+              window.open(`/index.html?v=${encodeURIComponent(video.id)}`, '_blank');
+            };
+          }
+
+          tr.appendChild(td);
+        }
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+// ==========================================
+// Column Drag Resize Functionality (PC & Mobile Touch Supported)
+// ==========================================
+function enableColumnResize() {
+  const resizers = document.querySelectorAll('.resizer');
+  
+  resizers.forEach(resizer => {
+    let x = 0;
+    let w = 0;
+    let th = null;
+
+    const pointerDownHandler = function (e) {
+      e.stopPropagation(); // ソートや他イベントの発生を防止
+      th = resizer.parentElement;
+      x = e.clientX;
+      w = th.offsetWidth;
+
+      resizer.classList.add('resizing');
+      
+      // ポインターのキャプチャ（ドラッグ中に要素外に指/カーソルが出ても追従）
+      if (resizer.setPointerCapture) {
+        resizer.setPointerCapture(e.pointerId);
+      }
+
+      resizer.addEventListener('pointermove', pointerMoveHandler);
+      resizer.addEventListener('pointerup', pointerUpHandler);
+      resizer.addEventListener('pointercancel', pointerUpHandler);
+    };
+
+    const pointerMoveHandler = function (e) {
+      const dx = e.clientX - x;
+      const newWidth = Math.max(50, w + dx); // 最小幅 50px
+      th.style.width = `${newWidth}px`;
+    };
+
+    const pointerUpHandler = function (e) {
+      resizer.classList.remove('resizing');
+      
+      if (resizer.releasePointerCapture) {
+        resizer.releasePointerCapture(e.pointerId);
+      }
+
+      resizer.removeEventListener('pointermove', pointerMoveHandler);
+      resizer.removeEventListener('pointerup', pointerUpHandler);
+      resizer.removeEventListener('pointercancel', pointerUpHandler);
+    };
+
+    resizer.addEventListener('pointerdown', pointerDownHandler);
+  });
+}
+
+// ヘルパー関数: 動画（タイトル・キーワード）がキーワードリストのいずれかに含まれるか判定
+function matchesAnyKeyword(item, keywordsList) {
+  if (!Array.isArray(keywordsList) || keywordsList.length === 0) return false;
+
+  const validKeywords = keywordsList
+    .map(k => String(k || '').trim().toLowerCase())
+    .filter(Boolean); // 空文字の定義を除外
+
+  if (validKeywords.length === 0) return false;
+
+  const titleJa = String(item.title_ja || '').toLowerCase();
+  const origTitle = String(item.original_title || '').toLowerCase();
+  const commaKw = String(item.keywords_comma || '').toLowerCase();
+
+  return validKeywords.some(kw => {
+    const inRaw = Array.isArray(item.raw_keywords) && item.raw_keywords.some(k => 
+      String(k || '').toLowerCase().includes(kw)
+    );
+    return inRaw || titleJa.includes(kw) || origTitle.includes(kw) || commaKw.includes(kw);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+window.addEventListener('DOMContentLoaded', loadVideoData);
+</script>
+</body>
+</html>
