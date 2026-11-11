@@ -246,7 +246,7 @@ def validate_chunk_data(data, expected_ids: set, is_first_chunk: bool = False) -
 def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_idx: int = None, model_name: str = None):
     global current_key_index, current_model_index, client
     
-    max_retries = 5
+    max_retries = 25
     base_backoff = 5
 
     time.sleep(1)
