@@ -40,6 +40,34 @@
       gap: 8px;
       flex-wrap: wrap;
     }
+
+    /* カテゴリー・タグ一覧全体の縦積みレイアウト */
+    #category-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #category-buttons.collapsed {
+      display: none;
+    }
+
+    /* 大分類ラベル（検索には使わない見出しテキスト） */
+    .category-group-label {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 6px;
+      padding-left: 6px;
+      border-left: 3px solid #333;
+      line-height: 1.2;
+    }
+
+    /* 各グループ内のタグボタン横並びコンテナ */
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
     
     /* Buttons Styling */
     .btn {
@@ -87,6 +115,7 @@
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 700px; /* ★追加：一覧の最下部に500pxの余白を固定 */
     }
     table {
       width: 100%;
@@ -193,6 +222,24 @@ td.cell-link:hover {
     .resizer.resizing {
       background: #2563eb; /* ホバー時・ドラッグ中に青線を表示 */
     }
+
+    /* アコーディオン開閉用スタイル */
+    .accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .accordion-header:hover {
+      color: #333;
+    }
+    .accordion-header.collapsed {
+      margin-bottom: 0;
+    }
+    .button-group.collapsed {
+      display: none;
+    }
   </style>
 </head>
 
@@ -261,7 +308,10 @@ td.cell-link:hover {
   
   <!-- Category / Year Filter Buttons -->
   <div class="control-section">
-    <div class="control-title">Categories & Years</div>
+    <div class="control-title accordion-header" id="category-accordion-header" onclick="toggleCategoryAccordion()">
+      <span>Categories & Years</span>
+      <span id="category-accordion-icon">▼</span>
+    </div>
     <div class="button-group" id="category-buttons">
       <!-- JavaScriptにより動的生成されます -->
     </div>
@@ -292,16 +342,17 @@ td.cell-link:hover {
 // Column Configuration Definition
 // ==========================================
 const COLUMN_DEFS = [
-  { key: 'published_at', label: 'Published Date', defaultVisible: true },
-  { key: 'original_title', label: 'Original Title', defaultVisible: true },
+  { key: 'published_at', label: 'Date', defaultVisible: true, width: '80px' },
+  { key: 'original_title', label: 'Original Title', defaultVisible: false },
   { key: 'title_ja', label: 'Title (JA)', defaultVisible: true },
   { key: 'title_en', label: 'Title (EN)', defaultVisible: false },
   { key: 'title_ko', label: 'Title (KO)', defaultVisible: false },
   { key: 'title_zh_tw', label: 'Title (ZH-TW)', defaultVisible: false },
   { key: 'title_id', label: 'Title (ID)', defaultVisible: false },
   { key: 'title_pt', label: 'Title (PT)', defaultVisible: false },
-  { key: 'keywords_comma', label: 'Keywords (Comma)', defaultVisible: false },
-  { key: 'keywords_lines', label: 'Keywords (Multiline)', defaultVisible: false }
+  //{ key: 'keywords_comma', label: 'Keywords (Comma)', defaultVisible: false },
+  //{ key: 'keywords_lines', label: 'Keywords (Multiline)', defaultVisible: false }
+  { key: 'keywords_lines', label: 'Tags', defaultVisible: false }
 ];
 
 // State Variables
@@ -309,13 +360,59 @@ let allVideos = [];
 let tagsData = {};
 let currentFilter = { type: 'ALL', value: 'ALL' };
 let activeColumns = {};
+let columnWidths = {}; // ★追加：各列の現在の幅を保持
 let currentSortKey = 'published_at';
 let currentSortOrder = 'desc';
 
-// Initialize Default Column Visibility
+// Initialize Default Column Visibility & Widths
 COLUMN_DEFS.forEach(col => {
   activeColumns[col.key] = col.defaultVisible;
+  if (col.width) {
+    columnWidths[col.key] = col.width; // ★追加：初期幅をセット
+  }
 });
+
+// ==========================================
+// URL Parameter Handling (?v=...)
+// ==========================================
+function getUrlSearchWord() {
+  const params = new URLSearchParams(window.location.search);
+  let word = params.get('v');
+
+  // 万が一 ?v=#○○ の形でアクセスされた場合も救済する
+  if ((!word || word === '') && window.location.hash) {
+    if (params.has('v')) {
+      word = decodeURIComponent(window.location.hash);
+    }
+  }
+  return word ? word.trim() : '';
+}
+
+function applyInitialUrlFilter(word) {
+  if (!word) return;
+
+  const cleanWord = word.replace(/^#/, '').toLowerCase();
+  const hashWord = `#${cleanWord}`;
+
+  // tags.json のタグ名（#2026, #KITTY SWAG 等）と一致するか判定
+  if (tagsData && typeof tagsData === 'object') {
+    for (const groupKey of Object.keys(tagsData)) {
+      const subGroup = tagsData[groupKey];
+      if (subGroup && typeof subGroup === 'object' && !Array.isArray(subGroup)) {
+        const matchedTag = Object.keys(subGroup).find(t =>
+          t.toLowerCase() === hashWord || t.toLowerCase() === cleanWord
+        );
+        if (matchedTag) {
+          currentFilter = { type: 'TAG', value: matchedTag };
+          return;
+        }
+      }
+    }
+  }
+
+  // 一致するタグがなければフリーワード検索として扱う
+  currentFilter = { type: 'SEARCH', value: word.replace(/^#/, '') };
+}
 
 // ==========================================
 // Data Fetching & Processing
@@ -323,7 +420,7 @@ COLUMN_DEFS.forEach(col => {
 async function loadVideoData() {
   const statusEl = document.getElementById('status');
   const tableEl = document.getElementById('data-table');
-  
+
   try {
     const [tagsResult, videoResult] = await Promise.allSettled([
       fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
@@ -347,14 +444,29 @@ async function loadVideoData() {
     }
 
     allVideos = normalizeData(rawData);
-    
+
+    // URLに ?v= が指定されていれば初期フィルターに反映
+    const initialWord = getUrlSearchWord();
+    if (initialWord) {
+      applyInitialUrlFilter(initialWord);
+    }
+
     renderCategoryButtons();
     renderColumnButtons();
 
+    // ★追加：?v= パラメータがある場合は初期非表示（閉じ）、ない場合は表示（開き）
+    const hasVParam = new URLSearchParams(window.location.search).has('v') || Boolean(getUrlSearchWord());
+    toggleCategoryAccordion(!hasVParam);
+
     if (statusEl) statusEl.style.display = 'none';
     if (tableEl) tableEl.style.display = 'table';
-    
+
     updateAndRender();
+
+    // ★追加：URLに ?v= が指定されていた場合は一覧までスクロール
+    if (initialWord) {
+      scrollToTable();
+    }
 
   } catch (err) {
     console.error(err);
@@ -370,8 +482,8 @@ function normalizeData(rawData) {
   const list = [];
   if (!rawData) return list;
 
-  const entries = Array.isArray(rawData) 
-    ? rawData 
+  const entries = Array.isArray(rawData)
+    ? rawData
     : Object.entries(rawData).map(([id, val]) => ({ id, ...(typeof val === 'object' && val !== null ? val : {}) }));
 
   entries.forEach(item => {
@@ -380,7 +492,7 @@ function normalizeData(rawData) {
     const id = item.id || item.video_id || '';
     const titles = item.title || {};
     const keywords = item.keywords || item.tags || [];
-    
+
     let rawKeywordsArray = [];
     if (Array.isArray(keywords)) {
       rawKeywordsArray = keywords.map(k => String(k || '').trim()).filter(Boolean);
@@ -448,46 +560,66 @@ function renderCategoryButtons() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. ALL ボタン
-  createFilterButton(container, 'ALL', 'ALL', 'ALL', currentFilter.type === 'ALL');
+  // 1. ALL ボタン（単独行）
+  const allRow = document.createElement('div');
+  allRow.className = 'tag-row';
+  createFilterButton(allRow, 'ALL', 'ALL', 'ALL', currentFilter.type === 'ALL');
+  container.appendChild(allRow);
 
-  // 2. データから「年」を自動抽出して降順ソート
-  const yearsSet = new Set();
-  allVideos.forEach(item => {
-    if (item.published_at) {
-      const match = String(item.published_at).match(/\b(20\d{2})\b/);
-      if (match) yearsSet.add(match[1]);
-    }
-  });
-  const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
-  
-  sortedYears.forEach(year => {
-    const isActive = currentFilter.type === 'YEAR' && currentFilter.value === year;
-    createFilterButton(container, year, 'YEAR', year, isActive);
-  });
-
-  // 3. tags.json から 大分類 と タグ ボタンを生成 (ネスト構造に対応)
+  // 2. tags.json から「大分類ラベル」と「タグボタン群」をブロックごとに生成
   if (tagsData && typeof tagsData === 'object' && !Array.isArray(tagsData)) {
     Object.keys(tagsData).forEach(groupKey => {
-      // 大分類ボタン
-      const isGroupActive = currentFilter.type === 'GROUP' && currentFilter.value === groupKey;
-      createFilterButton(container, groupKey, 'GROUP', groupKey, isGroupActive);
-
       const subGroup = tagsData[groupKey];
+      let tagKeys = [];
+
       if (subGroup && typeof subGroup === 'object' && !Array.isArray(subGroup)) {
-        // オブジェクト構造の場合、キー（#PERSES MUSIC VIDEO など）をタグボタンにする
-        Object.keys(subGroup).forEach(tag => {
-          const isTagActive = currentFilter.type === 'TAG' && currentFilter.value === tag;
-          createFilterButton(container, tag, 'TAG', tag, isTagActive);
-        });
+        tagKeys = Object.keys(subGroup);
       } else if (Array.isArray(subGroup)) {
-        // 配列構造の場合のフォールバック
-        subGroup.forEach(tag => {
-          const isTagActive = currentFilter.type === 'TAG' && currentFilter.value === tag;
-          createFilterButton(container, tag, 'TAG', tag, isTagActive);
-        });
+        tagKeys = subGroup;
       }
+
+      if (tagKeys.length === 0) return;
+
+      // 大分類ごとのブロック（ここで改行される）
+      const groupBlock = document.createElement('div');
+      groupBlock.className = 'category-group-block';
+
+      // 大分類ラベル（クリックイベントなしのテキスト要素）
+      const labelEl = document.createElement('div');
+      labelEl.className = 'category-group-label';
+      labelEl.textContent = groupKey;
+      groupBlock.appendChild(labelEl);
+
+      // タグボタン群のコンテナ（ラベルの下に改行して横並び表示）
+      const tagRow = document.createElement('div');
+      tagRow.className = 'tag-row';
+
+      tagKeys.forEach(tag => {
+        const isTagActive = currentFilter.type === 'TAG' && currentFilter.value === tag;
+        createFilterButton(tagRow, tag, 'TAG', tag, isTagActive);
+      });
+
+      groupBlock.appendChild(tagRow);
+      container.appendChild(groupBlock);
     });
+  }
+}
+
+// アコーディオンの開閉制御（forceOpen: true=開く, false=閉じる, 未指定=反転）
+function toggleCategoryAccordion(forceOpen) {
+  const header = document.getElementById('category-accordion-header');
+  const body = document.getElementById('category-buttons');
+  const icon = document.getElementById('category-accordion-icon');
+  if (!header || !body) return;
+
+  const shouldOpen = typeof forceOpen === 'boolean'
+    ? forceOpen
+    : body.classList.contains('collapsed');
+
+  header.classList.toggle('collapsed', !shouldOpen);
+  body.classList.toggle('collapsed', !shouldOpen);
+  if (icon) {
+    icon.textContent = shouldOpen ? '▼' : '▶';
   }
 }
 
@@ -510,7 +642,19 @@ function filterCategory(type, value, clickedBtn) {
     clickedBtn.classList.add('active');
   }
 
+  // URLパラメータを現在の選択状態と同期（# を除外）
+  const url = new URL(window.location.href);
+  url.hash = '';
+  if (type === 'ALL') {
+    url.searchParams.delete('v');
+  } else {
+    const urlValue = String(value).replace(/^#/, '');
+    url.searchParams.set('v', urlValue);
+  }
+  window.history.replaceState(null, '', url.toString());
+
   updateAndRender();
+  scrollToTable(); // ★追加：絞り込み後に一覧までスクロール
 }
 
 // Sort Handler
@@ -534,39 +678,13 @@ function updateAndRender() {
 
     if (type === 'ALL') return true;
 
-    // 年判定
-    if (type === 'YEAR') {
-      return String(item.published_at || '').includes(String(value));
-    }
-
-    // tags.json 大分類判定 (グループ傘下の全タグキーワードのいずれかに合致)
-    if (type === 'GROUP') {
-      const groupObj = tagsData && tagsData[value];
-      if (!groupObj) return false;
-
-      let keywordsToMatch = [];
-      if (Array.isArray(groupObj)) {
-        keywordsToMatch = groupObj;
-      } else if (typeof groupObj === 'object') {
-        Object.values(groupObj).forEach(arr => {
-          if (Array.isArray(arr)) {
-            keywordsToMatch.push(...arr);
-          }
-        });
-      }
-
-      return matchesAnyKeyword(item, keywordsToMatch);
-    }
-
-    // 特定タグ判定 (#PERSES MUSIC VIDEO など)
+    // 特定タグ判定 (#2026, #PERSES MUSIC VIDEO など)
     if (type === 'TAG') {
       let targetKeywords = [];
       if (tagsData && typeof tagsData === 'object') {
         Object.values(tagsData).forEach(groupObj => {
-          if (groupObj && typeof groupObj === 'object' && groupObj[value]) {
-            if (Array.isArray(groupObj[value])) {
-              targetKeywords = groupObj[value];
-            }
+          if (groupObj && typeof groupObj === 'object' && Array.isArray(groupObj[value])) {
+            targetKeywords = groupObj[value];
           }
         });
       }
@@ -576,6 +694,11 @@ function updateAndRender() {
       } else {
         return matchesAnyKeyword(item, [value]);
       }
+    }
+
+    // フリーワード検索判定
+    if (type === 'SEARCH') {
+      return matchesAnyKeyword(item, [value]);
     }
 
     return true;
@@ -598,27 +721,31 @@ function updateAndRender() {
     COLUMN_DEFS.forEach(col => {
       if (activeColumns[col.key]) {
         const th = document.createElement('th');
+        
+        // ★追加：初期幅またはリサイズ済みの幅を適用
+        if (columnWidths[col.key]) {
+          th.style.width = columnWidths[col.key];
+        }
+
         const isSorted = currentSortKey === col.key;
         const icon = isSorted ? (currentSortOrder === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
-        
+
         th.innerHTML = `<span>${escapeHtml(col.label)}</span><span class="sort-icon">${icon}</span>`;
         if (isSorted) th.classList.add('sorted');
         th.onclick = (e) => {
-          // ドラッグ操作時はソートを発動させない
           if (e.target.classList.contains('resizer')) return;
           sortBy(col.key);
         };
 
-        // リサイズ用ツマミ（Handle）を追加
         const resizer = document.createElement('div');
         resizer.className = 'resizer';
+        resizer.dataset.colKey = col.key; // ★追加：どの列のハンドルか識別用
         th.appendChild(resizer);
 
         theadTr.appendChild(th);
       }
     });
 
-    // ヘッダー描画後にドラッグリサイズ機能を有効化
     enableColumnResize();
   }
 
@@ -629,26 +756,31 @@ function updateAndRender() {
 
     filtered.forEach(video => {
       const tr = document.createElement('tr');
-      // ※ tr.onclick は削除し、行全体のクリック遷移を無効化
 
       COLUMN_DEFS.forEach(col => {
         if (activeColumns[col.key]) {
           const td = document.createElement('td');
           const val = video[col.key] || '';
-          
+
           if (col.key === 'keywords_lines') {
             td.className = 'cell-multiline';
           }
           td.textContent = val;
           td.title = val;
 
-          // ★ Published Date (published_at) セルのみにクリック遷移を設定
-          // ★ Published Date (published_at) セルをクリック時に新しいタブで開く
+          // Published Date セルのみクリック遷移を設定
           if (col.key === 'published_at') {
             td.classList.add('cell-link');
             td.onclick = (e) => {
               e.stopPropagation();
-              window.open(`/index.html?v=${encodeURIComponent(video.id)}`, '_blank');
+              const targetUrl = `/index.html?v=${encodeURIComponent(video.id)}`;
+              const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+              if (isStandalone) {
+                window.location.href = targetUrl;
+              } else {
+                window.open(targetUrl, '_blank');
+              }
             };
           }
 
@@ -661,26 +793,71 @@ function updateAndRender() {
   }
 }
 
+// 一覧テーブルの位置までスムーズにスクロールする
+function scrollToTable() {
+  const tableContainer = document.querySelector('.table-container');
+  if (tableContainer) {
+    tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ヘルパー関数：全タイトル・キーワードから部分一致検索を行う
+function matchesAnyKeyword(item, keywordsList) {
+  if (!Array.isArray(keywordsList) || keywordsList.length === 0) return false;
+
+  const validKeywords = keywordsList
+    .map(k => String(k || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  if (validKeywords.length === 0) return false;
+
+  const searchTargets = [
+    item.original_title,
+    item.title_ja,
+    item.title_en,
+    item.title_ko,
+    item.title_zh_tw,
+    item.title_id,
+    item.title_pt,
+    item.keywords_comma
+  ].map(val => String(val || '').toLowerCase());
+
+  return validKeywords.some(kw => {
+    const inRaw = Array.isArray(item.raw_keywords) && item.raw_keywords.some(k =>
+      String(k || '').toLowerCase().includes(kw)
+    );
+    return inRaw || searchTargets.some(target => target.includes(kw));
+  });
+}
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // ==========================================
 // Column Drag Resize Functionality (PC & Mobile Touch Supported)
 // ==========================================
 function enableColumnResize() {
   const resizers = document.querySelectorAll('.resizer');
-  
+
   resizers.forEach(resizer => {
     let x = 0;
     let w = 0;
     let th = null;
 
     const pointerDownHandler = function (e) {
-      e.stopPropagation(); // ソートや他イベントの発生を防止
+      e.stopPropagation();
       th = resizer.parentElement;
       x = e.clientX;
       w = th.offsetWidth;
 
       resizer.classList.add('resizing');
-      
-      // ポインターのキャプチャ（ドラッグ中に要素外に指/カーソルが出ても追従）
+
       if (resizer.setPointerCapture) {
         resizer.setPointerCapture(e.pointerId);
       }
@@ -692,13 +869,19 @@ function enableColumnResize() {
 
     const pointerMoveHandler = function (e) {
       const dx = e.clientX - x;
-      const newWidth = Math.max(50, w + dx); // 最小幅 50px
+      const newWidth = Math.max(50, w + dx);
       th.style.width = `${newWidth}px`;
+      
+      // ★追加：変更後の幅を保存
+      const colKey = resizer.dataset.colKey;
+      if (colKey) {
+        columnWidths[colKey] = `${newWidth}px`;
+      }
     };
 
     const pointerUpHandler = function (e) {
       resizer.classList.remove('resizing');
-      
+
       if (resizer.releasePointerCapture) {
         resizer.releasePointerCapture(e.pointerId);
       }
@@ -710,37 +893,6 @@ function enableColumnResize() {
 
     resizer.addEventListener('pointerdown', pointerDownHandler);
   });
-}
-
-// ヘルパー関数: 動画（タイトル・キーワード）がキーワードリストのいずれかに含まれるか判定
-function matchesAnyKeyword(item, keywordsList) {
-  if (!Array.isArray(keywordsList) || keywordsList.length === 0) return false;
-
-  const validKeywords = keywordsList
-    .map(k => String(k || '').trim().toLowerCase())
-    .filter(Boolean); // 空文字の定義を除外
-
-  if (validKeywords.length === 0) return false;
-
-  const titleJa = String(item.title_ja || '').toLowerCase();
-  const origTitle = String(item.original_title || '').toLowerCase();
-  const commaKw = String(item.keywords_comma || '').toLowerCase();
-
-  return validKeywords.some(kw => {
-    const inRaw = Array.isArray(item.raw_keywords) && item.raw_keywords.some(k => 
-      String(k || '').toLowerCase().includes(kw)
-    );
-    return inRaw || titleJa.includes(kw) || origTitle.includes(kw) || commaKw.includes(kw);
-  });
-}
-
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 window.addEventListener('DOMContentLoaded', loadVideoData);
