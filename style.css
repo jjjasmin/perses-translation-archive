@@ -205,7 +205,7 @@
       color: #8a7a80;
       border: 1.5px solid #f8c8d8;
       border-radius: 12px;
-      width: 32px;
+      width: 28px;
       height: 32px;
       padding: 0;
       display: flex;
@@ -242,9 +242,9 @@
       stroke: #f8c8d8; /* 非アクティブ時は枠線と同じ色にする */
     }
 
-    .theme-btn {
+/*    .theme-btn {
       font-size: 0.85rem;
-    }
+    }*/
       a.layout-btn,
       a.pink-btn {
       text-decoration: none;
@@ -1171,15 +1171,14 @@ body.dark-mode .search-clear-btn:hover {
           transform: scale(0.97);
         }
 
-        #theme-toggle-btn {
+/*        #theme-toggle-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          /* サイズや余白は好みに合わせて調整してください */
           width: 32px;
           height: 32px;
           padding: 0;
-        }
+        }*/
 
         /* ボタン内のSVGアイコンの位置補正 */
         #theme-toggle-btn svg {
@@ -1302,13 +1301,13 @@ body.dark-mode .search-clear-btn:hover {
         /* 概要ボックス右上の学習モード(study.html)遷移ボタン */
         .description-study-btn {
           position: absolute;
-          top: 8px;
-          right: 8px;
+          top: 2px;
+          right: 2px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          width: 25px;
+          height: 25px;
           background-color: #ffffff;
           color: #007bff;
           border: 1px solid #d0e1f9;

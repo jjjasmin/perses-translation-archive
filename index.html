@@ -202,6 +202,7 @@
           <option value="zh-TW">繁體中文 (zh-TW)</option>
           <option value="id">Bahasa Indonesia (ID)</option>
           <option value="pt">Português (PT)</option>
+          <option value="ad">Additional (ADMIN)</option>
           <!-- 今後 th や zh などが増えた場合も option を追加するだけで対応可能 -->
         </select>
       </div>
@@ -1715,10 +1716,18 @@ document.addEventListener('click', (e) => {
       let descriptionHtml = '';
       if (description && description.trim() !== '') {
         const studyUrl = currentVideoId ? `study.html?v=${encodeURIComponent(currentVideoId)}` : 'study.html';
+        const adminUrl = currentVideoId ? `admin.html?v=${encodeURIComponent(currentVideoId)}` : 'admin.html';
+        const viewerUrl = currentVideoId ? `admin_viewer.html?v=${encodeURIComponent(currentVideoId)}` : 'admin_viewer.html';
         
         descriptionHtml = `
           <div class="video-description-box">
-            <a href="${studyUrl}" class="description-study-btn" title="学習モードで開く（拡大）">
+            <a href="${adminUrl}" class="description-study-btn" style="right: 56px;" title="編集モードで開く">
+              ⚙️
+            </a>
+            <a href="${viewerUrl}" class="description-study-btn" style="right: 29px;"  title="閲覧モードで開く">
+              👁️
+            </a>
+            <a href="${studyUrl}" class="description-study-btn" title="学習モードで開く">
               <!-- 画面拡大（フルスクリーン/外部起動）をイメージしたSVGアイコン -->
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 3 21 3 21 9"></polyline>

@@ -31,6 +31,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
       background: #1e293b;
       color: #fff;
       padding: 12px 16px;
@@ -115,6 +117,7 @@
     .header-actions {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
     }
 
@@ -154,6 +157,19 @@
     }
     .download-btn.videos-btn:hover {
       background: #4f46e5;
+    }
+
+    .download-btn.ad-btn {
+      background: #f59e0b;
+      color: #1e293b;
+    }
+    .download-btn.ad-btn:hover {
+      background: #d97706;
+      color: #fff;
+    }
+    .download-btn.ad-btn:disabled {
+      background: #9ca3af;
+      color: #fff;
     }
 
     /* ファイル・動画選択コントロールパネル */
@@ -204,6 +220,24 @@
       background: #2d2d2d;
       border-color: #444;
       color: #fff;
+    }
+
+    .lang-select {
+      padding: 5px 8px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      outline: none;
+      background: #f8fafc;
+      color: #1e293b;
+      cursor: pointer;
+    }
+
+    body.dark-mode .lang-select {
+      background: #2d2d2d;
+      border-color: #555;
+      color: #f1f5f9;
     }
 
     .file-input-direct {
@@ -293,11 +327,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
       background: #fff;
       padding: 10px 14px;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
-      /* ▼ 追加: スクロール時に画面上部に固定する設定 */
       position: sticky;
       top: 0px;
       z-index: 100;
@@ -423,6 +458,8 @@
 
     body.dark-mode .action-mini-btn {
       background: #2d2d2d;
+      color: #e2e8f0;
+      border-color: #475569;
     }
     body.dark-mode .merge-btn:disabled {
       background: #1f2937;
@@ -526,7 +563,6 @@
       gap: 6px;
     }
 
-    /* ▼ 追加: 頻出キーワードコンテナのスクロール表示設定 */
     #common-keywords-container {
       margin-top: 8px;
       display: flex;
@@ -551,7 +587,7 @@
       resize: vertical;
       line-height: 1.4;
       min-height: 36px;
-      overflow-y: hidden; /* スクロールバーを非表示にして高さに任せる */
+      overflow-y: hidden;
     }
 
     body.dark-mode .card-input {
@@ -598,11 +634,10 @@
 
     /* PC表示時：左端に60pxの余白を設けてメニューと重ならないようにする */
     @media screen and (min-width: 769px) {
-        /* ページのメインコンテンツを囲む要素のCSSクラス/IDを指定してください */
-        .container {
-            margin-left: 60px; /* サイドバー初期幅と同じ余白をセット */
-            transition: margin-left 0.3s ease; /* スムーズに動かしたい場合 */
-        }
+      .container {
+        margin-left: 60px;
+        transition: margin-left 0.3s ease;
+      }
     }
   </style>
 </head>
@@ -735,6 +770,7 @@
     <div class="header-actions">
       <button class="theme-btn" id="theme-toggle-btn">🌙</button>
       <button class="download-btn videos-btn" id="download-videos-btn" disabled>📋 videos.json 出力</button>
+      <button class="download-btn ad-btn" id="add-ad-json-btn" disabled>➕ ad追加してJSON出力</button>
       <button class="download-btn" id="download-json-btn" disabled>💾 修正済みJSONを出力</button>
     </div>
   </div>
@@ -762,7 +798,9 @@
         <div id="youtube-player"></div>
       </div>
       <div class="video-meta-info" id="video-meta-info">
-
+        <div style="font-size: 0.72rem; font-weight: bold; color: #64748b; margin-bottom: 2px;" id="meta-title-lang-label">
+          タイトル (ja)
+        </div>
         <textarea class="card-input meta-title-input" 
           id="meta-title-input" 
           rows="1" 
@@ -776,19 +814,31 @@
           <label style="font-weight: bold; font-size: 0.8rem;">keywords 編集（カンマ区切り）:</label>
           <input type="text" id="keywords-input" class="keywords-input" placeholder="#JUNG, #NAY, #KRITTIN..." oninput="updateKeywords(this.value)">
 
-          <!-- ▼ 追加: 頻出キーワードボタン表示コンテナ -->
-          <div id="common-keywords-container" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
-            <!-- JavaScriptでボタンが動的に生成されます -->
-          </div>
+          <!-- 頻出キーワードボタン表示コンテナ -->
+          <div id="common-keywords-container"></div>
         </div>
       </div>
     </div>
 
     <!-- 右側: 発言者編集付き字幕カードリスト -->
     <div class="transcript-list-area">
-      <!-- ツールバー（一括クリアなど） -->
+      <!-- ツールバー（言語切替・一括クリアなど） -->
       <div class="editor-toolbar" id="editor-toolbar" style="display: none;">
         <span style="font-size: 0.82rem; font-weight: bold; color: #666;" id="card-count-label">字幕数: 0</span>
+
+        <!-- ▼ 追加: 編集言語切り替えプルダウン -->
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <label for="lang-select" style="font-size: 0.78rem; font-weight: bold; color: #475569;">編集言語:</label>
+          <select id="lang-select" class="lang-select" onchange="changeEditLanguage(this.value)">
+            <option value="ja">ja (日本語)</option>
+            <option value="ad">ad (管理用・日本語2)</option>
+            <option value="en">en (English)</option>
+            <option value="ko">ko (한국어)</option>
+            <option value="zh-TW">zh-TW (繁體中文)</option>
+            <option value="id">id (Bahasa Indonesia)</option>
+            <option value="pt">pt (Português)</option>
+          </select>
+        </div>
         
         <div style="display: flex; gap: 4px; align-items: center;">
           <span style="font-size: 0.75rem; font-weight: bold; color: #666;">全体時間調整:</span>
@@ -813,28 +863,38 @@
     </div>
   </div>
 </div>
+
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     // デフォルトのクイック選択用メンバーリスト
     let speakerOptions = ['JUNG', 'NAY', 'KRITTIN', 'PALM', 'PLUGGY', 'PERSES', 'PIECES'];
     let tagsDataGlobal = {}; // tags.json のデータを保持
 
+    // 言語表示名マップ
+    const LANGUAGE_LABELS = {
+      'ja': 'ja (日本語)',
+      'ad': 'ad (管理用・日本語2)',
+      'en': 'en (English)',
+      'ko': 'ko (한국어)',
+      'zh-TW': 'zh-TW (繁體中文)',
+      'id': 'id (Bahasa Indonesia)',
+      'pt': 'pt (Português)'
+    };
+
     // 現在編集中のJSONデータおよびvideos.jsonの参照
     let currentData = null;
     let videosData = []; // videos.json の全データ
     let currentVideoMeta = null; // 現在選択中の動画の videos.json エントリ
+    let currentLang = 'ja'; // 現在編集中の言語キー
 
     let player = null;
     let isApiReady = false;
     let syncInterval = null;
     let activeIndex = -1;
     let currentLoadedFileName = "updated_transcript.json";
-    // ▼ 追加: 自動スクロール状態の管理変数
     let isAutoScrollEnabled = true;
 
-    // --- 1. ハンバーガーメニュー ＆ テーマ切り替え ---
-    
-
+    // --- 1. テーマ切り替え ---
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     themeToggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('dark-mode');
@@ -880,102 +940,96 @@
     }
 
     function updateActiveCard() {
-          if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
-          const currentTime = player.getCurrentTime();
-          let currentIndex = -1;
+      if (!player || typeof player.getCurrentTime !== 'function' || !currentData || !currentData.transcript) return;
+      const currentTime = player.getCurrentTime();
+      let currentIndex = -1;
 
-          for (let i = 0; i < currentData.transcript.length; i++) {
-            const start = parseFloat(currentData.transcript[i].start || 0);
-            const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
-            if (currentTime >= start && currentTime < nextStart) {
-              currentIndex = i;
-              break;
-            }
-          }
-
-          if (currentIndex !== -1 && currentIndex !== activeIndex) {
-            activeIndex = currentIndex;
-            const cards = document.querySelectorAll('.transcript-card');
-            cards.forEach((card, idx) => {
-              if (idx === activeIndex) {
-                card.classList.add('active');
-                // ▼ 修正: isAutoScrollEnabled が true の時のみスクロール
-                if (isAutoScrollEnabled) {
-                  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              } else {
-                card.classList.remove('active');
-              }
-            });
-          }
-        }
-
-// --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
-function init() {
-    Promise.all([
-      fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
-      fetch('data/videos.json').then(res => res.ok ? res.json() : [])
-    ])
-    .then(([tags, videos]) => {
-      tagsDataGlobal = tags;
-      videosData = videos;
-      document.getElementById('download-videos-btn').disabled = false;
-
-      // tags.json に基づいてキーワード選択ボタン群を初期生成
-      renderCommonKeywords();
-
-      const select = document.getElementById('video-select');
-      select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
-
-      // id の昇順（アルファベット・数値順）にソートしてドロップダウンを生成
-      const sortedVideos = [...videos].sort((a, b) => {
-        return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
-      });
-
-      sortedVideos.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v.file;
-        const titleText = (typeof v.title === 'object') ? (v.title.ja || '') : (v.title || '');
-        opt.textContent = `${titleText} (${v.id})`;
-        select.appendChild(opt);
-      });
-
-      // ▼ 追加: URLパラメータ (?v=XXX) のチェックと初期ロード
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramV = urlParams.get('v');
-
-      if (paramV) {
-        // vパラメータが id または file(video_XXX.json) のいずれかにマッチするものを検索
-        const matchedVideo = videosData.find(v => v.id === paramV || v.file === paramV || v.file === `video_${paramV}.json`);
-        if (matchedVideo) {
-          select.value = matchedVideo.file;
-          currentLoadedFileName = matchedVideo.file;
-          currentVideoMeta = matchedVideo;
-          loadJsonFile(matchedVideo.file);
+      for (let i = 0; i < currentData.transcript.length; i++) {
+        const start = parseFloat(currentData.transcript[i].start || 0);
+        const nextStart = (i < currentData.transcript.length - 1) ? parseFloat(currentData.transcript[i + 1].start) : Infinity;
+        if (currentTime >= start && currentTime < nextStart) {
+          currentIndex = i;
+          break;
         }
       }
 
-      select.addEventListener('change', (e) => {
-        if (e.target.value) {
-          currentLoadedFileName = e.target.value;
-          currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
-
-          // ▼ 追加: ドロップダウン変更時にURLの?v=XXXを更新（リロードなし）
-          if (currentVideoMeta && currentVideoMeta.id) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('v', currentVideoMeta.id);
-            window.history.pushState({}, '', newUrl);
+      if (currentIndex !== -1 && currentIndex !== activeIndex) {
+        activeIndex = currentIndex;
+        const cards = document.querySelectorAll('.transcript-card');
+        cards.forEach((card, idx) => {
+          if (idx === activeIndex) {
+            card.classList.add('active');
+            if (isAutoScrollEnabled) {
+              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          } else {
+            card.classList.remove('active');
           }
+        });
+      }
+    }
 
-          loadJsonFile(e.target.value);
+    // --- 3. videos.json の読み込み ＆ 選択時のイベントハンドラ ---
+    function init() {
+      Promise.all([
+        fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
+        fetch('data/videos.json').then(res => res.ok ? res.json() : [])
+      ])
+      .then(([tags, videos]) => {
+        tagsDataGlobal = tags;
+        videosData = videos;
+        document.getElementById('download-videos-btn').disabled = false;
+
+        renderCommonKeywords();
+
+        const select = document.getElementById('video-select');
+        select.innerHTML = '<option value="">-- 動画を選択してください --</option>';
+
+        const sortedVideos = [...videos].sort((a, b) => {
+          return String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        sortedVideos.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.file;
+          const titleText = (typeof v.title === 'object' && v.title !== null) ? (v.title.ja || '') : (v.title || '');
+          opt.textContent = `${titleText} (${v.id})`;
+          select.appendChild(opt);
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramV = urlParams.get('v');
+
+        if (paramV) {
+          const matchedVideo = videosData.find(v => v.id === paramV || v.file === paramV || v.file === `video_${paramV}.json`);
+          if (matchedVideo) {
+            select.value = matchedVideo.file;
+            currentLoadedFileName = matchedVideo.file;
+            currentVideoMeta = matchedVideo;
+            loadJsonFile(matchedVideo.file);
+          }
         }
+
+        select.addEventListener('change', (e) => {
+          if (e.target.value) {
+            currentLoadedFileName = e.target.value;
+            currentVideoMeta = videosData.find(v => v.file === e.target.value) || null;
+
+            if (currentVideoMeta && currentVideoMeta.id) {
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.set('v', currentVideoMeta.id);
+              window.history.pushState({}, '', newUrl);
+            }
+
+            loadJsonFile(e.target.value);
+          }
+        });
+      })
+      .catch(err => {
+        console.error("データの読み込み失敗:", err);
+        document.getElementById('video-select').innerHTML = '<option value="">データの読込失敗</option>';
       });
-    })
-    .catch(err => {
-      console.error("データの読み込み失敗:", err);
-      document.getElementById('video-select').innerHTML = '<option value="">データの読込失敗</option>';
-    });
-  }
+    }
 
     // 直接ファイル選択
     document.getElementById('direct-file-input').addEventListener('change', (e) => {
@@ -1007,36 +1061,94 @@ function init() {
         });
     }
 
+    // 読み込んだJSON内の言語キーもプルダウン選択肢に反映
+    function syncLanguageSelectOptions(data) {
+      const langSelect = document.getElementById('lang-select');
+      if (!langSelect) return;
+
+      const defaultKeys = ['ja', 'ad', 'en', 'ko', 'zh-TW', 'id', 'pt'];
+      const keySet = new Set(defaultKeys);
+
+      if (data && typeof data.title === 'object' && data.title !== null) {
+        Object.keys(data.title).forEach(k => keySet.add(k));
+      }
+      if (data && Array.isArray(data.transcript)) {
+        data.transcript.forEach(item => {
+          if (item.translations && typeof item.translations === 'object') {
+            Object.keys(item.translations).forEach(k => keySet.add(k));
+          }
+        });
+      }
+
+      langSelect.innerHTML = Array.from(keySet).map(k => {
+        const label = LANGUAGE_LABELS[k] || k;
+        return `<option value="${escapeHtml(k)}">${escapeHtml(label)}</option>`;
+      }).join('');
+
+      if (!keySet.has(currentLang)) {
+        currentLang = 'ja';
+      }
+      langSelect.value = currentLang;
+    }
+
+    // 選択言語に応じて左側のタイトル欄を更新
+    function updateTitleFieldDisplay() {
+      const titleInput = document.getElementById('meta-title-input');
+      const titleLangLabel = document.getElementById('meta-title-lang-label');
+      if (titleLangLabel) {
+        titleLangLabel.textContent = `タイトル (${currentLang})`;
+      }
+      if (!titleInput || !currentData) return;
+
+      let videoTitle = '';
+      // currentData.title に該当言語があれば優先、なければ currentVideoMeta.title を参照
+      if (typeof currentData.title === 'object' && currentData.title !== null && currentData.title[currentLang] !== undefined) {
+        videoTitle = currentData.title[currentLang];
+      } else if (currentVideoMeta && typeof currentVideoMeta.title === 'object' && currentVideoMeta.title !== null && currentVideoMeta.title[currentLang] !== undefined) {
+        videoTitle = currentVideoMeta.title[currentLang];
+      } else if (currentLang === 'ja') {
+        const rawTitle = (currentVideoMeta && currentVideoMeta.title) ? currentVideoMeta.title : (currentData.title || '');
+        videoTitle = (typeof rawTitle === 'object' && rawTitle !== null) ? (rawTitle.ja || '') : rawTitle;
+      }
+
+      titleInput.value = videoTitle || '';
+      titleInput.placeholder = `動画タイトル (title.${currentLang})`;
+      autoResizeTextarea(titleInput);
+    }
+
+    // 編集言語切り替え処理
+    function changeEditLanguage(lang) {
+      currentLang = lang;
+      const langSelect = document.getElementById('lang-select');
+      if (langSelect && langSelect.value !== lang) {
+        langSelect.value = lang;
+      }
+      updateTitleFieldDisplay();
+      renderEditor();
+    }
+
     function loadJsonData(data) {
       currentData = data;
       reindexTranscript();
+      syncLanguageSelectOptions(data);
 
       document.getElementById('download-json-btn').disabled = false;
+      document.getElementById('add-ad-json-btn').disabled = false;
       document.getElementById('editor-toolbar').style.display = 'flex';
 
-      // メタデータ表示更新 (videos.json のタイトルを優先的に取得)
-        const titleInput = document.getElementById('meta-title-input');
-        if (titleInput) {
-          const rawTitle = (currentVideoMeta && currentVideoMeta.title) ? currentVideoMeta.title : (data.title || "");
-          const videoTitle = (typeof rawTitle === 'object') ? (rawTitle.ja || "") : rawTitle;
-          titleInput.value = videoTitle;
-          autoResizeTextarea(titleInput);
-        }
+      updateTitleFieldDisplay();
 
-        document.getElementById('meta-details').innerHTML = `
-          <strong>Video ID:</strong> ${data.video_id || '-'}<br>
-          <strong>公開日:</strong> ${(currentVideoMeta && currentVideoMeta.published_at) || data.published_at || '-'}<br>
-          <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
-        `;
+      document.getElementById('meta-details').innerHTML = `
+        <strong>Video ID:</strong> ${data.video_id || '-'}<br>
+        <strong>公開日:</strong> ${(currentVideoMeta && currentVideoMeta.published_at) || data.published_at || '-'}<br>
+        <strong>参加メンバー:</strong> ${(data.members || []).join(', ') || '-'}
+      `;
 
-      // keywords 編集欄の表示と値設定
       const keywordsBox = document.getElementById('keywords-editor-box');
       const keywordsInput = document.getElementById('keywords-input');
       if (currentVideoMeta) {
         keywordsBox.style.display = 'block';
         keywordsInput.value = (currentVideoMeta.keywords || []).join(', ');
-        
-        // ▼ 追加: 頻出キーワードボタン群を最新化
         renderCommonKeywords();
       } else {
         keywordsBox.style.display = 'none';
@@ -1048,7 +1160,6 @@ function init() {
 
       renderEditor();
     }
-
 
     function reindexTranscript() {
       if (currentData && currentData.transcript) {
@@ -1066,116 +1177,115 @@ function init() {
     }
 
     // --- 4. 発言者編集用UIの描画 ---
-        function renderEditor() {
-          const container = document.getElementById('transcript-editor-container');
-          if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
-            document.getElementById('card-count-label').textContent = '字幕数: 0';
-            return;
-          }
+    function renderEditor() {
+      const container = document.getElementById('transcript-editor-container');
+      if (!currentData || !currentData.transcript || currentData.transcript.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">字幕データがありません。</p>';
+        document.getElementById('card-count-label').textContent = '字幕数: 0';
+        return;
+      }
 
-          const totalItems = currentData.transcript.length;
-          document.getElementById('card-count-label').textContent = `字幕数: ${totalItems}`;
+      const totalItems = currentData.transcript.length;
+      document.getElementById('card-count-label').textContent = `字幕数: ${totalItems}`;
 
-          const html = currentData.transcript.map((item, index) => {
-            const startSec = item.start !== undefined && item.start !== null && item.start !== '' ? parseFloat(item.start).toFixed(1) : '';
-            const endSec = item.end !== undefined && item.end !== null && item.end !== '' ? parseFloat(item.end).toFixed(1) : '';
+      const html = currentData.transcript.map((item, index) => {
+        const startSec = item.start !== undefined && item.start !== null && item.start !== '' ? parseFloat(item.start).toFixed(1) : '';
+        const endSec = item.end !== undefined && item.end !== null && item.end !== '' ? parseFloat(item.end).toFixed(1) : '';
 
-            const buttonsHtml = speakerOptions.map(spk => 
-              `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
-            ).join('');
+        const buttonsHtml = speakerOptions.map(spk => 
+          `<button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '${spk}')">${spk}</button>`
+        ).join('');
 
-            const isLastItem = index === totalItems - 1;
-            const jaTranslation = item.translations?.ja || item.translation || '';
+        const isLastItem = index === totalItems - 1;
+        const currentTranslation = (item.translations && item.translations[currentLang] !== undefined)
+          ? item.translations[currentLang]
+          : (currentLang === 'ja' ? (item.translation || '') : '');
 
-            return `
-              <div class="transcript-card" id="card-${index}">
-                <div class="card-header-row">
-                  <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; flex-wrap: wrap;">
-                    <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ 再生</span>
-                    
-                    <!-- Start 時間の取得・編集 -->
-                    <label style="font-weight: bold;">Start:</label>
-                    <input type="number" step="0.1" value="${startSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'start', this.value)">
-                    <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'start')">📍 Startに設定</button>
+        return `
+          <div class="transcript-card" id="card-${index}">
+            <div class="card-header-row">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; flex-wrap: wrap;">
+                <span class="time-badge" onclick="seekToTime(${item.start})">⏱️ 再生</span>
+                
+                <!-- Start 時間の取得・編集 -->
+                <label style="font-weight: bold;">Start:</label>
+                <input type="number" step="0.1" value="${startSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'start', this.value)">
+                <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'start')">📍 Startに設定</button>
 
-                    <!-- End 時間の取得・編集 -->
-                    <label style="font-weight: bold; margin-left: 4px;">End:</label>
-                    <input type="number" step="0.1" value="${endSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'end', this.value)">
-                    <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'end')">📍 Endに設定</button>
-                  </div>
-
-                  <div class="card-actions-right">
-                    <button class="action-mini-btn merge-btn" type="button" onclick="mergeCardWithNext(${index})" ${isLastItem ? 'disabled' : ''}>👇 下と結合</button>
-                    <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
-                    <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
-                    <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
-                  </div>
-                </div>
-
-                <div class="speaker-editor">
-                  <div class="speaker-buttons">
-                    <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
-                    ${buttonsHtml}
-                    <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
-                  </div>
-                  <div class="speaker-input-group">
-                    <input type="text" class="speaker-input" id="speaker-input-${index}" 
-                           value="${item.speaker || ''}" 
-                           placeholder="発言者（自由入力可）"
-                           oninput="updateSpeakerText(${index}, this.value)">
-                    <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
-                  </div>
-                </div>
-
-                <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
-                <div class="field-input-group">
-                  <textarea class="card-input input-translation" 
-                            rows="1"
-                            placeholder="日本語訳 (translations.ja)"
-                            oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(jaTranslation)}</textarea>
-
-                  <textarea class="card-input input-thai" 
-                            rows="1"
-                            placeholder="タイ語原文 (text)"
-                            oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
-
-                  <textarea class="card-input input-kana" 
-                            rows="1"
-                            placeholder="発音カナ (pronunciation_kana)"
-                            oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
-
-                  <textarea class="card-input input-roman" 
-                            rows="1"
-                            placeholder="発音ローマ字 (pronunciation_roman)"
-                            oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
-                </div>
+                <!-- End 時間の取得・編集 -->
+                <label style="font-weight: bold; margin-left: 4px;">End:</label>
+                <input type="number" step="0.1" value="${endSec}" style="width: 55px; padding: 2px 4px; font-size: 0.75rem;" onchange="updateTimeValue(${index}, 'end', this.value)">
+                <button class="action-mini-btn" type="button" style="color: #0284c7; border-color: #38bdf8;" onclick="setSeekTimeToField(${index}, 'end')">📍 Endに設定</button>
               </div>
-            `;
-          }).join('');
 
-          container.innerHTML = html;
+              <div class="card-actions-right">
+                <button class="action-mini-btn merge-btn" type="button" onclick="mergeCardWithNext(${index})" ${isLastItem ? 'disabled' : ''}>👇 下と結合</button>
+                <button class="action-mini-btn split-btn" type="button" onclick="splitCard(${index})">✂️ ここで分割</button>
+                <button class="action-mini-btn delete-btn" type="button" onclick="deleteCard(${index})">🗑️ 削除</button>
+                <span style="font-size: 0.75rem; color: #888; margin-left: 4px;">#${item.id}</span>
+              </div>
+            </div>
 
-          // 描画完了後、既存テキストの量に合わせて高さを一括フィッティング
-          setTimeout(() => {
-            container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
-          }, 0);
-        }
+            <div class="speaker-editor">
+              <div class="speaker-buttons">
+                <span style="font-size: 0.75rem; color: #666; font-weight: bold;">クイック選択:</span>
+                ${buttonsHtml}
+                <button class="speaker-btn add-btn" type="button" onclick="promptAddSpeaker()">＋ 選択肢追加</button>
+              </div>
+              <div class="speaker-input-group">
+                <input type="text" class="speaker-input" id="speaker-input-${index}" 
+                       value="${escapeHtml(item.speaker || '')}" 
+                       placeholder="発言者（自由入力可）"
+                       oninput="updateSpeakerText(${index}, this.value)">
+                <button class="speaker-btn" type="button" onclick="setSpeaker(${index}, '')">クリア</button>
+              </div>
+            </div>
 
-    // 修正後
+            <!-- 全テキスト編集用フィールドグループ（入力に合わせて高さ自動伸縮） -->
+            <div class="field-input-group">
+              <textarea class="card-input input-translation" 
+                        rows="1"
+                        placeholder="翻訳テキスト (translations.${escapeHtml(currentLang)})"
+                        oninput="updateTranslationText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(currentTranslation)}</textarea>
+
+              <textarea class="card-input input-thai" 
+                        rows="1"
+                        placeholder="タイ語原文 (text)"
+                        oninput="updateThaiText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.text || '')}</textarea>
+
+              <textarea class="card-input input-kana" 
+                        rows="1"
+                        placeholder="発音カナ (pronunciation_kana)"
+                        oninput="updateKanaText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_kana || '')}</textarea>
+
+              <textarea class="card-input input-roman" 
+                        rows="1"
+                        placeholder="発音ローマ字 (pronunciation_roman)"
+                        oninput="updateRomanText(${index}, this.value); autoResizeTextarea(this);">${escapeHtml(item.pronunciation_roman || '')}</textarea>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+
+      setTimeout(() => {
+        container.querySelectorAll('textarea').forEach(el => autoResizeTextarea(el));
+      }, 0);
+    }
+
     function escapeHtml(str) {
-      if (!str) return '';
-      return str
+      if (str === undefined || str === null) return '';
+      return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;'); // シングルクォーテーションのエスケープを追加
+        .replace(/'/g, '&#39;');
     }
 
     // --- 5. アクション関数群 ---
 
-    // シークバーの現在時間を取得して start / end に反映
     function setSeekTimeToField(index, field) {
       if (!currentData || !currentData.transcript[index]) return;
       if (!player || typeof player.getCurrentTime !== 'function') {
@@ -1186,7 +1296,6 @@ function init() {
       const currentTime = parseFloat(player.getCurrentTime().toFixed(1));
       currentData.transcript[index][field] = currentTime;
 
-      // ▼ 追加: start が更新された際、1つ前の字幕カードが存在すればその end を「start - 0.01」に自動設定
       if (field === 'start' && index > 0) {
         const prevEnd = parseFloat((currentTime - 0.01).toFixed(2));
         currentData.transcript[index - 1].end = prevEnd;
@@ -1195,7 +1304,6 @@ function init() {
       renderEditor();
     }
 
-    // 数値入力エリアから直接編集された時間を反映
     function updateTimeValue(index, field, value) {
       if (!currentData || !currentData.transcript[index]) return;
       const numVal = parseFloat(value);
@@ -1227,15 +1335,15 @@ function init() {
       currentData.transcript[index].speaker = value.trim();
     }
 
+    // 現在選択中の言語 (currentLang) の翻訳を更新
     function updateTranslationText(index, value) {
       if (!currentData || !currentData.transcript[index]) return;
       const item = currentData.transcript[index];
-      if (!item.translations) {
+      if (!item.translations || typeof item.translations !== 'object') {
         item.translations = {};
       }
-      item.translations.ja = value;
-      // 後方互換性のために古いプロパティも残す場合は以下を維持（不要であれば削除可）
-      delete item.translation; 
+      item.translations[currentLang] = value;
+      delete item.translation;
     }
 
     function updateThaiText(index, value) {
@@ -1295,15 +1403,29 @@ function init() {
         romanCombined = (top.pronunciation_roman || '') + (bottom.pronunciation_roman || '');
       }
 
-      // words の配列結合（存在しない場合にも配慮）
+      // words / tokens の配列結合（存在する場合のみ維持）
       let mergedWords = undefined;
       if (top.words || bottom.words) {
         mergedWords = [...(top.words || []), ...(bottom.words || [])];
       }
+      let mergedTokens = undefined;
+      if (top.tokens || bottom.tokens) {
+        mergedTokens = [...(top.tokens || []), ...(bottom.tokens || [])];
+      }
 
-      // 統合オブジェクト作成（start, speaker は上、end は下）
-      const topJa = top.translations?.ja || top.translation || '';
-      const bottomJa = bottom.translations?.ja || bottom.translation || '';
+      // 全言語分の translations を結合
+      const topTrans = { ...(top.translations || {}) };
+      if (top.translation && !topTrans.ja) topTrans.ja = top.translation;
+      const bottomTrans = { ...(bottom.translations || {}) };
+      if (bottom.translation && !bottomTrans.ja) bottomTrans.ja = bottom.translation;
+
+      const allLangKeys = new Set([...Object.keys(topTrans), ...Object.keys(bottomTrans)]);
+      if (allLangKeys.size === 0) allLangKeys.add(currentLang);
+
+      const mergedTranslations = {};
+      allLangKeys.forEach(langKey => {
+        mergedTranslations[langKey] = (topTrans[langKey] || '') + (bottomTrans[langKey] || '');
+      });
 
       const mergedItem = {
         id: top.id,
@@ -1313,16 +1435,12 @@ function init() {
         text: (top.text || '') + (bottom.text || ''),
         pronunciation_kana: kanaCombined,
         pronunciation_roman: romanCombined,
-        translations: {
-          ja: topJa + bottomJa
-        }
+        translations: mergedTranslations
       };
 
-      if (mergedWords) {
-        mergedItem.words = mergedWords;
-      }
+      if (mergedWords) mergedItem.words = mergedWords;
+      if (mergedTokens) mergedItem.tokens = mergedTokens;
 
-      // 対象の2つの要素を結合後オブジェクトで置き換え
       currentData.transcript.splice(index, 2, mergedItem);
 
       reindexTranscript();
@@ -1349,7 +1467,12 @@ function init() {
 
       currentItem.end = splitTime;
 
-      const currentJa = currentItem.translations?.ja || currentItem.translation || "";
+      // 全言語の translations を引き継ぐ
+      const copiedTranslations = { ...(currentItem.translations || {}) };
+      if (currentItem.translation && !copiedTranslations.ja) {
+        copiedTranslations.ja = currentItem.translation;
+      }
+
       const newCard = {
         id: currentItem.id + 1,
         start: splitTime,
@@ -1358,9 +1481,7 @@ function init() {
         text: currentItem.text || "",
         pronunciation_kana: currentItem.pronunciation_kana || "",
         pronunciation_roman: currentItem.pronunciation_roman || "",
-        translations: {
-          ja: currentJa
-        }
+        translations: copiedTranslations
       };
 
       currentData.transcript.splice(index + 1, 0, newCard);
@@ -1390,76 +1511,75 @@ function init() {
       currentVideoMeta.keywords = arr;
     }
 
-    // 動画タイトルの変更を currentData (video_XX.json) と currentVideoMeta (videos.json) の両方に反映
+    // 動画タイトルの変更を選択中の言語 (currentLang) に反映
     function updateVideoTitle(value) {
       if (currentData) {
         if (typeof currentData.title === 'object' && currentData.title !== null) {
-          currentData.title.ja = value;
+          currentData.title[currentLang] = value;
         } else {
-          currentData.title = { ja: value };
+          const oldTitle = currentData.title || '';
+          currentData.title = oldTitle ? { ja: oldTitle, [currentLang]: value } : { [currentLang]: value };
         }
       }
       if (currentVideoMeta) {
         if (typeof currentVideoMeta.title === 'object' && currentVideoMeta.title !== null) {
-          currentVideoMeta.title.ja = value;
-        } else {
+          // ad は管理用データの前提のため、videos.json に元々 ad キーがある場合か ad 以外の言語のみ反映
+          if (currentLang !== 'ad' || currentVideoMeta.title.ad !== undefined) {
+            currentVideoMeta.title[currentLang] = value;
+          }
+        } else if (currentLang === 'ja') {
           currentVideoMeta.title = { ja: value };
         }
       }
     }
 
-// tags.json のキー順通りに選択用ボタンを描画する関数
-function renderCommonKeywords() {
-  const container = document.getElementById('common-keywords-container');
-  if (!container || !tagsDataGlobal) return;
+    function renderCommonKeywords() {
+      const container = document.getElementById('common-keywords-container');
+      if (!container || !tagsDataGlobal) return;
 
-  let html = '';
+      let html = '';
 
-  for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
-    html += `<div style="font-size:0.72rem; color:#475569; font-weight:bold; width:100%; margin-top:8px;">${escapeHtml(categoryName)}</div>`;
-    
-    for (const tagKey of Object.keys(categoryTags)) {
-        // 引数をダブルクォーテーションで囲む
-        html += `
-          <button class="speaker-btn" type="button" 
-                  style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
-                  onclick='addKeywordToInput("${escapeHtml(tagKey)}")'>
-            + ${escapeHtml(tagKey)}
-          </button>
-        `;
+      for (const [categoryName, categoryTags] of Object.entries(tagsDataGlobal)) {
+        html += `<div style="font-size:0.72rem; color:#475569; font-weight:bold; width:100%; margin-top:8px;">${escapeHtml(categoryName)}</div>`;
+        
+        for (const tagKey of Object.keys(categoryTags)) {
+          html += `
+            <button class="speaker-btn" type="button" 
+                    style="font-size: 0.72rem; padding: 2px 6px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;" 
+                    onclick='addKeywordToInput("${escapeHtml(tagKey)}")'>
+              + ${escapeHtml(tagKey)}
+            </button>
+          `;
+        }
       }
-  }
 
-  container.innerHTML = html;
-}
+      container.innerHTML = html;
+    }
 
-// クリックされたキーワードを input に追加
-function addKeywordToInput(keyword) {
-  const input = document.getElementById('keywords-input');
-  if (!input) return;
+    function addKeywordToInput(keyword) {
+      const input = document.getElementById('keywords-input');
+      if (!input) return;
 
-  let currentArray = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      let currentArray = input.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-  // 既に含まれていなければ追加
-  if (!currentArray.includes(keyword)) {
-    currentArray.push(keyword);
-    input.value = currentArray.join(', ');
-    updateKeywords(input.value);
-  }
-}
+      if (!currentArray.includes(keyword)) {
+        currentArray.push(keyword);
+        input.value = currentArray.join(', ');
+        updateKeywords(input.value);
+      }
+    }
 
-    // 全字幕の start / end 時間を引数 (seconds) の分だけ一括シフトする関数
     function shiftAllTimestamps(seconds) {
       if (!currentData || !currentData.transcript || currentData.transcript.length === 0) return;
 
       currentData.transcript.forEach(item => {
         if (item.start !== undefined && item.start !== null && item.start !== '') {
           const newStart = parseFloat((parseFloat(item.start) + seconds).toFixed(3));
-          item.start = Math.max(0, newStart); // 0秒未満にならないよう制御
+          item.start = Math.max(0, newStart);
         }
         if (item.end !== undefined && item.end !== null && item.end !== '') {
           const newEnd = parseFloat((parseFloat(item.end) + seconds).toFixed(3));
-          item.end = Math.max(0, newEnd); // 0秒未満にならないよう制御
+          item.end = Math.max(0, newEnd);
         }
       });
 
@@ -1468,7 +1588,7 @@ function addKeywordToInput(keyword) {
 
     // --- 6. JSONファイルの出力・ダウンロード ---
 
-    document.getElementById('download-json-btn').addEventListener('click', () => {
+    function downloadTranscriptJson() {
       if (!currentData) return;
 
       const jsonString = JSON.stringify(currentData, null, 2);
@@ -1481,7 +1601,59 @@ function addKeywordToInput(keyword) {
       a.click();
 
       URL.revokeObjectURL(url);
-    });
+    }
+
+    // translations.ja の内容をコピーして ad データ行を追加した JSON を出力する
+    function addAdDataAndDownloadJson() {
+      if (!currentData || !Array.isArray(currentData.transcript)) return;
+
+      // 既に空でない ad データが存在するかチェック
+      const hasExistingAd = currentData.transcript.some(
+        item => item.translations && typeof item.translations.ad === 'string' && item.translations.ad.trim() !== ''
+      );
+      if (hasExistingAd) {
+        if (!confirm('既に translations.ad にデータが入力されています。translations.ja の内容で上書きしてJSONを出力しますか？')) {
+          return;
+        }
+      }
+
+      // title オブジェクトにも ad キーが未定義の場合は先頭に "" を追加
+      if (typeof currentData.title === 'object' && currentData.title !== null) {
+        if (currentData.title.ad === undefined) {
+          const newTitle = { ad: "" };
+          for (const [k, v] of Object.entries(currentData.title)) {
+            if (k !== 'ad') newTitle[k] = v;
+          }
+          currentData.title = newTitle;
+        }
+      }
+
+      // 各字幕の translations.ja をコピーして ad を先頭行に追加
+      currentData.transcript.forEach(item => {
+        const oldTrans = (item.translations && typeof item.translations === 'object') ? item.translations : {};
+        const jaText = oldTrans.ja !== undefined ? oldTrans.ja : (item.translation || '');
+
+        const newTrans = { ad: jaText };
+        for (const [k, v] of Object.entries(oldTrans)) {
+          if (k !== 'ad') {
+            newTrans[k] = v;
+          }
+        }
+        item.translations = newTrans;
+        delete item.translation;
+      });
+
+      // 画面の表示も更新（現在 ad を表示中ならコピー後の内容が反映される）
+      syncLanguageSelectOptions(currentData);
+      updateTitleFieldDisplay();
+      renderEditor();
+
+      // JSONファイルを出力
+      downloadTranscriptJson();
+    }
+
+    document.getElementById('download-json-btn').addEventListener('click', downloadTranscriptJson);
+    document.getElementById('add-ad-json-btn').addEventListener('click', addAdDataAndDownloadJson);
 
     document.getElementById('download-videos-btn').addEventListener('click', () => {
       if (!videosData || videosData.length === 0) return;
