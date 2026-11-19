@@ -120,9 +120,9 @@ else:
     print("🌟 【高精度モード起動】 賢い Gemini 3.7 Flash 等で高品質生成を実行します。")
     AVAILABLE_MODELS = [
         "gemini-4-hydrogen",
-        "gemini-3.6-flash",
         "gemini-3.8-flash",
         "gemini-3.7-flash",
+        "gemini-3.6-flash",
     ]
     CHUNK_SIZE = 20  # 精度重視で20件ずつ
 
@@ -267,46 +267,55 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
             target_model = AVAILABLE_MODELS[model_idx]
 
         try:
+            # 1. 従来の基本設定（3.8-flash 等はこれまでと全く同じ設定で動く）
+            gen_config = {
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "title": {"type": "STRING"},
+                        "items": {
+                            "type": "ARRAY",
+                            "items": {
+                                "type": "ARRAY",
+                                "items": {"type": "STRING"}
+                            }
+                        }
+                    },
+                    "required": ["items"]
+                },
+                "max_output_tokens": 8192,
+                "safety_settings": [
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                        threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                ],
+            }
+
+            # ★ hydrogen の場合のみ思考を LOW に抑え、出力上限を広げる
+            if "hydrogen" in target_model:
+                gen_config["max_output_tokens"] = 16384
+                gen_config["thinking_config"] = types.ThinkingConfig(
+                    thinking_level="MEDIUM"
+                )
+
             response = client.models.generate_content(
                 model=target_model,
                 contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "title": {"type": "STRING"},
-                            "items": {
-                                "type": "ARRAY",
-                                "items": {
-                                    "type": "ARRAY",
-                                    "items": {"type": "STRING"}
-                                }
-                            }
-                        },
-                        "required": ["items"]
-                    },
-                    "max_output_tokens": 8192,
-                    # 👇 ここを追加してセーフティブロックを解除
-                    "safety_settings": [
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                    ],
-                }
+                config=gen_config
             )
             tracker.log(response, prefix=f"{chunk_info} ({target_model})")
 
