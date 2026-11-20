@@ -538,6 +538,15 @@
       <textarea id="out-trans-pt" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
     </div>
 
+    <!-- ad (日本語2) -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="prop-tag" style="background: #f1f5f9; color: #475569;">12. translation: ad (日本語2)</span>
+        <button class="copy-btn" onclick="copyText('out-trans-ad')">📋 一括コピー</button>
+      </div>
+      <textarea id="out-trans-ad" class="output-textarea" readonly placeholder="データがある場合、ここにID順で出力されます..."></textarea>
+    </div>
+
   </div>
   </div>
 </div>
@@ -673,6 +682,7 @@
       const transZhTw = sortedList.map(item => item.translations?.['zh-TW'] ?? '').join('\n');
       const transId = sortedList.map(item => item.translations?.id ?? '').join('\n');
       const transPt = sortedList.map(item => item.translations?.pt ?? '').join('\n');
+      const transAd = sortedList.map(item => item.translations?.ad ?? '').join('\n');
 
       // 出力エリアへ書き込み
       document.getElementById('out-combined').value = combined;
@@ -689,6 +699,7 @@
       document.getElementById('out-trans-zh-tw').value = transZhTw;
       document.getElementById('out-trans-id').value = transId;
       document.getElementById('out-trans-pt').value = transPt;
+      document.getElementById('out-trans-ad').value = transAd;
     }
 
     // 一括コピー用関数

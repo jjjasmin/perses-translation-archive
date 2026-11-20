@@ -222,6 +222,8 @@ CONFIG = {
         "PLUGGY": os.path.join(ASSETS_DIR, "pluggy.jpg"),
     },
     "AVAILABLE_MODELS": [
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash",
         "gemini-3.8-flash",
         "gemini-3.7-flash",
         "gemini-3.6-flash",
