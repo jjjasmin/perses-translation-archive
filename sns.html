@@ -674,7 +674,7 @@
   <div id="stickyHeader" class="sticky-header">
     <div class="sticky-header-content">
       <header>
-        <h1>SNS翻訳</h1>
+        <h1>SNS翻訳(ブラウザ動確〇chrome)</h1>
 
         <div class="controls-row">
           <div class="layout-switcher">
@@ -1259,14 +1259,17 @@
         const videoId = match ? match[1] : '';
 
         return `
-          <div class="tiktok-embed-container" style="display:flex; justify-content:center; margin: 10px 0;">
-            <blockquote class="tiktok-embed" cite="${escapeHtml(videoUrl)}" data-video-id="${videoId}" data-autoplay="0" style="max-width: 605px; min-width: 325px;">
+            <div class="tiktok-embed-container" style="display:flex; flex-direction:column; align-items:center; margin: 10px 0;">
+              <blockquote class="tiktok-embed" cite="${escapeHtml(videoUrl)}" data-video-id="${videoId}" data-autoplay="0" style="max-width: 605px; min-width: 325px;">
               <section>
                 <a target="_blank" href="${escapeHtml(videoUrl)}"></a>
               </section>
             </blockquote>
-          </div>
-        `;
+              <a href="${escapeHtml(videoUrl)}" target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: #536471; margin-top: 6px; text-decoration: underline;">
+                再生できない場合はTikTokで開く ↗
+              </a>
+            </div>
+          `;
       } else {
         return `
           <div class="x-embed-container">

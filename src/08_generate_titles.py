@@ -13,7 +13,7 @@ load_dotenv()
 VIDEOS_JSON_PATH = '../data/videos.json'
 STATUS_FILE_PATH = '../pipeline_status.json'
 
-MODEL_NAME = "gemini-3.5-flash-lite"
+MODEL_NAME = "gemini-3.8-flash"
 TARGET_LANGS = ["ja", "en", "ko", "zh-TW", "id", "pt"]
 
 # 1回のAPIリクエストでまとめて翻訳する件数（類似タイトル同士を並べて処理）
@@ -39,8 +39,8 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["TOUCHDOWN", "ใกล้ดาว"],
-        "ja": "TOUCHDOWN (ใกล้ดาว) | クライ・ダーウ | 星の近く",
-        "other": "TOUCHDOWN (ใกล้ดาว) | klai dao",
+        "ja": "TOUCHDOWN (クライ・ダーウ) | 星の近く",
+        "other": "TOUCHDOWN (klai dao) ",
     },
     {
         "keywords": ["Catch the Night"],
@@ -49,8 +49,8 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["Cuteless", "น่ารักน้อยลงหน่อย"],
-        "ja": "Cuteless (น่ารักน้อยลงหน่อย) | ナーラック・ノーイ・ロン・ノイ | 可愛いすぎて困る",
-        "other": "Cuteless (น่ารักน้อยลงหน่อย) | naarak noi long noi",
+        "ja": "Cuteless (ナーラック・ノーイ・ロン・ノイ) | 可愛いすぎて困る",
+        "other": "Cuteless (naarak noi long noi)",
     },
     {
         "keywords": ["Beautiful"],
@@ -59,13 +59,13 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["Far Too Close", "คนใกล้ที่คิดไกล"],
-        "ja": "Far Too Close (คนใกล้ที่คิดไกล) | コン・クライ・ティー・キット・クライ | 近づくほど遠くなる",
-        "other": "Far Too Close (คนใกล้ที่คิดไกล) | khon klai thi khit klai",
+        "ja": "Far Too Close (コン・クライ・ティー・キット・クライ) | 近づくほど遠くなる",
+        "other": "Far Too Close (khon klai thi khit klai)",
     },
     {
         "keywords": ["Prompt Play", "เล่นใจป้ะ"],
-        "ja": "Prompt Play (เล่นใจป้ะ?) | レン・チャイ・パ？ | 本気出して遊ばない？",
-        "other": "Prompt Play (เล่นใจป้ะ?) | len chai pa?",
+        "ja": "Prompt Play (レン・チャイ・パ？) | 本気出して遊ばない？",
+        "other": "Prompt Play (len chai pa?)",
     },
     {
         "keywords": ["Spoil!"],
@@ -79,8 +79,8 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["OVER", "อย่าฝืน"],
-        "ja": "OVER (อย่าฝืน) | ヤー・フーン | 無理しないで",
-        "other": "OVER (อย่าฝืน) | ya fuen",
+        "ja": "OVER (ヤー・フーン) | 無理しないで",
+        "other": "OVER (ya fuen)",
     },
     {
         "keywords": ["ONE SHOT"],
@@ -89,13 +89,13 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["Comment", "เม้นหยอกๆ"],
-        "ja": "Comment (เม้นหยอกๆ) | メン・ヨックヨック | 冗談めいたコメント",
-        "other": "Comment (เม้นหยอกๆ) | men yok yok",
+        "ja": "Comment (メン・ヨックヨック) | 冗談めいたコメント",
+        "other": "Comment (men yok yok)",
     },
     {
         "keywords": ["FREEZE", "ห้ามขยับจับนะ"],
-        "ja": "FREEZE (ห้ามขยับจับนะ) | ハーム・カヤップ・チャップ・ナ | 動かないで、逮捕するよ",
-        "other": "FREEZE (ห้ามขยับจับนะ) | ham khayap chap na",
+        "ja": "FREEZE (ハーム・カヤップ・チャップ・ナ) | 動かないで、逮捕するよ",
+        "other": "FREEZE (ham khayap chap na) ",
     },
     {
         "keywords": ["KITTY SWAG"],
@@ -104,8 +104,8 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["OUR TIME", "อยู่คนเดียวยังไงไหว"],
-        "ja": "OUR TIME (อยู่คนเดียวยังไงไหว) | ユー・コンディァウ・ヤンガイ・ワイ | 一人きりなんて耐えられないよ",
-        "other": "OUR TIME (อยู่คนเดียวยังไงไหว) | yu khon diao yangngai wai",
+        "ja": "OUR TIME (ユー・コンディァウ・ヤンガイ・ワイ) | 一人きりなんて耐えられないよ",
+        "other": "OUR TIME (yu khon diao yangngai wai)",
     },
     {
         "keywords": ["TURN ME ON"],
@@ -114,8 +114,8 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["Hotter than ur X", "ไม่แพ้ใคร"],
-        "ja": "Hotter than ur X (ไม่แพ้ใคร) | マイ・ペー・クライ | 誰にも負けない（元カレにも！）",
-        "other": "Hotter than ur X (ไม่แพ้ใคร) | mai phae khrai",
+        "ja": "Hotter than ur X (マイ・ペー・クライ) | 誰にも負けない（元カレにも！）",
+        "other": "Hotter than ur X (mai phae khrai)",
     },
     {
         "keywords": ["FLY", "JUNG x F.HERO"],
@@ -124,13 +124,13 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["YES ME, BABY", "คืนนี้อยากได้กี่ครั้ง"],
-        "ja": "YES ME, BABY (คืนนี้อยากได้กี่ครั้ง) - PALM x Hannah 4EVE | クーン・ニー・ヤーク・ダイ・キー・クラング | 今夜は何回ほしい？",
-        "other": "YES ME, BABY (คืนนี้อยากได้กี่ครั้ง) - PALM x Hannah 4EVE | khuen ni yak dai ki khrang",
+        "ja": "YES ME, BABY (クーン・ニー・ヤーク・ダイ・キー・クラング) - PALM x Hannah 4EVE | 今夜は何回ほしい？",
+        "other": "YES ME, BABY (khuen ni yak dai ki khrang) - PALM x Hannah 4EVE",
     },
     {
         "keywords": ["ยกมือขึ้น"],
-        "ja": "ยกมือขึ้น - NAY x TangBadVoice | ヨック・ムー・クン | 手を挙げて",
-        "other": "ยกมือขึ้น - NAY x TangBadVoice | yok mue khuen",
+        "ja": "ヨック・ムー・クン - NAY x TangBadVoice | 手を挙げて",
+        "other": "yok mue khuen - NAY x TangBadVoice",
     },
     {
         "keywords": ["NO PAIN NO GAIN"],
@@ -144,21 +144,19 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["Wanna Taste", "ใจละลาย"],
-        "ja": "Wanna Taste (ใจละลาย) - PLUGGY x JAY OF DICE | ジャイ・ララーイ | 心がとろけちゃう",
-        "other": "Wanna Taste (ใจละลาย) - PLUGGY x JAY OF DICE | chai lalai",
+        "ja": "Wanna Taste (ジャイ・ララーイ) - PLUGGY x JAY OF DICE | 心がとろけちゃう",
+        "other": "Wanna Taste (chai lalai) - PLUGGY x JAY OF DICE",
     },
     {
         "keywords": ["Mashup song CYCLE", "การเริ่มต้นใหม่ ความรัก และการจากลา"],
-        "ja": "Mashup song CYCLE (การเริ่มต้นใหม่ ความรัก และการจากลา) - KRITTIN | カーン・レーム・トン・マイ、クワーム・ラック、レ・カーン・チャーク・ラー | 新しい始まり、愛、そして別れ",
-        "other": "Mashup song CYCLE (การเริ่มต้นใหม่ ความรัก และการจากลา) - KRITTIN | kan roem ton mai khwam rak lae kan chak la",
+        "ja": "Mashup song CYCLE (カーン・レーム・トン・マイ、クワーム・ラック、レ・カーン・チャーク・ラー) - KRITTIN | 新しい始まり、愛、そして別れ",
+        "other": "Mashup song CYCLE (kan roem ton mai khwam rak lae kan chak la) - KRITTIN",
     },
     {
         "keywords": ["บางกรอบ"],
-        "ja": "บางกรอบ (POTATO feat. PERSES) | バンクローブ | 薄切りクリスプ",
-        "other": "บางกรอบ (POTATO feat. PERSES) | bang krop",
+        "ja": "バンクローブ (POTATO feat. PERSES) | 薄切りクリスプ",
+        "other": "bang krop (POTATO feat. PERSES)",
     },
-
-    # === 今回のリスト内に含まれていた未登録の楽曲・コラボ曲 ===
     {
         "keywords": ["Colorblind"],
         "ja": "Colorblind (JUNG PERSES Ft. GENIEPAK) (OST.iQIYI Original Don't Be Too Emotional)",
@@ -166,13 +164,13 @@ SONG_AND_SHOW_RULES = [
     },
     {
         "keywords": ["WAKE UP, DON’T WAIT", "WAKE UP, DON'T WAIT", "ไปกันต่อ"],
-        "ja": "WAKE UP, DON'T WAIT (ไปกันต่อ) | パイ・カン・トー | さあ、先へ行こう",
-        "other": "WAKE UP, DON'T WAIT (ไปกันต่อ) | pai kan to",
+        "ja": "WAKE UP, DON'T WAIT (パイ・カン・トー) | さあ、先へ行こう",
+        "other": "WAKE UP, DON'T WAIT (pai kan to)",
     },
     {
         "keywords": ["BOUNCE"],
         "ja": "BOUNCE (GMM GRAMMY 40周年記念企画『ซนซน (ソンソン／Playful)』)",
-        "other": "BOUNCE (ซนซน 40 ปี GMM GRAMMY) | ZonZon (Playful) / Naughty 40 Years of GMM GRAMMY",
+        "other": "BOUNCE (ZonZon (Playful) / Naughty 40 Years of GMM GRAMMY)",
     },
     {
         "keywords": ["Safe Zone"],
@@ -196,19 +194,19 @@ SONG_AND_SHOW_RULES = [
         "other": "G'NEST PLAYROOM",
     },
     {
-        "keywords": ["Research Day"],
-        "ja": "Research Day",
-        "other": "Research Day",
-    },
-    {
         "keywords": ["Artist of the Month"],
         "ja": "Artist of the Month",
         "other": "Artist of the Month",
     },
     {
-        "keywords": ["ALTER", "ALTER-ROLE", "ALTER-CLASS"],
+        "keywords": ["ALTER-ROLE"],
         "ja": "ALTER-ROLE",
         "other": "ALTER-ROLE",
+    },
+    {
+        "keywords": ["ALTER-CLASS"],
+        "ja": "ALTER-CLASS",
+        "other": "ALTER-CLASS",
     },
     {
         "keywords": ["A DAY WITH PERSES", "A Day With"],
@@ -271,245 +269,6 @@ SONG_AND_SHOW_RULES = [
         "keywords": ["OUR PIECES"],
         "ja": "OUR PIECES",
         "other": "OUR PIECES",
-    },
-    {
-        "keywords": ["TMEA 2024"],
-        "ja": "TMEA 2024",
-        "other": "TMEA 2024",
-    },
-    {
-        "keywords": ["AIYA BKK"],
-        "ja": "LIVE AT AIYA BKK",
-        "other": "LIVE AT AIYA BKK",
-    },
-
-    # === 音楽番組・アワード・バラエティ・メディア番組（英語名あり） ===
-    {
-        "keywords": ["T-POP STAGE SHOW Presented by PEPSI", "T-POP STAGE Presented by PEPSI", "T-POP STAGE SHOW", "T-POP STAGE"],
-        "ja": "T-POP STAGE",
-        "other": "T-POP STAGE",
-    },
-    {
-        "keywords": ["Thailand Music Countdown"],
-        "ja": "Thailand Music Countdown",
-        "other": "Thailand Music Countdown",
-    },
-    {
-        "keywords": ["TOTY Music Awards"],
-        "ja": "TOTY Music Awards",
-        "other": "TOTY Music Awards",
-    },
-    {
-        "keywords": ["Spotify T-Pop Now Hottest of the Month"],
-        "ja": "Spotify T-Pop Now Hottest of the Month",
-        "other": "Spotify T-Pop Now Hottest of the Month",
-    },
-    {
-        "keywords": ["IDOL ENERGY"],
-        "ja": "IDOL ENERGY",
-        "other": "IDOL ENERGY",
-    },
-    {
-        "keywords": ["One Playground"],
-        "ja": "One Playground",
-        "other": "One Playground",
-    },
-    {
-        "keywords": ["LOVE HORIZON", "มิติรักสุดขอบฟ้า"],
-        "ja": "LOVE HORIZON (มิติรักสุดขอบฟ้า) | ミティ・ラック・スット・コープ・ファー",
-        "other": "LOVE HORIZON (มิติรักสุดขอบฟ้า) | miti rak sut khop fa",
-    },
-    {
-        "keywords": ["5 จุดเปลี่ยน บทเรียนหัวใจ", "Turning Points"],
-        "ja": "Turning Points (5 จุดเปลี่ยน บทเรียนหัวใจ)",
-        "other": "Turning Points (5 จุดเปลี่ยน บทเรียนหัวใจ)",
-    },
-    {
-        "keywords": ["EM DISTRICT"],
-        "ja": "EM DISTRICT",
-        "other": "EM DISTRICT",
-    },
-    {
-        "keywords": ["CANDY CHANNEL"],
-        "ja": "CANDY CHANNEL",
-        "other": "CANDY CHANNEL",
-    },
-    {
-        "keywords": ["OHANA บ้าพลัง", "OHANA"],
-        "ja": "OHANA บ้าพลัง (OHANA バー・パラン)",
-        "other": "OHANA บ้าพลัง (OHANA Ba Phalang)",
-    },
-    {
-        "keywords": ["Bua Sri is Happy"],
-        "ja": "Bua Sri is Happy",
-        "other": "Bua Sri is Happy",
-    },
-    {
-        "keywords": ["legend th"],
-        "ja": "LEGEND TH",
-        "other": "LEGEND TH",
-    },
-    {
-        "keywords": ["Sound Check"],
-        "ja": "Sound Check",
-        "other": "Sound Check",
-    },
-    {
-        "keywords": ["Horwang Sisters"],
-        "ja": "Horwang Sisters",
-        "other": "Horwang Sisters",
-    },
-    {
-        "keywords": ["Katanyu Tonight"],
-        "ja": "Katanyu Tonight",
-        "other": "Katanyu Tonight",
-    },
-    {
-        "keywords": ["Viking Sing Along"],
-        "ja": "Viking Sing Along",
-        "other": "Viking Sing Along",
-    },
-    {
-        "keywords": ["Praew And You"],
-        "ja": "Praew And You",
-        "other": "Praew And You",
-    },
-    {
-        "keywords": ["Mellow POP Mission"],
-        "ja": "Mellow POP Mission",
-        "other": "Mellow POP Mission",
-    },
-    {
-        "keywords": ["Mellow Highlight"],
-        "ja": "Mellow Highlight",
-        "other": "Mellow Highlight",
-    },
-    {
-        "keywords": ["Guest who?"],
-        "ja": "Guest who?",
-        "other": "Guest who?",
-    },
-    {
-        "keywords": ["RoV T-POP Tournament"],
-        "ja": "RoV T-POP Tournament",
-        "other": "RoV T-POP Tournament",
-    },
-    {
-        "keywords": ["Flex Talk"],
-        "ja": "Flex Talk",
-        "other": "Flex Talk",
-    },
-    {
-        "keywords": ["TMC LIVE SPECIAL"],
-        "ja": "TMC LIVE SPECIAL",
-        "other": "TMC LIVE SPECIAL",
-    },
-    {
-        "keywords": ["T-POP : FEED", "T-POP: FEED"],
-        "ja": "T-POP : FEED",
-        "other": "T-POP : FEED",
-    },
-    {
-        "keywords": ["NYLON THAILAND"],
-        "ja": "NYLON THAILAND",
-        "other": "NYLON THAILAND",
-    },
-    {
-        "keywords": ["KAZZ NEWS UPDATE"],
-        "ja": "KAZZ NEWS UPDATE",
-        "other": "KAZZ NEWS UPDATE",
-    },
-    {
-        "keywords": ["Lesson B podcast"],
-        "ja": "Lesson B podcast",
-        "other": "Lesson B podcast",
-    },
-    {
-        "keywords": ["EFMFandomlive", "EFM Fandom Live"],
-        "ja": "EFM Fandom Live",
-        "other": "EFM Fandom Live",
-    },
-
-    # === タイ語タイトルのテレビ・Web番組名 ===
-    {
-        "keywords": ["คุณพระช่วย"],
-        "ja": "คุณพระช่วย (クン・プラ・チュアイ)",
-        "other": "คุณพระช่วย (Khun Phra Chuay)",
-    },
-    {
-        "keywords": ["20 ยังจอย"],
-        "ja": "20 ยังจอย (20 ヤン・ジョイ)",
-        "other": "20 ยังจอย (20 Yang Joy)",
-    },
-    {
-        "keywords": ["รอบวัน"],
-        "ja": "รอบวัน (ロープ・ワン)",
-        "other": "รอบวัน (Rop Wan)",
-    },
-    {
-        "keywords": ["เพื่อนฉันเป็นคนดีย์"],
-        "ja": "เพื่อนฉันเป็นคนดีย์ (プアン・チャン・ペン・コン・ディー)",
-        "other": "เพื่อนฉันเป็นคนดีย์ (Phuean Chan Pen Khon Di)",
-    },
-    {
-        "keywords": ["หัวท้ายตายก่อน"],
-        "ja": "หัวท้ายตายก่อน (フア・ターイ・ターイ・コーン)",
-        "other": "หัวท้ายตายก่อน (Hua Thai Tai Kon)",
-    },
-    {
-        "keywords": ["รับสายผมหน่อย"],
-        "ja": "รับสายผมหน่อย (ラップ・サーイ・ポム・ノーイ)",
-        "other": "รับสายผมหน่อย (Rap Sai Phom Noi)",
-    },
-    {
-        "keywords": ["อะไรก็ไม่รู้"],
-        "ja": "อะไรก็ไม่รู้ (アライ・コー・マイ・ルー)",
-        "other": "อะไรก็ไม่รู้ (Arai Ko Mai Ru)",
-    },
-    {
-        "keywords": ["โต๊ะหมู่ชาบู"],
-        "ja": "โต๊ะหมู่ชาบู (ト・ムー・シャーブー)",
-        "other": "โต๊ะหมู่ชาบู (To Mu Shabu)",
-    },
-    {
-        "keywords": ["ถ้าโลกนี้ไม่มี GPS"],
-        "ja": "ถ้าโลกนี้ไม่มี GPS (ター・ローク・ニー・マイ・ミー GPS)",
-        "other": "ถ้าโลกนี้ไม่มี GPS (Tha Lok Ni Mai Mi GPS)",
-    },
-    {
-        "keywords": ["ข่าววันบันเทิง"],
-        "ja": "ข่าววันบันเทิง (カーオ・ワン・バントゥーン)",
-        "other": "ข่าววันบันเทิง (Khao Wan Banthoeng)",
-    },
-    {
-        "keywords": ["หนูตกถังข้าวสาร"],
-        "ja": "หนูตกถังข้าวสาร (ヌー・トック・タン・カーオサーン)",
-        "other": "หนูตกถังข้าวสาร (Nu Tok Thang Khaosan)",
-    },
-    {
-        "keywords": ["ทศกัณฐ์รันวงการ"],
-        "ja": "ทศกัณฐ์รันวงการ (トッサカン・ラン・ウォンカーン)",
-        "other": "ทศกัณฐ์รันวงการ (Thotsakan Ran Wongkan)",
-    },
-    {
-        "keywords": ["ตู้ซ่อนหมี"],
-        "ja": "ตู้ซ่อนหมี (トゥー・ソーン・ミー)",
-        "other": "ตู้ซ่อนหมี (Tu Son Mi)",
-    },
-    {
-        "keywords": ["ไอดอลตึกเจมรุ่นแ"],
-        "ja": "ไอดอลตึกเจมรุ่นแรก (アイドル・トゥック・ジェム・ルン・レーク)",
-        "other": "ไอดอลตึกเจมรุ่นแรก (Idol Tuek Gem Run Raek)",
-    },
-    {
-        "keywords": ["อาตุ่ยคุ้ยPerses", "อาตุ่ยคุ้ย"],
-        "ja": "อาตุ่ยคุ้ย PERSES (アー・トゥイ・クイ PERSES)",
-        "other": "อาตุ่ยคุ้ย PERSES (A Tui Khui PERSES)",
-    },
-    {
-        "keywords": ["FIVE ME"],
-        "ja": "FIVE ME",
-        "other": "FIVE ME",
     },
 ]
 
