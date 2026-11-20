@@ -23,12 +23,17 @@ CHUNK_CHAR_LIMIT = 12000
 # 既存の summary がある場合でも強制的に再生成するかどうか
 FORCE_REGENERATE = False
 
-# APIキーの設定とローテーション管理
+# APIキーの設定とローテーション管理（改行・リテラル\n・カンマ区切りに対応）
 api_keys_str = os.getenv("GEMINI_API_KEYS")
 if not api_keys_str:
     raise ValueError("エラー: .envファイルに GEMINI_API_KEYS が設定されていません。")
 
-API_KEYS = [k.strip() for k in api_keys_str.split(",") if k.strip()]
+normalized_keys_str = api_keys_str.replace("\\n", "\n")
+API_KEYS = [k.strip(' "\'') for k in re.split(r'[,\r\n]+', normalized_keys_str) if k.strip(' "\'')]
+
+if not API_KEYS:
+    raise ValueError("エラー: 有効なAPIキーが1つも読み込めませんでした。")
+
 current_key_index = 0
 exhausted_keys = set()
 
@@ -232,7 +237,7 @@ def is_summary_complete(video_obj):
 
 
 def main():
-    print(f"🚀 多言語サマリー生成を開始します (使用モデル: {MODEL_NAME})")
+    print(f"🚀 多言語サマリー生成を開始します (使用モデル: {MODEL_NAME} / APIキー数: {len(API_KEYS)}個)")
     videos = load_json(VIDEOS_JSON_PATH, [])
     if not videos:
         print(f"❌ {VIDEOS_JSON_PATH} が見つからないか空です。")
