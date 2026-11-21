@@ -13,7 +13,7 @@ load_dotenv()
 VIDEOS_JSON_PATH = '../data/videos.json'
 STATUS_FILE_PATH = '../pipeline_status.json'
 
-MODEL_NAME = "gemini-3.8-flash"
+MODEL_NAME = "gemini-3.5-flash-lite"
 TARGET_LANGS = ["ja", "en", "ko", "zh-TW", "id", "pt"]
 
 # 1回のAPIリクエストでまとめて翻訳する件数（類似タイトル同士を並べて処理）
