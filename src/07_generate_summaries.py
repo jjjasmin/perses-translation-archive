@@ -13,20 +13,16 @@ load_dotenv()
 VIDEOS_JSON_PATH = '../data/videos.json'
 TRANSCRIPTS_DIR = '../data/transcripts'
 STATUS_FILE_PATH = '../pipeline_status.json'
+OUTPUT_JSON_PATH = '../data/07_summaries.json'
 
 MODEL_NAME = "gemini-3.5-flash-lite"
-TARGET_LANGS = ["ja", "en", "ko", "zh-TW", "id", "pt"]
 
 # レート制限設定（1分に15回以内 = 1リクエストあたり最低4秒間隔）
 API_SLEEP_SECONDS = 4.0
 
-# 長文分割（チャンキング）の閾値（文字数）
-CHUNK_CHAR_LIMIT = 12000
-HIGHLIGHT_FULL_PASS_LIMIT = 35000
-
-# 既存データがある場合でも強制的に再生成するかどうか
-FORCE_REGENERATE_SUMMARY = False
-FORCE_REGENERATE_HIGHLIGHTS = False
+# 1回のAPI通信で直接処理する最大文字数（これを超える超長尺のみ分割処理）
+SINGLE_PASS_CHAR_LIMIT = 45000
+CHUNK_CHAR_LIMIT = 15000
 
 # APIキーの設定とローテーション管理（改行・リテラル\n・カンマ区切りに対応）
 api_keys_str = os.getenv("GEMINI_API_KEYS")
@@ -81,10 +77,17 @@ def load_json(path, default_val=None):
         return json.load(f)
 
 
-def save_json(path, data):
+def save_sorted_summaries(path, summaries_dict):
+    """published_at の降順（新しい順）にソートして保存する"""
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    sorted_items = sorted(
+        summaries_dict.items(),
+        key=lambda kv: str(kv[1].get("published_at") or ""),
+        reverse=True
+    )
+    sorted_dict = dict(sorted_items)
     with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(sorted_dict, f, ensure_ascii=False, indent=2)
 
 
 def parse_and_fix_json(raw_text):
@@ -121,7 +124,7 @@ def call_gemini_with_retry(prompt, response_mime_type="application/json"):
             wait_for_rate_limit()
             client = get_client()
             config = types.GenerateContentConfig(
-                temperature=0.35,
+                temperature=0.15,
                 response_mime_type=response_mime_type,
             )
             response = client.models.generate_content(
@@ -157,7 +160,7 @@ def format_timestamp(seconds):
 
 
 def extract_transcript_items(video_id):
-    """transcriptファイルからタイムスタンプ・原文・日本語訳を抽出する"""
+    """transcriptファイルからID付きセリフ一覧を抽出する"""
     t_path = os.path.join(TRANSCRIPTS_DIR, f"video_{video_id}.json")
     if not os.path.exists(t_path):
         return []
@@ -181,6 +184,7 @@ def extract_transcript_items(video_id):
         has_laugh = bool(re.search(r'5{3,}', orig_text))
 
         items.append({
+            "id": len(items),
             "start": start_sec,
             "orig": orig_text,
             "text": display_text,
@@ -189,8 +193,25 @@ def extract_transcript_items(video_id):
     return items
 
 
-def split_into_chunks(lines, max_chars=CHUNK_CHAR_LIMIT):
-    """文字数上限を超えないように文字列配列をチャンク分割する"""
+def build_dialogue_log(items, rejected_starts=None):
+    """AIに渡す [ID: 数字] (MM:SS) セリフ 形式のログを作成する"""
+    rejected_starts = rejected_starts or []
+    lines = []
+    for x in items:
+        ts = format_timestamp(x["start"])
+        tags = []
+        if x["has_laugh"]:
+            tags.append("【笑い(555)】")
+        # 除外対象タイムスタンプの前後20秒には除外マークを付与
+        if any(abs(x["start"] - r_sec) <= 20.0 for r_sec in rejected_starts):
+            tags.append("【ハイライト除外区間】")
+        tag_str = " " + "".join(tags) if tags else ""
+        lines.append(f"[ID: {x['id']}] ({ts}) {x['text']}{tag_str}")
+    return "\n".join(lines)
+
+
+def split_lines_into_chunks(lines, max_chars=CHUNK_CHAR_LIMIT):
+    """文字数上限を超えないように文字列リストを分割する"""
     chunks = []
     current_chunk = []
     current_len = 0
@@ -208,109 +229,15 @@ def split_into_chunks(lines, max_chars=CHUNK_CHAR_LIMIT):
     return chunks
 
 
-def summarize_chunk_ja(original_title, chunk_text, part_idx, total_parts):
-    """長文チャンク（パートごと）の暫定要点を日本語で抽出する"""
-    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」の動画アーカイブの編集者です。
-以下は動画（原題: {original_title}）の文字起こしテキストの分割パート（{part_idx}/{total_parts}）です。
-このパートで話されている主なトピック・出来事・見どころを、日本語の箇条書き（3〜5項目程度）で簡潔に抽出してください。
+def extract_chunk_notes(original_title, chunk_text, part_idx, total_parts):
+    """45,000文字を超える超長尺動画用：パートごとの事実メモと候補IDを抽出"""
+    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」のアーカイブ編集者です。
+以下は動画（原題: {original_title}）のID付き会話ログの分割パート（{part_idx}/{total_parts}）です。
+このパートの内容を整理し、以下の3点を日本語のメモとして簡潔に出力してください。
 
-【ルール】
-- グループ名・メンバー名・ファンダム名などの固有名詞は必ず英語表記で統一すること（例: PERSES, PIECES, JUNG, NAY, KRITTIN, PALM, PLUGGY）。
-- 冗長な文末（「〜について話している」等）は省き、体言止めや短いフレーズにすること。
-
-【文字起こしテキスト（パート {part_idx}/{total_parts}）】
-{chunk_text}
-"""
-    return call_gemini_with_retry(prompt, response_mime_type="text/plain")
-
-
-def generate_multilingual_summary(original_title, content_text, is_merged_notes=False):
-    """6言語一括の要点まとめJSONを生成する"""
-    source_desc = "各パートから抽出した要点メモ" if is_merged_notes else "動画の文字起こしテキスト"
-
-    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」の多言語ファンアーカイブの編集者です。
-以下の動画情報をもとに、動画の主なトピック・見どころ（3〜5個程度）を抽出し、指定された6言語すべてで意味が一致する要点まとめを生成してください。
-
-【動画の原題】
-{original_title}
-
-【{source_desc}】
-{content_text}
-
-【厳守ルール】
-1. 出力形式は必ず以下の6言語キー（"ja", "en", "ko", "zh-TW", "id", "pt"）を持つ純粋なJSONオブジェクトのみにすること。
-2. すべての言語において、グループ名・メンバー名・ファンダム名などの固有名詞は翻訳・音写せず、必ず英語表記のまま統一すること（例: PERSES, PIECES, JUNG, NAY, KRITTIN, PALM, PLUGGY）。
-3. 各トピックは簡潔な短いフレーズ（日本語なら体言止め）にし、「〜について話しています」のような冗長な説明は省くこと。
-4. 各トピックの区切り文字には、必ず全角スペースを含む「 ／ 」を使用し、1行の文字列として結合すること（箇条書き記号や改行は入れないこと）。
-5. 元のテキストが長い場合でも、重複を省いて動画全体のハイライトが網羅されるように3〜5トピックにまとめること。
-
-【出力JSONフォーマット例】
-{{
-  "ja": "GQ賞受賞への感謝 ／ 新曲での新たな挑戦とプレッシャー ／ 過去最大規模のフルバンド台北公演の予告 ／ NAYの誕生日エピソード",
-  "en": "Gratitude for the GQ Award ／ New challenges and pressure with the upcoming song ／ Announcement of their largest full-band Taipei show ／ NAY's birthday episode",
-  "ko": "GQ 수상에 대한 감사 ／ 신곡에서의 새로운 도전과 부담감 ／ 역대 최대 규모의 풀밴드 타이베이 공연 예고 ／ NAY의 생일 에피소드",
-  "zh-TW": "感謝獲得GQ獎項 ／ 新歌的全新挑戰與壓力 ／ 預告史上最大規模的全樂團台北演出 ／ NAY的生日小插曲",
-  "id": "Rasa syukur atas penghargaan GQ ／ Tantangan baru dan tekanan untuk lagu terbaru ／ Pengumuman konser full-band terbesar di Taipei ／ Cerita ulang tahun NAY",
-  "pt": "Gratidão pelo prêmio GQ ／ Novos desafios e pressão com a nova música ／ Anúncio do maior show com banda completa em Taipei ／ Episódio de aniversário de NAY"
-}}
-"""
-    raw_res = call_gemini_with_retry(prompt, response_mime_type="application/json")
-    parsed = parse_and_fix_json(raw_res)
-    if not isinstance(parsed, dict):
-        return None
-
-    cleaned_summary = {}
-    for lang in TARGET_LANGS:
-        val = parsed.get(lang)
-        if not isinstance(val, str) or not val.strip():
-            return None
-        val = val.replace("\n", " ／ ").strip()
-        val = re.sub(r'\s*/\s*', ' ／ ', val)
-        cleaned_summary[lang] = val
-
-    return cleaned_summary
-
-
-def validate_single_highlight(hl_data, min_start, max_start):
-    """laugh または quote の1項目分のデータを検証・整形する"""
-    if not isinstance(hl_data, dict):
-        return None
-
-    text_obj = hl_data.get("text")
-    if not isinstance(text_obj, dict):
-        return None
-
-    cleaned_text = {}
-    for lang in TARGET_LANGS:
-        val = text_obj.get(lang)
-        if not isinstance(val, str) or not val.strip():
-            return None
-        cleaned_text[lang] = val.replace("\n", " ").strip()
-
-    try:
-        chosen_start = float(hl_data.get("start", min_start))
-        if not (min_start <= chosen_start <= max_start):
-            chosen_start = min_start
-    except (ValueError, TypeError):
-        chosen_start = min_start
-
-    return {
-        "start": round(chosen_start, 2),
-        "timestamp": format_timestamp(chosen_start),
-        "text": cleaned_text
-    }
-
-
-def extract_dual_candidates_from_chunk(original_title, chunk_text, part_idx, total_parts):
-    """長尺動画のチャンクから「面白シーン候補」と「名言シーン候補」を1コールで同時メモ抽出"""
-    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」のファンサイトの編集者です。
-以下は動画（原題: {original_title}）のタイムスタンプ付き会話ログの分割パート（{part_idx}/{total_parts}）です。
-このパートの中から、以下の2種類のハイライト候補をそれぞれ最大1つずつ日本語で短く抜き出してください（該当がなければ「なし」と記載）。
-
-1. 【面白シーン候補】: 【笑い(555)】タグがある場面はもちろん、555が無くてもメンバーのボケ・ツッコミ・無茶振り・天然発言・イジり・焦るリアクションなど、会話としてクスッと笑える場面。
-2. 【名言シーン候補】: メンバーの熱い想い、ファン（PIECES）への感謝、グループへの覚悟、仲間の絆など、心に響く言葉がある場面。
-
-※どちらも該当箇所の `start` 秒数、前後の流れ、一番輝いている発言をメモしてください。
+1. 【このパートの話題と結論】：話されていた主なトピックと、会話がどう着地したか（事実のみ）。
+2. 【笑いシーン候補ID】：面白かったやり取りがあれば、その開始ID〜終了ID（最大4行）と簡単な状況メモ（※【ハイライト除外区間】は避けること）。なければ「なし」。
+3. 【感動・名言シーン候補ID】：熱い想いや感謝など心に響く場面があれば、その開始ID〜終了ID（最大4行）と簡単な状況メモ（※【ハイライト除外区間】は避けること）。なければ「なし」。
 
 【会話ログ（パート {part_idx}/{total_parts}）】
 {chunk_text}
@@ -318,76 +245,138 @@ def extract_dual_candidates_from_chunk(original_title, chunk_text, part_idx, tot
     return call_gemini_with_retry(prompt, response_mime_type="text/plain")
 
 
-def generate_dual_highlights(original_title, items):
-    """「面白ハイライト(laugh)」と「名言ハイライト(quote)」の2種類を同時に6言語で生成する"""
-    timestamped_lines = []
-    for x in items:
-        ts = format_timestamp(x["start"])
-        laugh_tag = " 【笑い(555)】" if x["has_laugh"] else ""
-        timestamped_lines.append(f"[{ts}] (start={x['start']}) {x['text']}{laugh_tag}")
+def build_highlight_from_ids(hl_raw, items, rejected_starts=None, exclude_range=None):
+    """AIが指定した start_id 〜 end_id から、本物の字幕テキストを結合してハイライトを作る"""
+    if not isinstance(hl_raw, dict):
+        return None
 
-    full_dialogue = "\n".join(timestamped_lines)
+    summary_text = hl_raw.get("summary")
+    start_id = hl_raw.get("start_id")
+    end_id = hl_raw.get("end_id")
 
-    if len(full_dialogue) <= HIGHLIGHT_FULL_PASS_LIMIT:
-        dialogue_source = full_dialogue
-        source_label = "動画全体の会話ログ"
+    if not isinstance(summary_text, str) or not summary_text.strip():
+        return None
+    if not isinstance(start_id, int) or not isinstance(end_id, int):
+        return None
+
+    max_idx = len(items) - 1
+    if start_id < 0 or start_id > max_idx:
+        return None
+    if end_id < start_id:
+        end_id = start_id
+    # 長くなりすぎないよう最大4行までに制限
+    if end_id - start_id > 3:
+        end_id = start_id + 3
+    if end_id > max_idx:
+        end_id = max_idx
+
+    chosen_start = items[start_id]["start"]
+
+    # 除外タイムスタンプと被っている場合は弾く
+    if rejected_starts and any(abs(chosen_start - r_sec) <= 15.0 for r_sec in rejected_starts):
+        return None
+
+    # もう一方のハイライトと範囲が丸被りしている場合は弾く
+    if exclude_range and not (end_id < exclude_range[0] or start_id > exclude_range[1]):
+        return None
+
+    # 実字幕からセリフを抽出して「〜」「〜」形式で結合
+    quote_parts = []
+    for i in range(start_id, end_id + 1):
+        line_text = items[i]["text"].strip()
+        # 二重括弧防止
+        line_text = line_text.strip("「」")
+        if line_text:
+            quote_parts.append(f"「{line_text}」")
+
+    if not quote_parts:
+        return None
+
+    clean_summary = summary_text.replace("\n", " ").strip()
+    clean_summary = re.sub(r'「.*」$', '', clean_summary).strip()
+
+    return {
+        "timestamp": format_timestamp(chosen_start),
+        "start": round(chosen_start, 2),
+        "summary": clean_summary,
+        "dialogue": "".join(quote_parts),
+        "_id_range": (start_id, end_id)
+    }
+
+
+def generate_video_summary_one_pass(original_title, items, rejected_starts=None):
+    """1回のAPI通信で topics, episode_digest, laugh, quote を一括生成する"""
+    full_log = build_dialogue_log(items, rejected_starts=rejected_starts)
+
+    if len(full_log) <= SINGLE_PASS_CHAR_LIMIT:
+        source_block = full_log
+        source_title = "動画全体のID付き会話ログ"
     else:
-        chunks = split_into_chunks(timestamped_lines, CHUNK_CHAR_LIMIT)
-        print(f"   📚 長尺のため {len(chunks)} パートから面白＆名言候補を抽出中...")
-        candidates = []
-        for c_idx, c_text in enumerate(chunks, start=1):
-            cand = extract_dual_candidates_from_chunk(original_title, c_text, c_idx, len(chunks))
-            if cand:
-                candidates.append(f"【パート{c_idx}候補】\n{cand}")
-        if not candidates:
+        log_lines = full_log.split("\n")
+        chunks = split_lines_into_chunks(log_lines, CHUNK_CHAR_LIMIT)
+        print(f"   📚 超長尺（{len(full_log):,}文字）のため {len(chunks)} パートに整理してから統合します...")
+        notes = []
+        for idx, c_text in enumerate(chunks, start=1):
+            print(f"   - パート {idx}/{len(chunks)} を解析中...")
+            note = extract_chunk_notes(original_title, c_text, idx, len(chunks))
+            if note:
+                notes.append(f"=== パート {idx} ===\n{note}")
+        if not notes:
             return None
-        dialogue_source = "\n\n".join(candidates)
-        source_label = "各パートから抽出されたハイライト候補"
+        source_block = "\n\n".join(notes)
+        source_title = "各パートの整理メモ（ID付き）"
 
-    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」のファンサイトの編集者です。
-以下は動画（原題: {original_title}）の{source_label}です。
-この中から、ファンが見たくなる次の**2種類のハイライト**を両方（別々のシーンから）抽出し、指定のJSON形式で出力してください。
+    reject_note = ""
+    if rejected_starts:
+        ts_list = ", ".join(format_timestamp(s) for s in rejected_starts)
+        reject_note = f"\n※注意：【ハイライト除外区間】タグが付いている時間帯（{ts_list} 付近）は、すでにボツになったシーンのため `laugh` と `quote` のどちらにも絶対に選ばないでください。"
 
-【抽出する2種類のハイライト】
-1. `laugh`（一番笑える・面白いシーン）:
-   - 【笑い(555)】タグが付いている場面だけでなく、**555が一切無くても、メンバー同士のボケ・ツッコミ・無茶振り・天然発言・イジり・焦りや照れなどのやりとりから、会話として一番面白い場面**を選ぶこと。
-   - 完全にシリアスな内容で面白い要素が全く無い動画の場合は、無理に作らず `null` にすること。
-2. `quote`（一番グッとくる名言シーン）:
-   - メンバーの熱い想い、ファン（PIECES）への感謝、努力やグループへの覚悟、絆など、心に響く言葉が語られている場面を選ぶこと。
-   - 短い告知や軽い雑談のみで名言らしい発言が全く無い動画の場合は、無理に作らず `null` にすること。
+    prompt = f"""あなたはタイの5人組ボーイズグループ「PERSES」のファン向けアーカイブ＆SNS企画担当の編集者です。
+以下の動画情報をもとに、日本語の要点データを作成し、指定のJSON形式のみで出力してください。
 
-【厳守ルール】
-1. 出力は必ず `"laugh"` と `"quote"` をトップレベルのキーに持つ純粋なJSONオブジェクトのみとすること（片方または両方が該当なしの場合は `null`）。
-2. `start` には、選んだシーンの会話が始まる行の `start` の数値をそのまま選ぶこと。`laugh` と `quote` は必ず異なるシーン（別の `start`）から選ぶこと。
-3. `text` の各言語の文字列は、必ず【状況の一言説明（体言止め）】の直後に、そのシーンで一番輝いている発言を【「」で囲んで追記】する構成にすること。
-   - 構成イメージ: 状況の短い説明「一番輝いているセリフ」
-   - 引用するセリフは会話ログから核心部分だけを短く切り抜くこと（日本語で15〜20文字前後、全体で35〜40文字前後を目安）。
-4. 6言語（"ja", "en", "ko", "zh-TW", "id", "pt"）すべてで意味が一致するようにし、引用の括弧は全言語共通で「」を使用すること。
-5. すべての言語で、グループ名・メンバー名などの固有名詞は必ず英語表記で統一すること（例: PERSES, PIECES, JUNG, NAY, KRITTIN, PALM, PLUGGY）。
+【動画の原題】
+{original_title}
 
-【出力JSONフォーマット例】
+【{source_title}】
+{source_block}
+
+【作成する4項目と厳守ルール】
+1. `topics`（主なトピック：文字列の配列）:
+   - 動画内で実際に話されている主な話題・見どころを3〜5個の短いフレーズ（体言止め）で挙げること。
+2. `episode_digest`（エピソードダイジェスト：文字列）:
+   - `topics` よりも詳しく、「どんな話題・出来事から始まり → どんなやり取りを経て → 最終的にどういう結論・オチになったか」という**会話の流れと結果**までを、3〜4文（130〜200文字程度）の自然な日本語でまとめること。SNS投稿のネタとして使えるよう、出来事の着地点を明確に書くこと。
+3. `laugh`（一番笑える・面白いシーン：オブジェクト または `null`）:
+   - 【笑い(555)】タグがある場面はもちろん、555が無くてもメンバー同士のボケ・ツッコミ・無茶振り・天然発言・焦りなどのやり取りから一番面白い場面を1つ選ぶこと。
+   - **短い告知動画や完全にシリアスな回で、面白い要素が全く無い場合は無理に選ばず必ず `null` にすること。**
+   - 選ぶ場合は、その場面の短い状況説明（`summary`：20文字前後）と、会話ログにある実際の行番号（`start_id` と `end_id`、連続する1〜4行）を指定すること。
+4. `quote`（一番感動する・グッとくる名言シーン：オブジェクト または `null`）:
+   - メンバーの熱い想い、ファン（PIECES）への感謝、グループへの覚悟や絆など、心に響く言葉がある場面を1つ選ぶこと。
+   - **軽い雑談や告知のみで、感動・名言らしい発言が全く無い場合は無理に選ばず必ず `null` にすること。**
+   - 選ぶ場合は、その場面の短い状況説明（`summary`：20文字前後）と、会話ログにある実際の行番号（`start_id` と `end_id`、連続する1〜4行）を指定すること。
+
+【共通の絶対ルール（捏造禁止）】
+- ログに書かれていない事実・展開・オチを絶対に創作しないこと。
+- 会話ログ内にメンバーの名前が明記されていない限り、「JUNGが〜」「KRITTINが〜」のように誰の発言か推測でメンバー名を書かないこと（不明な場合は「メンバーが〜」「トークの中で〜」と書くこと）。
+- グループ名・メンバー名・ファンダム名などの固有名詞は英語表記で統一すること（PERSES, PIECES, JUNG, NAY, KRITTIN, PALM, PLUGGY）。
+- `laugh` と `quote` は必ず別々の時間帯（異なるID）から選ぶこと。{reject_note}
+
+【出力JSONフォーマット】
 {{
+  "topics": [
+    "トピック1",
+    "トピック2",
+    "トピック3"
+  ],
+  "episode_digest": "話題の始まりから途中のやり取り、最終的な結論やオチまでをまとめた3〜4文の文章。",
   "laugh": {{
-    "start": 865.2,
-    "text": {{
-      "ja": "PLUGGYの無茶振りにタジタジになるKRITTIN「これ放送できるの！？」",
-      "en": "KRITTIN getting flustered by PLUGGY's sudden dare 「Can we even air this!?」",
-      "ko": "PLUGGY의 무리한 부탁에 당황하는 KRITTIN 「이거 방송에 나가도 돼!?」",
-      "zh-TW": "被PLUGGY的無理要求弄得手足無措的KRITTIN「這真的能播出嗎！？」",
-      "id": "KRITTIN salah tingkah karena tantangan mendadak PLUGGY 「Ini boleh ditayangin!?」",
-      "pt": "KRITTIN ficando sem jeito com o desafio repentino de PLUGGY 「Isso pode ir ao ar!?」"
-    }}
+    "summary": "やり取りの短い概要",
+    "start_id": 120,
+    "end_id": 122
   }},
   "quote": {{
-    "start": 1120.5,
-    "text": {{
-      "ja": "ファンへの感謝を真っ直ぐに語るJUNG「PIECESがいなければ今の僕たちはいない」",
-      "en": "JUNG expressing heartfelt gratitude to fans 「Without PIECES, we wouldn't be here today」",
-      "ko": "팬들에게 진심 어린 감사를 전하는 JUNG 「PIECES가 없었다면 지금의 우리도 없었을 것」",
-      "zh-TW": "真誠向粉絲表達感謝的JUNG「沒有PIECES就沒有現在的我們」",
-      "id": "JUNG menyampaikan rasa terima kasih tulus untuk fans 「Tanpa PIECES, kami tidak akan ada di sini」",
-      "pt": "JUNG expressando profunda gratidão aos fãs 「Sem PIECES, não estaríamos aqui hoje」"
-    }}
+    "summary": "場面の短い概要",
+    "start_id": 245,
+    "end_id": 247
   }}
 }}
 """
@@ -396,34 +385,40 @@ def generate_dual_highlights(original_title, items):
     if not isinstance(parsed, dict):
         return None
 
-    min_start = items[0]["start"]
-    max_start = items[-1]["start"]
+    # topics の検証
+    raw_topics = parsed.get("topics")
+    topics = [str(t).strip() for t in raw_topics if str(t).strip()] if isinstance(raw_topics, list) else []
 
-    laugh_obj = validate_single_highlight(parsed.get("laugh"), min_start, max_start)
-    quote_obj = validate_single_highlight(parsed.get("quote"), min_start, max_start)
+    # episode_digest の検証
+    digest = parsed.get("episode_digest")
+    digest = digest.strip() if isinstance(digest, str) and digest.strip() else ""
+
+    if not topics or not digest:
+        return None
+
+    # laugh と quote の実字幕結合
+    laugh_obj = build_highlight_from_ids(parsed.get("laugh"), items, rejected_starts=rejected_starts)
+    laugh_range = laugh_obj.pop("_id_range", None) if laugh_obj else None
+
+    quote_obj = build_highlight_from_ids(
+        parsed.get("quote"),
+        items,
+        rejected_starts=rejected_starts,
+        exclude_range=laugh_range
+    )
+    if quote_obj:
+        quote_obj.pop("_id_range", None)
 
     return {
+        "topics": topics,
+        "episode_digest": digest,
         "laugh": laugh_obj,
         "quote": quote_obj
     }
 
 
-def is_summary_complete(video_obj):
-    summary = video_obj.get("summary")
-    if not isinstance(summary, dict):
-        return False
-    return all(isinstance(summary.get(lang), str) and summary.get(lang).strip() for lang in TARGET_LANGS)
-
-
-def is_highlights_complete(video_obj):
-    hls = video_obj.get("highlights")
-    if not isinstance(hls, dict):
-        return False
-    return "laugh" in hls and "quote" in hls
-
-
 def main():
-    print(f"🚀 多言語サマリー＆2種ハイライト生成を開始します (モデル: {MODEL_NAME} / 間隔: {API_SLEEP_SECONDS}秒 / APIキー数: {len(API_KEYS)}個)")
+    print(f"🚀 日本語サマリー＆ツイートネタ帳生成を開始します (モデル: {MODEL_NAME} / 間隔: {API_SLEEP_SECONDS}秒)")
     videos = load_json(VIDEOS_JSON_PATH, [])
     if not videos:
         print(f"❌ {VIDEOS_JSON_PATH} が見つからないか空です。")
@@ -432,101 +427,154 @@ def main():
     status_data = load_json(STATUS_FILE_PATH, {})
     videos_status = status_data.get("videos", {})
 
+    # 既存の 07_summaries.json を読み込み
+    summaries = load_json(OUTPUT_JSON_PATH, {})
+    if not isinstance(summaries, dict):
+        summaries = {}
+
+    # 処理順は priority 順（保存時は published_date 降順にソート）
     def get_priority(v):
         vid = v.get("id", "")
         return videos_status.get(vid, {}).get("priority", 999999)
 
-    sorted_indices = sorted(range(len(videos)), key=lambda idx: get_priority(videos[idx]))
+    sorted_videos = sorted(videos, key=get_priority)
 
     updated_count = 0
     skipped_count = 0
 
-    for idx in sorted_indices:
-        video = videos[idx]
+    for video in sorted_videos:
         vid = video.get("id")
-        original_title = video.get("original_title", "")
-        keywords = video.get("keywords", [])
+        if not vid:
+            continue
 
+        keywords = video.get("keywords", [])
         if "#HIDDEN" in keywords:
             skipped_count += 1
             continue
 
-        need_summary = FORCE_REGENERATE_SUMMARY or not is_summary_complete(video)
-        need_highlights = FORCE_REGENERATE_HIGHLIGHTS or not is_highlights_complete(video)
+        original_title = video.get("original_title", "")
+        published_at = video.get("published_at") or ""
 
-        if not need_summary and not need_highlights:
+        existing = summaries.get(vid)
+
+        # 初回生成 or 部分やり直し（null へ手動変更された項目）の判定
+        need_topics = True
+        need_digest = True
+        need_laugh = True
+        need_quote = True
+        rejected_starts = []
+        prev_starts = {}
+
+        if isinstance(existing, dict):
+            done_fields = set(existing.get("_done_fields", []))
+            prev_starts = dict(existing.get("_prev_starts", {}))
+            rejected_starts = list(existing.get("rejected_timestamps", []))
+
+            need_topics = not bool(existing.get("topics"))
+            need_digest = not bool(existing.get("episode_digest"))
+
+            # laugh: 中身があれば完了。nullの場合、過去に生成済み(_done_fieldsにある)なら手動やり直しと判定
+            if isinstance(existing.get("laugh"), dict):
+                need_laugh = False
+            elif "laugh" in done_fields:
+                need_laugh = True
+                if "laugh" in prev_starts and prev_starts["laugh"] not in rejected_starts:
+                    rejected_starts.append(prev_starts["laugh"])
+            else:
+                need_laugh = True
+
+            # quote: 同上
+            if isinstance(existing.get("quote"), dict):
+                need_quote = False
+            elif "quote" in done_fields:
+                need_quote = True
+                if "quote" in prev_starts and prev_starts["quote"] not in rejected_starts:
+                    rejected_starts.append(prev_starts["quote"])
+            else:
+                need_quote = True
+
+        if not (need_topics or need_digest or need_laugh or need_quote):
+            # published_at が未反映、または旧キー published_date が残っている場合だけ同期
+            if isinstance(existing, dict) and (
+                existing.get("published_at") != published_at or "published_date" in existing
+            ):
+                existing.pop("published_date", None)
+                existing["published_at"] = published_at
+                save_sorted_summaries(OUTPUT_JSON_PATH, summaries)
             skipped_count += 1
             continue
-
+            
         items = extract_transcript_items(vid)
         if not items:
             print(f"⏭️ [{vid}] 文字起こしデータが空のためスキップします。")
             skipped_count += 1
             continue
 
-        lines = [x["text"] for x in items]
-        full_text = "\n".join(lines)
-        total_chars = len(full_text)
-        print(f"\n🎬 処理中: [{vid}] {original_title} ({total_chars:,}文字)")
-
-        video_changed = False
+        target_labels = [
+            name for name, flag in [
+                ("topics", need_topics),
+                ("digest", need_digest),
+                ("laugh", need_laugh),
+                ("quote", need_quote)
+            ] if flag
+        ]
+        print(f"\n🎬 処理中: [{vid}] {original_title}")
+        print(f"   対象項目: {', '.join(target_labels)}" + (f" (除外秒数: {rejected_starts})" if rejected_starts else ""))
 
         try:
-            # 1. summary の生成
-            if need_summary:
-                if total_chars <= CHUNK_CHAR_LIMIT:
-                    summary_dict = generate_multilingual_summary(original_title, full_text, is_merged_notes=False)
-                else:
-                    chunks = split_into_chunks(lines, CHUNK_CHAR_LIMIT)
-                    print(f"   📚 長文のため {len(chunks)} パートに分割して要約します...")
-                    part_notes = []
-                    for c_idx, chunk_text in enumerate(chunks, start=1):
-                        print(f"   - パート {c_idx}/{len(chunks)} を要約中...")
-                        note = summarize_chunk_ja(original_title, chunk_text, c_idx, len(chunks))
-                        if note:
-                            part_notes.append(f"【パート{c_idx}】\n{note}")
+            result = generate_video_summary_one_pass(
+                original_title=original_title,
+                items=items,
+                rejected_starts=rejected_starts
+            )
+            if not result:
+                print(f"   ⚠️ 生成またはJSONパースに失敗しました。")
+                continue
 
-                    if part_notes:
-                        merged_text = "\n\n".join(part_notes)
-                        print(f"   🔗 全パートの要点を統合して6言語サマリーを生成中...")
-                        summary_dict = generate_multilingual_summary(original_title, merged_text, is_merged_notes=True)
-                    else:
-                        summary_dict = None
+            # 既存データがある場合は、やり直し対象（nullだった項目）だけを差し替える
+            if isinstance(existing, dict):
+                merged = dict(existing)
+            else:
+                merged = {}
 
-                if summary_dict:
-                    videos[idx]["summary"] = summary_dict
-                    video_changed = True
-                    print(f"   ✅ サマリー生成: {summary_dict['ja']}")
-                else:
-                    print(f"   ⚠️ サマリーの生成に失敗しました。")
+            merged.pop("published_date", None)
+            merged["published_at"] = published_at
+            merged["original_title"] = original_title
 
-            # 2. highlights（面白 & 名言 の2種類同時抽出）
-            if need_highlights:
-                print(f"   🎬 面白シーン＆名言シーンを同時抽出中...")
-                hls_dict = generate_dual_highlights(original_title, items)
-                if hls_dict is not None:
-                    # 旧形式の単数キー "highlight" が残っていれば整理
-                    videos[idx].pop("highlight", None)
-                    videos[idx]["highlights"] = hls_dict
-                    video_changed = True
+            if need_topics:
+                merged["topics"] = result["topics"]
+            if need_digest:
+                merged["episode_digest"] = result["episode_digest"]
+            if need_laugh:
+                merged["laugh"] = result["laugh"]
+                if result["laugh"]:
+                    prev_starts["laugh"] = result["laugh"]["start"]
+            if need_quote:
+                merged["quote"] = result["quote"]
+                if result["quote"]:
+                    prev_starts["quote"] = result["quote"]["start"]
 
-                    if hls_dict["laugh"]:
-                        l_item = hls_dict["laugh"]
-                        print(f"   😂 面白ハイライト: [{l_item['timestamp']}] {l_item['text']['ja']}")
-                    else:
-                        print(f"   😂 面白ハイライト: 該当なし (null)")
+            merged["rejected_timestamps"] = rejected_starts
+            merged["_prev_starts"] = prev_starts
+            merged["_done_fields"] = ["topics", "episode_digest", "laugh", "quote"]
 
-                    if hls_dict["quote"]:
-                        q_item = hls_dict["quote"]
-                        print(f"   ✨ 名言ハイライト: [{q_item['timestamp']}] {q_item['text']['ja']}")
-                    else:
-                        print(f"   ✨ 名言ハイライト: 該当なし (null)")
-                else:
-                    print(f"   ⚠️ ハイライトの生成に失敗しました。")
+            summaries[vid] = merged
+            save_sorted_summaries(OUTPUT_JSON_PATH, summaries)
+            updated_count += 1
 
-            if video_changed:
-                save_json(VIDEOS_JSON_PATH, videos)
-                updated_count += 1
+            print(f"   ✅ 保存完了 ({published_at}):")
+            print(f"      📌 トピック: {' ／ '.join(merged['topics'])}")
+            print(f"      📝 ダイジェスト: {merged['episode_digest']}")
+            if merged["laugh"]:
+                l_data = merged["laugh"]
+                print(f"      😂 笑い [{l_data['timestamp']}]: {l_data['summary']} -> {l_data['dialogue']}")
+            else:
+                print(f"      😂 笑い: なし (null)")
+            if merged["quote"]:
+                q_data = merged["quote"]
+                print(f"      ✨ 感動 [{q_data['timestamp']}]: {q_data['summary']} -> {q_data['dialogue']}")
+            else:
+                print(f"      ✨ 感動: なし (null)")
 
         except RuntimeError as re_err:
             print(f"\n{re_err}")

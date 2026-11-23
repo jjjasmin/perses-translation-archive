@@ -109,28 +109,28 @@
       margin-bottom: 10px;
     }
 
-    /* Table Container (without max-height as requested) */
+    /* Table Container */
     .table-container {
       overflow-x: auto;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 700px; /* ★追加：一覧の最下部に500pxの余白を固定 */
+      margin-bottom: 700px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
       font-size: 0.72rem;
-      table-layout: fixed; /* ドラッグリサイズ用に必須 */
+      table-layout: fixed;
     }
     th, td {
       padding: 10px 12px;
       border-bottom: 1px solid #ddd;
-      /* --- 文字重なり防止の設定を追加 --- */
-  overflow: hidden;            /* はみ出た文字を隠す */
-  white-space: nowrap;         /* 勝手に折り返さず1行にする */
-  text-overflow: ellipsis;     /* はみ出た部分を「…」にする */
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      vertical-align: top;
     }
     th {
       background-color: #333;
@@ -140,6 +140,7 @@
       z-index: 10;
       cursor: pointer;
       user-select: none;
+      position: relative;
     }
     th:hover {
       background-color: #444;
@@ -153,31 +154,90 @@
       opacity: 1;
       color: #f59e0b;
     }
-/* 行全体のポインターカーソルを解除（テキスト選択・コピペ可能化） */
-tr {
-  transition: background-color 0.15s ease;
-}
-tr:hover {
-  background-color: #f1f5f9;
-}
 
-/* 遷移リンク用セル (Published Date) のスタイル */
-td.cell-link {
-  cursor: pointer;
-  color: #2563eb;
-  text-decoration: underline;
-}
-td.cell-link:hover {
-  color: #1d4ed8;
-  font-weight: bold;
-}
+    tr {
+      transition: background-color 0.15s ease;
+    }
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* 遷移リンク用セル (Published Date) のスタイル */
+    td.cell-link {
+      cursor: pointer;
+      color: #2563eb;
+      text-decoration: underline;
+    }
+    td.cell-link:hover {
+      color: #1d4ed8;
+      font-weight: bold;
+    }
     
-    /* 複数行表示用セル（キーワード等）の重なり防止 */
-.cell-multiline {
-  white-space: pre-wrap;       /* 折り返しを許可する場合 */
-  line-height: 1.4;            /* 行同士が重ならないよう行高を確保 */
-  word-break: break-word;
-}
+    /* 複数行表示用セル（Tags等） */
+    .cell-multiline {
+      white-space: pre-wrap;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    /* Topics表示用セル（箇条書き） */
+    .cell-topics {
+      white-space: normal;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .topic-list {
+      margin: 0;
+      padding-left: 1.1em;
+      list-style-type: disc;
+    }
+    .topic-list li {
+      margin-bottom: 3px;
+    }
+    .topic-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Episode Digest表示用セル（要約文） */
+    .cell-digest {
+      white-space: normal;
+      line-height: 1.6;
+      word-break: break-word;
+      color: #374151;
+    }
+
+    /* Laugh / Quote 表示用セル */
+    .cell-highlight {
+      white-space: normal;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .highlight-header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 4px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+    .highlight-time {
+      display: inline-block;
+      padding: 1px 5px;
+      font-size: 0.65rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background-color: #f1f5f9;
+      color: #475569;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .highlight-dialogue {
+      font-size: 0.68rem;
+      color: #4b5563;
+      background-color: #f8fafc;
+      border-left: 2px solid #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 0 4px 4px 0;
+    }
 
     /* PC Layout Adjustments */
     @media screen and (min-width: 769px) {
@@ -185,24 +245,6 @@ td.cell-link:hover {
         margin-left: 60px;
         transition: margin-left 0.3s ease;
       }
-    }
-
-    /* テーブルの固定レイアウト化 */
-    table {
-      width: 100%;
-      table-layout: fixed; /* ドラッグ調整を有効にするため固定幅レイアウトに変更 */
-    }
-
-    /* ヘッダーのドラッグハンドル用の設定 */
-    th {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      cursor: pointer;
-      user-select: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      position: relative; /* リサイズハンドルの基準位置 */
     }
 
     /* 列幅調整用ハンドル */
@@ -220,7 +262,7 @@ td.cell-link:hover {
 
     .resizer:hover,
     .resizer.resizing {
-      background: #2563eb; /* ホバー時・ドラッグ中に青線を表示 */
+      background: #2563eb;
     }
 
     /* アコーディオン開閉用スタイル */
@@ -342,25 +384,28 @@ td.cell-link:hover {
 // Column Configuration Definition
 // ==========================================
 const COLUMN_DEFS = [
-  { key: 'published_at', label: 'Date', defaultVisible: true, width: '80px' },
-  { key: 'original_title', label: 'Original Title', defaultVisible: false },
-  { key: 'title_ja', label: 'Title (JA)', defaultVisible: true },
-  { key: 'title_en', label: 'Title (EN)', defaultVisible: false },
-  { key: 'title_ko', label: 'Title (KO)', defaultVisible: false },
-  { key: 'title_zh_tw', label: 'Title (ZH-TW)', defaultVisible: false },
-  { key: 'title_id', label: 'Title (ID)', defaultVisible: false },
-  { key: 'title_pt', label: 'Title (PT)', defaultVisible: false },
-  //{ key: 'keywords_comma', label: 'Keywords (Comma)', defaultVisible: false },
-  //{ key: 'keywords_lines', label: 'Keywords (Multiline)', defaultVisible: false }
-  { key: 'keywords_lines', label: 'Tags', defaultVisible: false }
+  { key: 'published_at', label: 'Date', defaultVisible: true, width: '85px' },
+  { key: 'original_title', label: 'Original Title', defaultVisible: false, width: '220px' },
+  { key: 'title_ja', label: 'Title (JA)', defaultVisible: true, width: '220px' },
+  { key: 'title_en', label: 'Title (EN)', defaultVisible: false, width: '220px' },
+  { key: 'title_ko', label: 'Title (KO)', defaultVisible: false, width: '220px' },
+  { key: 'title_zh_tw', label: 'Title (ZH-TW)', defaultVisible: false, width: '220px' },
+  { key: 'title_id', label: 'Title (ID)', defaultVisible: false, width: '220px' },
+  { key: 'title_pt', label: 'Title (PT)', defaultVisible: false, width: '220px' },
+  { key: 'topics_text', label: 'Topics', defaultVisible: false, width: '240px' },
+  { key: 'episode_digest', label: 'Digest', defaultVisible: false, width: '340px' },
+  { key: 'laugh_text', label: 'Laugh', defaultVisible: true, width: '300px' },
+  { key: 'quote_text', label: 'Quote', defaultVisible: false, width: '300px' },
+  { key: 'keywords_lines', label: 'Tags', defaultVisible: false, width: '160px' }
 ];
 
 // State Variables
 let allVideos = [];
 let tagsData = {};
+let summariesData = {};
 let currentFilter = { type: 'ALL', value: 'ALL' };
 let activeColumns = {};
-let columnWidths = {}; // ★追加：各列の現在の幅を保持
+let columnWidths = {};
 let currentSortKey = 'published_at';
 let currentSortOrder = 'desc';
 
@@ -368,7 +413,7 @@ let currentSortOrder = 'desc';
 COLUMN_DEFS.forEach(col => {
   activeColumns[col.key] = col.defaultVisible;
   if (col.width) {
-    columnWidths[col.key] = col.width; // ★追加：初期幅をセット
+    columnWidths[col.key] = col.width;
   }
 });
 
@@ -379,7 +424,6 @@ function getUrlSearchWord() {
   const params = new URLSearchParams(window.location.search);
   let word = params.get('v');
 
-  // 万が一 ?v=#○○ の形でアクセスされた場合も救済する
   if ((!word || word === '') && window.location.hash) {
     if (params.has('v')) {
       word = decodeURIComponent(window.location.hash);
@@ -394,7 +438,6 @@ function applyInitialUrlFilter(word) {
   const cleanWord = word.replace(/^#/, '').toLowerCase();
   const hashWord = `#${cleanWord}`;
 
-  // tags.json のタグ名（#2026, #KITTY SWAG 等）と一致するか判定
   if (tagsData && typeof tagsData === 'object') {
     for (const groupKey of Object.keys(tagsData)) {
       const subGroup = tagsData[groupKey];
@@ -410,7 +453,6 @@ function applyInitialUrlFilter(word) {
     }
   }
 
-  // 一致するタグがなければフリーワード検索として扱う
   currentFilter = { type: 'SEARCH', value: word.replace(/^#/, '') };
 }
 
@@ -422,17 +464,15 @@ async function loadVideoData() {
   const tableEl = document.getElementById('data-table');
 
   try {
-    const [tagsResult, videoResult] = await Promise.allSettled([
+    const [tagsResult, videoResult, summariesResult] = await Promise.allSettled([
       fetch('data/tags.json').then(res => res.ok ? res.json() : {}),
       fetch('data/videos.json')
-        .then(res => res.ok ? res.json() : fetch('data/pipeline_status.json').then(r => r.ok ? r.json() : null))
+        .then(res => res.ok ? res.json() : fetch('data/pipeline_status.json').then(r => r.ok ? r.json() : null)),
+      fetch('data/07_summaries.json').then(res => res.ok ? res.json() : {})
     ]);
 
-    if (tagsResult.status === 'fulfilled' && tagsResult.value) {
-      tagsData = tagsResult.value;
-    } else {
-      tagsData = {};
-    }
+    tagsData = (tagsResult.status === 'fulfilled' && tagsResult.value) ? tagsResult.value : {};
+    summariesData = (summariesResult.status === 'fulfilled' && summariesResult.value) ? summariesResult.value : {};
 
     let rawData = null;
     if (videoResult.status === 'fulfilled' && videoResult.value) {
@@ -443,9 +483,8 @@ async function loadVideoData() {
       throw new Error("Failed to load video dataset.");
     }
 
-    allVideos = normalizeData(rawData);
+    allVideos = normalizeData(rawData, summariesData);
 
-    // URLに ?v= が指定されていれば初期フィルターに反映
     const initialWord = getUrlSearchWord();
     if (initialWord) {
       applyInitialUrlFilter(initialWord);
@@ -454,7 +493,6 @@ async function loadVideoData() {
     renderCategoryButtons();
     renderColumnButtons();
 
-    // ★追加：?v= パラメータがある場合は初期非表示（閉じ）、ない場合は表示（開き）
     const hasVParam = new URLSearchParams(window.location.search).has('v') || Boolean(getUrlSearchWord());
     toggleCategoryAccordion(!hasVParam);
 
@@ -463,7 +501,6 @@ async function loadVideoData() {
 
     updateAndRender();
 
-    // ★追加：URLに ?v= が指定されていた場合は一覧までスクロール
     if (initialWord) {
       scrollToTable();
     }
@@ -478,7 +515,7 @@ async function loadVideoData() {
   }
 }
 
-function normalizeData(rawData) {
+function normalizeData(rawData, summariesMap = {}) {
   const list = [];
   if (!rawData) return list;
 
@@ -489,9 +526,10 @@ function normalizeData(rawData) {
   entries.forEach(item => {
     if (!item || typeof item !== 'object') return;
 
-    const id = item.id || item.video_id || '';
+    const id = String(item.id || item.video_id || '');
     const titles = item.title || {};
     const keywords = item.keywords || item.tags || [];
+    const summaryObj = (id && summariesMap && typeof summariesMap === 'object') ? (summariesMap[id] || {}) : {};
 
     let rawKeywordsArray = [];
     if (Array.isArray(keywords)) {
@@ -500,16 +538,52 @@ function normalizeData(rawData) {
       rawKeywordsArray = keywords.split(',').map(s => s.trim()).filter(Boolean);
     }
 
+    // topics の正規化
+    const rawTopics = Array.isArray(summaryObj.topics)
+      ? summaryObj.topics.map(t => String(t || '').trim()).filter(Boolean)
+      : [];
+
+    // episode_digest の正規化
+    const episodeDigest = summaryObj.episode_digest
+      ? String(summaryObj.episode_digest).trim()
+      : '';
+
+    // laugh / quote の正規化（timestamp, summary, dialogue を整形）
+    const formatHighlight = (obj) => {
+      if (!obj || typeof obj !== 'object') return null;
+      const timestamp = obj.timestamp ? String(obj.timestamp).trim() : '';
+      const summary = obj.summary ? String(obj.summary).trim() : '';
+      const dialogue = obj.dialogue ? String(obj.dialogue).trim() : '';
+      if (!timestamp && !summary && !dialogue) return null;
+
+      const textParts = [];
+      if (timestamp || summary) {
+        textParts.push(`${timestamp ? `[${timestamp}] ` : ''}${summary}`);
+      }
+      if (dialogue) {
+        textParts.push(dialogue);
+      }
+      return {
+        timestamp,
+        summary,
+        dialogue,
+        text: textParts.join('\n')
+      };
+    };
+
+    const laughObj = formatHighlight(summaryObj.laugh);
+    const quoteObj = formatHighlight(summaryObj.quote);
+
     const cleanText = (str) => {
       if (!str || typeof str !== 'string') return String(str || '');
       return str.replace(/^\{\s*translation:\s*/, '').replace(/\s*\}$/, '').trim();
     };
 
-    const pubDate = item.published_at || item.publishedAt || item.year || '';
+    const pubDate = item.published_at || item.publishedAt || summaryObj.published_at || item.year || '';
 
     list.push({
-      id: String(id),
-      original_title: String(item.original_title || (typeof item.title === 'string' ? item.title : (titles.original || titles.ja || ''))),
+      id: id,
+      original_title: String(item.original_title || summaryObj.original_title || (typeof item.title === 'string' ? item.title : (titles.original || titles.ja || ''))),
       title_ja: cleanText(titles.ja || (typeof titles === 'string' ? titles : '')),
       title_en: cleanText(titles.en),
       title_ko: cleanText(titles.ko),
@@ -520,7 +594,14 @@ function normalizeData(rawData) {
       category: String(item.category || item.year || (pubDate ? String(pubDate).substring(0, 4) : 'Other')),
       raw_keywords: rawKeywordsArray,
       keywords_comma: rawKeywordsArray.join(', '),
-      keywords_lines: rawKeywordsArray.join('\n')
+      keywords_lines: rawKeywordsArray.join('\n'),
+      topics: rawTopics,
+      topics_text: rawTopics.join('\n'),
+      episode_digest: episodeDigest,
+      laugh: laughObj,
+      laugh_text: laughObj ? laughObj.text : '',
+      quote: quoteObj,
+      quote_text: quoteObj ? quoteObj.text : ''
     });
   });
 
@@ -560,13 +641,11 @@ function renderCategoryButtons() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. ALL ボタン（単独行）
   const allRow = document.createElement('div');
   allRow.className = 'tag-row';
   createFilterButton(allRow, 'ALL', 'ALL', 'ALL', currentFilter.type === 'ALL');
   container.appendChild(allRow);
 
-  // 2. tags.json から「大分類ラベル」と「タグボタン群」をブロックごとに生成
   if (tagsData && typeof tagsData === 'object' && !Array.isArray(tagsData)) {
     Object.keys(tagsData).forEach(groupKey => {
       const subGroup = tagsData[groupKey];
@@ -580,17 +659,14 @@ function renderCategoryButtons() {
 
       if (tagKeys.length === 0) return;
 
-      // 大分類ごとのブロック（ここで改行される）
       const groupBlock = document.createElement('div');
       groupBlock.className = 'category-group-block';
 
-      // 大分類ラベル（クリックイベントなしのテキスト要素）
       const labelEl = document.createElement('div');
       labelEl.className = 'category-group-label';
       labelEl.textContent = groupKey;
       groupBlock.appendChild(labelEl);
 
-      // タグボタン群のコンテナ（ラベルの下に改行して横並び表示）
       const tagRow = document.createElement('div');
       tagRow.className = 'tag-row';
 
@@ -605,7 +681,6 @@ function renderCategoryButtons() {
   }
 }
 
-// アコーディオンの開閉制御（forceOpen: true=開く, false=閉じる, 未指定=反転）
 function toggleCategoryAccordion(forceOpen) {
   const header = document.getElementById('category-accordion-header');
   const body = document.getElementById('category-buttons');
@@ -642,7 +717,6 @@ function filterCategory(type, value, clickedBtn) {
     clickedBtn.classList.add('active');
   }
 
-  // URLパラメータを現在の選択状態と同期（# を除外）
   const url = new URL(window.location.href);
   url.hash = '';
   if (type === 'ALL') {
@@ -654,7 +728,7 @@ function filterCategory(type, value, clickedBtn) {
   window.history.replaceState(null, '', url.toString());
 
   updateAndRender();
-  scrollToTable(); // ★追加：絞り込み後に一覧までスクロール
+  scrollToTable();
 }
 
 // Sort Handler
@@ -678,7 +752,6 @@ function updateAndRender() {
 
     if (type === 'ALL') return true;
 
-    // 特定タグ判定 (#2026, #PERSES MUSIC VIDEO など)
     if (type === 'TAG') {
       let targetKeywords = [];
       if (tagsData && typeof tagsData === 'object') {
@@ -696,7 +769,6 @@ function updateAndRender() {
       }
     }
 
-    // フリーワード検索判定
     if (type === 'SEARCH') {
       return matchesAnyKeyword(item, [value]);
     }
@@ -722,7 +794,6 @@ function updateAndRender() {
       if (activeColumns[col.key]) {
         const th = document.createElement('th');
         
-        // ★追加：初期幅またはリサイズ済みの幅を適用
         if (columnWidths[col.key]) {
           th.style.width = columnWidths[col.key];
         }
@@ -739,7 +810,7 @@ function updateAndRender() {
 
         const resizer = document.createElement('div');
         resizer.className = 'resizer';
-        resizer.dataset.colKey = col.key; // ★追加：どの列のハンドルか識別用
+        resizer.dataset.colKey = col.key;
         th.appendChild(resizer);
 
         theadTr.appendChild(th);
@@ -762,11 +833,59 @@ function updateAndRender() {
           const td = document.createElement('td');
           const val = video[col.key] || '';
 
-          if (col.key === 'keywords_lines') {
-            td.className = 'cell-multiline';
+          if (col.key === 'topics_text') {
+            td.className = 'cell-topics';
+            if (Array.isArray(video.topics) && video.topics.length > 0) {
+              const ul = document.createElement('ul');
+              ul.className = 'topic-list';
+              video.topics.forEach(topic => {
+                const li = document.createElement('li');
+                li.textContent = topic;
+                ul.appendChild(li);
+              });
+              td.appendChild(ul);
+            }
+            td.title = val;
+          } else if (col.key === 'episode_digest') {
+            td.className = 'cell-digest';
+            td.textContent = val;
+            td.title = val;
+          } else if (col.key === 'laugh_text' || col.key === 'quote_text') {
+            td.className = 'cell-highlight';
+            const itemData = col.key === 'laugh_text' ? video.laugh : video.quote;
+            if (itemData) {
+              if (itemData.timestamp || itemData.summary) {
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'highlight-header';
+
+                if (itemData.timestamp) {
+                  const timeSpan = document.createElement('span');
+                  timeSpan.className = 'highlight-time';
+                  timeSpan.textContent = itemData.timestamp;
+                  headerDiv.appendChild(timeSpan);
+                }
+                if (itemData.summary) {
+                  const sumSpan = document.createElement('span');
+                  sumSpan.textContent = itemData.summary;
+                  headerDiv.appendChild(sumSpan);
+                }
+                td.appendChild(headerDiv);
+              }
+              if (itemData.dialogue) {
+                const dlgDiv = document.createElement('div');
+                dlgDiv.className = 'highlight-dialogue';
+                dlgDiv.textContent = itemData.dialogue;
+                td.appendChild(dlgDiv);
+              }
+            }
+            td.title = val;
+          } else {
+            if (col.key === 'keywords_lines') {
+              td.className = 'cell-multiline';
+            }
+            td.textContent = val;
+            td.title = val;
           }
-          td.textContent = val;
-          td.title = val;
 
           // Published Date セルのみクリック遷移を設定
           if (col.key === 'published_at') {
@@ -793,7 +912,6 @@ function updateAndRender() {
   }
 }
 
-// 一覧テーブルの位置までスムーズにスクロールする
 function scrollToTable() {
   const tableContainer = document.querySelector('.table-container');
   if (tableContainer) {
@@ -801,7 +919,6 @@ function scrollToTable() {
   }
 }
 
-// ヘルパー関数：全タイトル・キーワードから部分一致検索を行う
 function matchesAnyKeyword(item, keywordsList) {
   if (!Array.isArray(keywordsList) || keywordsList.length === 0) return false;
 
@@ -819,7 +936,11 @@ function matchesAnyKeyword(item, keywordsList) {
     item.title_zh_tw,
     item.title_id,
     item.title_pt,
-    item.keywords_comma
+    item.keywords_comma,
+    item.topics_text,
+    item.episode_digest,
+    item.laugh_text,
+    item.quote_text
   ].map(val => String(val || '').toLowerCase());
 
   return validKeywords.some(kw => {
@@ -872,7 +993,6 @@ function enableColumnResize() {
       const newWidth = Math.max(50, w + dx);
       th.style.width = `${newWidth}px`;
       
-      // ★追加：変更後の幅を保存
       const colKey = resizer.dataset.colKey;
       if (colKey) {
         columnWidths[colKey] = `${newWidth}px`;
