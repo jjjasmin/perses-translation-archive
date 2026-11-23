@@ -239,6 +239,41 @@
       border-radius: 0 4px 4px 0;
     }
 
+    /* セル内のXシェアボタン配置用 */
+    .cell-share-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      gap: 6px;
+    }
+    .cell-share-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn-x-share {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 7px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      line-height: 1.2;
+      color: #fff;
+      background-color: #0f1419;
+      border: 1px solid #0f1419;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.75;
+      transition: opacity 0.15s ease, transform 0.1s ease;
+    }
+    .btn-x-share:hover {
+      opacity: 1;
+    }
+    .btn-x-share:active {
+      transform: scale(0.95);
+    }
+
     /* PC Layout Adjustments */
     @media screen and (min-width: 769px) {
       .container {
@@ -887,6 +922,18 @@ function updateAndRender() {
             td.title = val;
           }
 
+          // Topics / Digest / Laugh / Quote の右下にXボタンを追加
+          if (col.key === 'topics_text' && video.topics && video.topics.length > 0) {
+            const topicsForTweet = video.topics.map(t => `・${t}`).join('\n');
+            appendShareButton(td, video, 'Topics', topicsForTweet);
+          } else if (col.key === 'episode_digest' && video.episode_digest) {
+            appendShareButton(td, video, 'Digest', video.episode_digest);
+          } else if (col.key === 'laugh_text' && video.laugh_text) {
+            appendShareButton(td, video, 'Laugh', video.laugh_text);
+          } else if (col.key === 'quote_text' && video.quote_text) {
+            appendShareButton(td, video, 'Quote', video.quote_text);
+          }
+
           // Published Date セルのみクリック遷移を設定
           if (col.key === 'published_at') {
             td.classList.add('cell-link');
@@ -958,6 +1005,66 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// ==========================================
+// X (Twitter) Share Intent Helper (index.html統一仕様)
+// ==========================================
+function openXShareIntent(video, label, contentText) {
+  if (!video || !contentText) return;
+
+  // 該当動画ページのフルURLを生成
+  const targetUrl = new URL(`/index.html?v=${encodeURIComponent(video.id)}`, window.location.origin).toString();
+  //const videoTitle = video.title_ja || video.original_title || 'PERSES動画';
+
+  // 投稿文の組み立て（URL分を差し引いて文字数制限内に収める）
+  //const header = `🎬【${label}】『${videoTitle}』\n\n`;
+  const footer = `\n\n#PERSES_translation\n`;
+  const maxBodyLen = 200;
+  const trimmedBody = contentText.length > maxBodyLen
+    ? `${contentText.slice(0, maxBodyLen)}…`
+    : contentText;
+
+  //const shareText = `${header}${trimmedBody}${footer}`;
+  const shareText = `${trimmedBody}${footer}`;
+
+  // index.html と同じURL構造・別ウィンドウサイズで開く
+  const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(targetUrl)}`;
+  window.open(shareUrl, '_blank', 'width=550,height=420');
+}
+
+function appendShareButton(td, video, label, contentText) {
+  if (!contentText) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'cell-share-wrapper';
+
+  const contentBox = document.createElement('div');
+  while (td.firstChild) {
+    contentBox.appendChild(td.firstChild);
+  }
+  wrapper.appendChild(contentBox);
+
+  const footer = document.createElement('div');
+  footer.className = 'cell-share-footer';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn-x-share';
+  btn.title = `X(Twitter)で${label}をシェア`;
+  btn.innerHTML = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  `;
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    openXShareIntent(video, label, contentText);
+  };
+
+  footer.appendChild(btn);
+  wrapper.appendChild(footer);
+  td.appendChild(wrapper);
 }
 
 // ==========================================
