@@ -372,32 +372,13 @@ def call_gemini_api_with_retry(prompt: str, chunk_info: str = "", default_model_
                     return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx=None, model_name=model_name)
 
             if is_503:
-                # max_retries まで試行しても 503 の場合
-                if attempt == max_retries:
-                    print(f"⚠️ [503 サーバー混雑] {max_retries}回試行しましたが解消しませんでした。(モデル: {target_model})")
-                    
-                    # model_name が直接固定指定されている場合（リペア時など）は切り替えずに終了
-                    if model_name:
-                        print("❌ モデル固定指定のため、リトライを終了します。")
-                    # まだ次のモデルがある場合 ➔ 次のモデル & キーIndex 0 に切り替え
-                    elif model_idx + 1 < len(AVAILABLE_MODELS):
-                        current_model_index = model_idx + 1
-                        current_key_index = 0
-                        client = get_client(current_key_index)
-                        print(f"🔀 【503によるモデル切り替え】 次のモデル 『{AVAILABLE_MODELS[current_model_index]}』 (キーIndex: 0) へ切替えて続行します！")
-                        time.sleep(5)
-                        return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx=None, model_name=model_name)
-                    # 最後のモデルまで使い切った場合 ➔ 60秒待機してモデル0・キー0にループバック
-                    else:
-                        print("⏳ 全モデルで503が続いています。60秒待機後、モデル0・キー0に戻って再試行します...")
-                        time.sleep(60)
-                        current_model_index = 0
-                        current_key_index = 0
-                        client = get_client(current_key_index)
-                        return call_gemini_api_with_retry(prompt, chunk_info, default_model_idx=None, model_name=model_name)
-                else:
-                    print(f"⚠️ [503 サーバー混雑] 5秒待機して再試行します (試行 {attempt}/{max_retries})...")
-                    time.sleep(5)
+                # 503は指数バックオフで長めに待機 (5秒、10秒、20秒...)
+                # sleep_time = base_backoff * (2 ** (attempt - 1))
+                # print(f"⚠️ [503 サーバー混雑] {sleep_time}秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                # time.sleep(sleep_time)
+                # 14秒ではRPMを越える
+                print(f"⚠️ [503 サーバー混雑] 18秒待機して再試行します (試行 {attempt}/{max_retries})...")
+                time.sleep(18)
             else:
                 print(f"❌ 予期せぬAPIエラー: {e}")
                 time.sleep(5)

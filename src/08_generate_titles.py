@@ -20,7 +20,7 @@ TARGET_LANGS = ["ja", "en", "ko", "zh-TW", "id", "pt"]
 BATCH_SIZE = 5
 
 # ★ ひとまず全件やり直すため True に設定（完了後は False に変更してください）
-FORCE_REGENERATE = True
+FORCE_REGENERATE = False
 
 
 # === 曲名・番組名の統一対応表 ===
